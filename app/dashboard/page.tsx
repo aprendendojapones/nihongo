@@ -31,7 +31,7 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                     <section className="glass-card" style={{ padding: '2rem' }}>
                         <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                            <BookOpen size={24} /> Próxima Lição: Hiragana Básico
+                            < BookOpen size={24} /> Próxima Lição: Hiragana Básico
                         </h2>
                         <div style={{ background: 'rgba(255,255,255,0.05)', height: '10px', borderRadius: '5px', overflow: 'hidden', marginBottom: '1rem' }}>
                             <div style={{ background: 'var(--accent-primary)', width: '65%', height: '100%' }} />
