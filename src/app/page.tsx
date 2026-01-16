@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main>
@@ -8,24 +10,34 @@ export default function Home() {
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', marginTop: '3rem' }}>
-          <div className="glass-card" style={{ padding: '2rem' }}>
-            <h3>Níveis JLPT</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Conteúdo estruturado do básico ao avançado.</p>
-          </div>
-          <div className="glass-card" style={{ padding: '2rem' }}>
-            <h3>Modo Game</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Aprenda brincando e suba no ranking global.</p>
-          </div>
-          <div className="glass-card" style={{ padding: '2rem' }}>
-            <h3>Escrita Real-time</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Use seu celular como tablet de escrita para o PC.</p>
-          </div>
+          <Link href="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
+              <h3>Níveis JLPT</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Conteúdo estruturado do básico ao avançado.</p>
+            </div>
+          </Link>
+
+          <Link href="/game" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
+              <h3>Modo Game</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Aprenda brincando e suba no ranking global.</p>
+            </div>
+          </Link>
+
+          <Link href="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <div className="glass-card" style={{ padding: '2rem', height: '100%' }}>
+              <h3>Escrita Real-time</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Use seu celular como tablet de escrita para o PC.</p>
+            </div>
+          </Link>
         </div>
 
         <div style={{ marginTop: '4rem' }}>
-          <button className="btn-primary" style={{ fontSize: '1.1rem', padding: '16px 40px' }}>
-            Começar Agora
-          </button>
+          <Link href="/dashboard">
+            <button className="btn-primary" style={{ fontSize: '1.1rem', padding: '16px 40px' }}>
+              Começar Agora
+            </button>
+          </Link>
         </div>
       </div>
     </main>
