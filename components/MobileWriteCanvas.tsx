@@ -7,6 +7,17 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [points, setPoints] = useState<{ x: number, y: number }[]>([]);
+    const channelRef = useRef<any>(null);
+
+    useEffect(() => {
+        const channel = supabase.channel(`session:${sessionId}`);
+        channel.subscribe();
+        channelRef.current = channel;
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [sessionId]);
 
     const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
         setIsDrawing(true);
@@ -38,16 +49,13 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
         setIsDrawing(false);
 
         // Send stroke to PC via Broadcast
-        const channel = supabase.channel(`session:${sessionId}`);
-        channel.subscribe(async (status) => {
-            if (status === 'SUBSCRIBED') {
-                await channel.send({
-                    type: 'broadcast',
-                    event: 'stroke',
-                    payload: { points, color: '#ff3e3e', width: 5 }
-                });
-            }
-        });
+        if (channelRef.current) {
+            await channelRef.current.send({
+                type: 'broadcast',
+                event: 'stroke',
+                payload: { points, color: '#ff3e3e', width: 5 }
+            });
+        }
     };
 
     const getPos = (e: React.TouchEvent | React.MouseEvent) => {
