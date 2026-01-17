@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import './profile.css';
 
@@ -100,6 +100,51 @@ export default function ProfilePage() {
         setSaving(false);
     };
 
+    const [showScanner, setShowScanner] = useState(false);
+    const [scanError, setScanError] = useState('');
+
+    const handleScan = async (data: string | null) => {
+        if (data) {
+            setShowScanner(false);
+            // Assuming data is the school ID
+            const schoolId = data;
+
+            // Verify school exists
+            const { data: schoolData, error: schoolError } = await supabase
+                .from('schools')
+                .select('name')
+                .eq('id', schoolId)
+                .single();
+
+            if (schoolData) {
+                // Update user profile
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ school_id: schoolId })
+                    .eq('id', user.id);
+
+                if (!updateError) {
+                    setFormData(prev => ({ ...prev, schoolName: schoolData.name }));
+                    alert(`Vinculado com sucesso à escola: ${schoolData.name}`);
+                } else {
+                    alert('Erro ao vincular escola.');
+                }
+            } else {
+                alert('Escola não encontrada.');
+            }
+        }
+    };
+
+    const handleError = (err: any) => {
+        console.error(err);
+        setScanError('Erro ao acessar a câmera.');
+    };
+
+    // Dynamically import QrReader to avoid SSR issues
+    const QrReader = typeof window !== 'undefined'
+        ? require('react-qr-reader').QrReader
+        : () => null;
+
     if (loading) return <div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>;
 
     return (
@@ -157,13 +202,23 @@ export default function ProfilePage() {
 
                         <div className="form-group">
                             <label>Escola</label>
-                            <input
-                                type="text"
-                                value={formData.schoolName || 'Nenhuma escola vinculada'}
-                                disabled
-                                className="input-field disabled"
-                                style={{ opacity: 0.7, cursor: 'not-allowed' }}
-                            />
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <input
+                                    type="text"
+                                    value={formData.schoolName || 'Nenhuma escola vinculada'}
+                                    disabled
+                                    className="input-field disabled"
+                                    style={{ opacity: 0.7, cursor: 'not-allowed', flex: 1 }}
+                                />
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => setShowScanner(true)}
+                                    title="Escanear QR Code da Escola"
+                                >
+                                    <ScanLine size={20} />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -248,6 +303,30 @@ export default function ProfilePage() {
                     </button>
                 </form>
             </main>
+
+            {showScanner && (
+                <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div className="modal-content glass-card" style={{ width: '90%', maxWidth: '400px', padding: '20px' }}>
+                        <h3>Escanear QR Code da Escola</h3>
+                        <div style={{ width: '100%', height: '300px', background: '#000', marginBottom: '1rem', overflow: 'hidden', borderRadius: '8px' }}>
+                            <QrReader
+                                onResult={(result: any, error: any) => {
+                                    if (!!result) {
+                                        handleScan(result?.text);
+                                    }
+                                    if (!!error) {
+                                        console.info(error);
+                                    }
+                                }}
+                                style={{ width: '100%' }}
+                                constraints={{ facingMode: 'environment' }}
+                            />
+                        </div>
+                        <p style={{ textAlign: 'center', color: '#aaa', fontSize: '0.9rem' }}>Aponte a câmera para o QR Code</p>
+                        <button className="btn-secondary" style={{ width: '100%', marginTop: '1rem' }} onClick={() => setShowScanner(false)}>Cancelar</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

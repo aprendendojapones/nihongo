@@ -84,6 +84,9 @@ const Sidebar = () => {
             </nav>
 
             <div className="sidebar-footer">
+                <div style={{ fontSize: '10px', color: '#666', padding: '0 1rem', marginBottom: '0.5rem' }}>
+                    Debug Role: {user?.role || 'undefined'}
+                </div>
                 <div className="lang-switcher">
                     <div className="nav-item" style={{ padding: '0.5rem 1rem', cursor: 'default', background: 'transparent' }}>
                         <Languages size={20} />
