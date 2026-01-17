@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { createClient } from '@supabase/supabase-js';
 import { supabase } from "@/lib/supabase";
 
 const handler = NextAuth({
@@ -15,8 +16,14 @@ const handler = NextAuth({
             try {
                 if (!user.email) return false;
 
+                // Use service role key if available for admin operations, otherwise anon key
+                const supabaseAdmin = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                );
+
                 // Check if user exists in Supabase profiles
-                const { data, error } = await supabase
+                const { data, error } = await supabaseAdmin
                     .from('profiles')
                     .select('id')
                     .eq('email', user.email)
@@ -25,7 +32,7 @@ const handler = NextAuth({
                 if (error && error.code === 'PGRST116') {
                     // User doesn't exist, create profile
                     const isSuperAdmin = user.email === 'maicontsuda@gmail.com';
-                    const { error: insertError } = await supabase
+                    const { error: insertError } = await supabaseAdmin
                         .from('profiles')
                         .insert({
                             email: user.email,
@@ -40,21 +47,23 @@ const handler = NextAuth({
                     if (insertError) {
                         console.error('Error creating profile in Supabase:', insertError);
                     }
-                } else if (data) {
-                    // Update system language if it changed
-                    // (Optional: implement auto-update logic here)
                 }
 
                 return true;
             } catch (err) {
                 console.error('Critical error in signIn callback:', err);
-                return true; // Return true to allow login even if sync fails
+                return true;
             }
         },
         async session({ session, token }) {
             if (session.user?.email) {
-                // Fetch extra data from Supabase
-                const { data } = await supabase
+                // Use service role key to ensure we can read the profile regardless of RLS
+                const supabaseAdmin = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                );
+
+                const { data } = await supabaseAdmin
                     .from('profiles')
                     .select('*, schools(name)')
                     .eq('email', session.user.email)

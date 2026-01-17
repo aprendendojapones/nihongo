@@ -49,8 +49,8 @@ export default function ProfilePage() {
                         setLang(data.language_pref);
                     }
                 }
-                setLoading(false);
             }
+            setLoading(false);
         };
 
         fetchProfile();
