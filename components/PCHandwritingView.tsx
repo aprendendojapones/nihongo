@@ -48,8 +48,8 @@ export default function PCHandwritingView() {
                 const { points, color, width } = currentStroke;
                 if (points.length < 2) return;
 
-                ctx.strokeStyle = color || '#fff';
-                ctx.lineWidth = width || 3;
+                ctx.strokeStyle = color || '#ff3e3e';
+                ctx.lineWidth = width || 5;
                 ctx.lineCap = 'round';
                 ctx.lineJoin = 'round';
 

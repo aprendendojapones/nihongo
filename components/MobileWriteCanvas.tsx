@@ -7,7 +7,17 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [points, setPoints] = useState<{ x: number, y: number }[]>([]);
+    const [selectedColor, setSelectedColor] = useState('#ff3e3e');
     const channelRef = useRef<any>(null);
+
+    const colors = [
+        '#ff3e3e', // Red
+        '#3effa2', // Green
+        '#3e88ff', // Blue
+        '#ffbe3e', // Yellow
+        '#ffffff', // White
+        '#000000'  // Black
+    ];
 
     useEffect(() => {
         const channel = supabase.channel(`session:${sessionId}`);
@@ -58,7 +68,7 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
             await channelRef.current.send({
                 type: 'broadcast',
                 event: 'stroke',
-                payload: { points, color: '#ff3e3e', width: 5 }
+                payload: { points, color: selectedColor, width: 5 }
             });
         }
     };
@@ -94,6 +104,28 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
             />
+
+            <div style={{ padding: '1rem', display: 'flex', gap: '0.8rem', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', marginBottom: '1rem' }}>
+                {colors.map(color => (
+                    <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        title={`Selecionar cor ${color}`}
+                        aria-label={`Selecionar cor ${color}`}
+                        style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            backgroundColor: color,
+                            border: selectedColor === color ? '3px solid white' : '1px solid rgba(255,255,255,0.2)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                    />
+                ))}
+            </div>
 
             <div style={{ padding: '1rem', display: 'flex', gap: '1rem' }}>
                 <button className="btn-primary" style={{ flex: 1 }} onClick={() => {
