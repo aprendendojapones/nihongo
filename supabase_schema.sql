@@ -3,6 +3,11 @@ CREATE TABLE schools (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   director_id UUID, -- Will be linked to profiles.id
+  address TEXT,
+  map_pin TEXT, -- URL or coordinates for map integration
+  phone TEXT,
+  fax TEXT,
+  email TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 

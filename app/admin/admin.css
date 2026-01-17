@@ -168,24 +168,10 @@
     color: #ffd700;
 }
 
-.role-teacher {
-    background: rgba(62, 255, 162, 0.2);
-    color: var(--accent-primary);
-}
-
-.role-student {
-    background: rgba(255, 255, 255, 0.1);
-    color: var(--text-muted);
-}
-
-.btn-icon {
-    background: none;
-    border: none;
-    color: var(--accent-secondary);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: background 0.2s;
+cursor: pointer;
+padding: 0.5rem;
+border-radius: 50%;
+transition: background 0.2s;
 }
 
 .btn-icon:hover {

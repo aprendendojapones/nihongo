@@ -69,7 +69,10 @@ export default function AdminDashboard() {
             .from('profiles')
             .select('*, schools(name)')
             .order('created_at', { ascending: false });
-        if (data) setUsersList(data);
+        if (data) {
+            // Ensure all users are shown, including admin
+            setUsersList(data);
+        }
     };
 
     const createSchool = async () => {
@@ -215,6 +218,7 @@ export default function AdminDashboard() {
                                 <th>Usuário</th>
                                 <th>Email</th>
                                 <th>Escola</th>
+                                <th>Nível</th>
                                 <th>Função</th>
                                 <th>Ações</th>
                             </tr>
@@ -230,6 +234,7 @@ export default function AdminDashboard() {
                                     </td>
                                     <td>{u.email}</td>
                                     <td>{u.schools?.name || '-'}</td>
+                                    <td><span className="level-badge">{u.level || 'N5'}</span></td>
                                     <td><span className={`role-tag role-${u.role}`}>{u.role}</span></td>
                                     <td>
                                         <button
