@@ -13,22 +13,31 @@ export default function AdminDashboard() {
     const router = useRouter();
     const { t } = useTranslation();
     const user = session?.user as any;
-    const [schools, setSchools] = useState<any[]>([]);
-    const [newSchoolName, setNewSchoolName] = useState('');
-    const [invitationLink, setInvitationLink] = useState('');
-    const [copied, setCopied] = useState(false);
+    const [usersList, setUsersList] = useState<any[]>([]);
+    const [showMsgModal, setShowMsgModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<any>(null);
+    const [msgContent, setMsgContent] = useState('');
 
     useEffect(() => {
         if (user && user.role !== 'admin') {
             router.push('/dashboard');
         } else {
             fetchSchools();
+            fetchUsers();
         }
     }, [user]);
 
     const fetchSchools = async () => {
         const { data } = await supabase.from('schools').select('*, profiles(full_name)');
         if (data) setSchools(data);
+    };
+
+    const fetchUsers = async () => {
+        const { data } = await supabase
+            .from('profiles')
+            .select('*, schools(name)')
+            .order('created_at', { ascending: false });
+        if (data) setUsersList(data);
     };
 
     const createSchool = async () => {
@@ -56,6 +65,32 @@ export default function AdminDashboard() {
         navigator.clipboard.writeText(invitationLink);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const openMsgModal = (targetUser: any) => {
+        setSelectedUser(targetUser);
+        setShowMsgModal(true);
+    };
+
+    const sendPrivateMessage = async () => {
+        if (!msgContent || !selectedUser || !user) return;
+
+        const { error } = await supabase.from('messages').insert({
+            sender_id: user.id,
+            receiver_id: selectedUser.id,
+            content: msgContent,
+            is_private: true,
+            school_id: selectedUser.school_id // Optional: link to user's school context
+        });
+
+        if (!error) {
+            alert('Mensagem enviada com sucesso!');
+            setShowMsgModal(false);
+            setMsgContent('');
+            setSelectedUser(null);
+        } else {
+            alert('Erro ao enviar mensagem.');
+        }
     };
 
     if (!user || user.role !== 'admin') return null;
@@ -123,6 +158,68 @@ export default function AdminDashboard() {
                     ))}
                 </div>
             </section>
+
+            <section className="glass-card admin-section" style={{ marginTop: '2rem' }}>
+                <h2 className="admin-section-title">
+                    <Users size={24} /> Gerenciamento de Usuários
+                </h2>
+                <div className="users-list-container">
+                    <table className="users-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Email</th>
+                                <th>Escola</th>
+                                <th>Função</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {usersList.map(u => (
+                                <tr key={u.id}>
+                                    <td>
+                                        <div className="flex items-center gap-2">
+                                            {u.avatar_url && <img src={u.avatar_url} className="w-6 h-6 rounded-full" />}
+                                            {u.username || u.full_name || 'Sem nome'}
+                                        </div>
+                                    </td>
+                                    <td>{u.email}</td>
+                                    <td>{u.schools?.name || '-'}</td>
+                                    <td><span className={`role-tag role-${u.role}`}>{u.role}</span></td>
+                                    <td>
+                                        <button
+                                            className="btn-icon"
+                                            title="Enviar Mensagem Privada"
+                                            onClick={() => openMsgModal(u)}
+                                        >
+                                            <Users size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {showMsgModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content glass-card">
+                        <h3>Enviar Mensagem para {selectedUser?.username || selectedUser?.email}</h3>
+                        <textarea
+                            value={msgContent}
+                            onChange={(e) => setMsgContent(e.target.value)}
+                            placeholder="Digite sua mensagem privada..."
+                            className="modal-textarea"
+                            rows={5}
+                        />
+                        <div className="modal-actions">
+                            <button className="btn-secondary" onClick={() => setShowMsgModal(false)}>Cancelar</button>
+                            <button className="btn-primary" onClick={sendPrivateMessage}>Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -16,6 +16,11 @@ CREATE TABLE profiles (
   school_id UUID REFERENCES schools(id),
   language_pref TEXT DEFAULT 'pt',
   system_lang TEXT,
+  username TEXT,
+  phone TEXT,
+  address TEXT,
+  phone_public BOOLEAN DEFAULT FALSE,
+  address_public BOOLEAN DEFAULT FALSE,
   xp INTEGER DEFAULT 0,
   streak INTEGER DEFAULT 0,
   level TEXT DEFAULT 'N5',
@@ -63,5 +68,16 @@ CREATE TABLE handwriting_sessions (
   pc_session_id TEXT UNIQUE NOT NULL,
   current_stroke JSONB,
   is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Messages table (Chat)
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  school_id UUID REFERENCES schools(id),
+  sender_id UUID REFERENCES profiles(id) NOT NULL,
+  receiver_id UUID REFERENCES profiles(id), -- For Admin PMs
+  content TEXT NOT NULL,
+  is_private BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );

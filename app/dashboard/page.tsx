@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Flame, BookOpen, User, LogOut } from 'lucide-react';
+import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, ArrowRight } from 'lucide-react';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -16,68 +16,86 @@ export default function Dashboard() {
     const userStats = {
         level: user?.level || 'N5',
         xp: user?.xp || 0,
-        rank: 42,
         streak: user?.streak || 0
     };
+
+    const xpNeededForNextLevel = 1000; // Mock value
+
+    const loading = !session;
+
+    if (loading) return <div className="flex-center" style={{ height: '100vh' }}><div className="loader"></div></div>;
 
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
                 <div className="user-profile">
-                    {user?.image ? (
-                        <img src={user.image} alt="Avatar" className="user-avatar-img" />
+                    {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt="Profile" className="user-avatar-img" />
                     ) : (
-                        <div className="glass-card user-avatar-placeholder">
+                        <div className="user-avatar-placeholder glass-card">
                             <User size={32} />
                         </div>
                     )}
                     <div className="user-info">
-                        <h1 className="gradient-text">{t('welcome')}, {user?.name || 'Estudante'}!</h1>
-                        <p>
-                            {t('level')}: {userStats.level}
-                            {user?.schoolName && ` • ${user.schoolName}`}
-                            {user?.role === 'admin' && ` • Admin`}
-                        </p>
+                        <h1>{t('welcome')}, {user?.username || user?.full_name || 'Student'}</h1>
+                        <p style={{ color: 'var(--text-muted)' }}>{t('keep_learning')}</p>
                     </div>
                 </div>
+
                 <div className="header-stats">
                     <div className="glass-card stat-badge">
                         <Flame color="var(--accent-primary)" size={20} />
-                        <span>{userStats.streak} {t('days')}</span>
+                        <span style={{ fontWeight: 'bold' }}>{userStats.streak}</span>
                     </div>
                     <div className="glass-card stat-badge">
                         <Star color="var(--accent-secondary)" size={20} />
-                        <span>{userStats.xp} XP</span>
+                        <span style={{ fontWeight: 'bold' }}>{userStats.xp} XP</span>
                     </div>
-                    <button
-                        onClick={() => signOut()}
-                        className="logout-button"
-                    >
+                    <button className="icon-button" onClick={() => router.push('/profile')} title={t('settings')}>
+                        <Settings size={20} />
+                    </button>
+                    <button className="logout-button" onClick={() => signOut()}>
                         <LogOut size={20} /> {t('logout')}
                     </button>
                 </div>
             </header>
 
-            <div className="dashboard-grid">
-                <div className="main-column">
-                    <section className="glass-card next-lesson-section">
-                        <h2 className="next-lesson-title">
-                            <BookOpen size={24} /> {t('next_lesson')}: {t('level_hiragana_title')}
-                        </h2>
-                        <div className="progress-bar-container">
-                            <div className="progress-bar-fill" style={{ width: '65%' }} />
+            <main className="dashboard-grid">
+                <section className="main-column">
+                    <div className="glass-card next-lesson-section">
+                        <div className="next-lesson-title">
+                            <BookOpen size={24} color="var(--accent-primary)" />
+                            <h2>{t('next_lesson')}</h2>
                         </div>
-                        <p className="progress-text">65% do nível {userStats.level} concluído</p>
-                        <button
-                            className="btn-primary continue-button"
-                            onClick={() => router.push('/lessons')}
-                        >
-                            {t('continue_studying')}
+                        <h3>{t('katakana_basics')}</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Master the basic characters</p>
+
+                        <div className="progress-bar-container">
+                            <div className="progress-bar-fill" style={{ width: '45%' }}></div>
+                        </div>
+                        <div className="flex-between" style={{ color: 'var(--text-muted)' }}>
+                            <span>45% {t('completed')}</span>
+                            <span>5/12 {t('lessons')}</span>
+                        </div>
+
+                        <button className="btn-primary continue-button" onClick={() => router.push('/lessons')}>
+                            {t('continue_learning')} <ArrowRight size={20} />
                         </button>
-                    </section>
+                    </div>
+
+                    <div className="glass-card level-section">
+                        <div className="flex-between">
+                            <h3>{t('current_level')}</h3>
+                            <span style={{ fontWeight: 'bold', color: 'var(--accent-secondary)' }}>{userStats.level}</span>
+                        </div>
+                        <div className="progress-bar-container" style={{ marginTop: '1rem' }}>
+                            <div className="progress-bar-fill" style={{ width: `${(userStats.xp / xpNeededForNextLevel) * 100}%` }}></div>
+                        </div>
+                        <p className="xp-needed-text">{xpNeededForNextLevel - userStats.xp} XP {t('to_next_level')}</p>
+                    </div>
 
                     <PCHandwritingView />
-                </div>
+                </section>
 
                 <aside className="side-column">
                     <section className="glass-card ranking-section">
@@ -86,29 +104,32 @@ export default function Dashboard() {
                         </h3>
                         <div className="ranking-list">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className={`ranking-item ${i === 3 ? 'active' : ''}`}>
-                                    <span className={`rank-number ${i <= 3 ? 'top' : 'other'}`}>#{i}</span>
-                                    <span>{t('student')} {i}</span>
-                                    <span className="rank-score">{5000 - i * 500}</span>
+                                <div key={i} className="ranking-item">
+                                    <div className="rank-position">#{i}</div>
+                                    <div className="rank-user-info">
+                                        <div className="rank-avatar-placeholder"><User size={16} /></div>
+                                        <div className="rank-details">
+                                            <span className="rank-username">User {i}</span>
+                                            <span className="rank-school">School Name</span>
+                                        </div>
+                                    </div>
+                                    <div className="rank-xp">{5000 - i * 100} XP</div>
                                 </div>
                             ))}
                         </div>
                     </section>
 
-                    <section className="glass-card level-section">
-                        <h3>{t('level')}: {userStats.level}</h3>
-                        <p className="xp-needed-text">
-                            {t('xp_needed').replace('{xp}', '750').replace('{next}', 'N4')}
-                        </p>
-                        <button
-                            className="btn-primary achievements-button"
-                            onClick={() => router.push('/lessons')}
-                        >
-                            {t('achievements')}
+                    <section className="glass-card chat-section">
+                        <h3 className="ranking-title">
+                            <Users size={20} color="var(--accent-primary)" /> {t('school_chat')}
+                        </h3>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Conecte-se com sua escola.</p>
+                        <button className="btn-primary" style={{ width: '100%' }} onClick={() => router.push('/chat')}>
+                            {t('open_chat')}
                         </button>
                     </section>
                 </aside>
-            </div>
+            </main>
 
             {['director', 'teacher'].includes(user?.role) && (
                 <div className="admin-actions">

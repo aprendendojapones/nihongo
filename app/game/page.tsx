@@ -9,18 +9,17 @@ import { useSession } from 'next-auth/react';
 import { JAPANESE_DATA } from '@/data/japanese';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useTranslation } from '@/components/TranslationContext';
+import FinalExam from '@/components/FinalExam';
 import './game.css';
 
-function GameContent() {
-    const searchParams = useSearchParams();
+function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
     const router = useRouter();
     const { data: session } = useSession();
     const { t } = useTranslation();
     const user = session?.user as any;
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const levelId = searchParams.get('level') || 'katakana';
-    const isTest = searchParams.get('mode') === 'test';
+    const isTest = mode === 'test';
 
     // Game State
     const [shuffledData, setShuffledData] = useState<any[]>([]);
@@ -30,7 +29,7 @@ function GameContent() {
     const [score, setScore] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [showHint, setShowHint] = useState(false);
-    
+
     // New Features State
     const [hintMultiplier, setHintMultiplier] = useState(1.0);
     const [correctList, setCorrectList] = useState<any[]>([]);
@@ -42,7 +41,7 @@ function GameContent() {
         const savedState = localStorage.getItem(`game_state_${levelId}`);
         const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
 
-        if (savedState) {
+        if (savedState && !isTest) { // Don't load persistence for test mode
             const state = JSON.parse(savedState);
             setShuffledData(state.shuffledData);
             setCurrentIndex(state.currentIndex);
@@ -58,11 +57,11 @@ function GameContent() {
             setUserInput('');
         }
         setIsLoaded(true);
-    }, [levelId]);
+    }, [levelId, isTest]);
 
     // Save Persistence
     useEffect(() => {
-        if (isLoaded && !isFinished) {
+        if (isLoaded && !isFinished && !isTest) {
             const state = {
                 shuffledData,
                 currentIndex,
@@ -74,7 +73,7 @@ function GameContent() {
             };
             localStorage.setItem(`game_state_${levelId}`, JSON.stringify(state));
         }
-    }, [isLoaded, isFinished, shuffledData, currentIndex, score, hintMultiplier, correctList, wrongList, levelId, userInput]);
+    }, [isLoaded, isFinished, shuffledData, currentIndex, score, hintMultiplier, correctList, wrongList, levelId, userInput, isTest]);
 
     // Auto-focus input
     useEffect(() => {
@@ -86,7 +85,7 @@ function GameContent() {
     const currentItem = shuffledData[currentIndex];
 
     const handleHint = () => {
-        if (!showHint && currentItem) {
+        if (!showHint && currentItem && !isTest) {
             setShowHint(true);
             // Pre-fill first letter ONLY when hint is requested
             if (userInput.length === 0) {
@@ -115,7 +114,7 @@ function GameContent() {
         const pointsGained = Math.round(10 * hintMultiplier);
         setScore(s => s + pointsGained);
         setCorrectList(prev => [...prev, currentItem]);
-        
+
         if (!showHint) {
             setHintMultiplier(prev => Math.min(1.0, prev + 0.1));
         }
@@ -149,7 +148,7 @@ function GameContent() {
     const finishGame = async () => {
         setIsFinished(true);
         localStorage.removeItem(`game_state_${levelId}`);
-        
+
         confetti({
             particleCount: 150,
             spread: 70,
@@ -247,17 +246,7 @@ function GameContent() {
                     </div>
                 </header>
 
-                <main className="glass-card game-card">
-                    <p className="question-label">{isTest ? t('test_mode') : t('practice_mode')}</p>
-                    <h2 className="question-main">{currentItem.char}</h2>
-                    {showHint && <p className="question-sub">{currentItem.romaji}</p>}
-
-                    {currentItem.type === 'kanji' && (
-                        <div style={{ width: '100%', marginBottom: '2rem' }}>
-                            <PCHandwritingView />
-                        </div>
-                    )}
-
+                <main className="game-main">
                     <form onSubmit={handleSubmit} className="game-input-container">
                         <input
                             ref={inputRef}
@@ -282,15 +271,17 @@ function GameContent() {
                 </main>
 
                 <footer className="game-footer">
-                    <button className="hint-button" onClick={handleHint}>
-                        <HelpCircle size={20} /> {t('hint')}
-                    </button>
+                    {!isTest && (
+                        <button className="hint-button" onClick={handleHint}>
+                            <HelpCircle size={20} /> {t('hint')}
+                        </button>
+                    )}
                     <p style={{ color: 'var(--text-muted)' }}>{currentIndex + 1} / {shuffledData.length}</p>
                     <button className="hint-button" onClick={resetGame} title={t('reset_game')}>
                         <RotateCcw size={20} />
                     </button>
                 </footer>
-            </div>
+            </div >
 
             <aside className="game-side-list correct-list">
                 <h3>{t('correct') || 'Correct'}</h3>
@@ -300,15 +291,53 @@ function GameContent() {
                     ))}
                 </div>
             </aside>
-        </div>
+        </div >
     );
+}
+
+function GamePageContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const levelId = searchParams.get('level') || 'katakana';
+    const mode = searchParams.get('mode') || 'study'; // study, game, test, final_exam
+
+    const handleExamComplete = async (passed: boolean, score: number) => {
+        if (passed) {
+            // Save progress
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                await supabase.from('user_progress').upsert({
+                    user_id: user.id,
+                    lesson_id: levelId,
+                    completed: true,
+                    score: score,
+                    updated_at: new Date().toISOString()
+                });
+            }
+            router.push('/lessons');
+        }
+    };
+
+    if (mode === 'final_exam') {
+        // Extract level (N5, N4, etc.) from levelId (e.g., n5_final -> N5)
+        const examLevel = levelId.split('_')[0].toUpperCase();
+        return (
+            <FinalExam
+                level={examLevel}
+                onComplete={handleExamComplete}
+                onCancel={() => router.back()}
+            />
+        );
+    }
+
+    return <GameContent levelId={levelId} mode={mode} />;
 }
 
 export default function GamePage() {
     const { t } = useTranslation();
     return (
         <Suspense fallback={<div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>}>
-            <GameContent />
+            <GamePageContent />
         </Suspense>
     );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
 
 type Language = 'pt' | 'jp' | 'en' | 'fil' | 'zh' | 'hi';
 
@@ -84,12 +86,11 @@ const translations: Record<Language, Record<string, string>> = {
         average_level: "Média de Nível",
         onboarding_desc: "Peça para o aluno escanear este código para se vincular automaticamente à sua escola.",
         close: "Fechar",
-        // Level Titles & Descriptions
         level_katakana_title: "Katakana",
         level_katakana_desc: "O alfabeto para palavras estrangeiras.",
         level_hiragana_title: "Hiragana",
         level_hiragana_desc: "A base da escrita japonesa.",
-        level_n5_kanji_title: "Kanji Básicos (N5)",
+        level_n5_kanji_title: "Basic Kanji (N5)",
         level_n5_kanji_desc: "Os primeiros ideogramas essenciais.",
         level_n5_vocab_title: "Vocabulário N5",
         level_n5_vocab_desc: "Palavras e expressões do dia a dia.",
@@ -312,21 +313,58 @@ const TranslationContext = createContext<TranslationContextType | undefined>(und
 
 export function TranslationProvider({ children }: { children: React.ReactNode }) {
     const [lang, setLang] = useState<Language>('pt');
+    const { data: session } = useSession();
+    const user = session?.user as any;
 
+    // Load language preference
     useEffect(() => {
-        // Auto-detect language
-        const systemLang = navigator.language.split('-')[0] as Language;
-        if (translations[systemLang]) {
-            setLang(systemLang);
+        const loadLang = async () => {
+            if (user?.id) {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('language_pref')
+                    .eq('id', user.id)
+                    .single();
+
+                if (data?.language_pref && translations[data.language_pref as Language]) {
+                    setLang(data.language_pref as Language);
+                    return;
+                }
+            }
+
+            // Fallback to local storage or system lang
+            const savedLang = localStorage.getItem('preferred_language') as Language;
+            if (savedLang && translations[savedLang]) {
+                setLang(savedLang);
+            } else {
+                const systemLang = navigator.language.split('-')[0] as Language;
+                if (translations[systemLang]) {
+                    setLang(systemLang);
+                }
+            }
+        };
+
+        loadLang();
+    }, [user?.id]);
+
+    const handleSetLang = async (newLang: Language) => {
+        setLang(newLang);
+        localStorage.setItem('preferred_language', newLang);
+
+        if (user?.id) {
+            await supabase
+                .from('profiles')
+                .update({ language_pref: newLang })
+                .eq('id', user.id);
         }
-    }, []);
+    };
 
     const t = (key: string) => {
         return translations[lang][key] || translations['en'][key] || key;
     };
 
     return (
-        <TranslationContext.Provider value={{ lang, setLang, t }}>
+        <TranslationContext.Provider value={{ lang, setLang: handleSetLang, t }}>
             {children}
         </TranslationContext.Provider>
     );

@@ -57,7 +57,11 @@ export default function LessonsPage() {
     };
 
     const startLevel = (levelId: string, isTest: boolean = false) => {
-        router.push(`/game?level=${levelId}${isTest ? '&mode=test' : ''}`);
+        let mode = isTest ? 'test' : 'study';
+        if (levelId.includes('final') && !isTest) {
+            mode = 'final_exam';
+        }
+        router.push(`/game?level=${levelId}&mode=${mode}`);
     };
 
     if (loading) return <div className="flex-center" style={{ height: '100vh' }}><div className="loader"></div></div>;
@@ -107,7 +111,7 @@ export default function LessonsPage() {
                                             </button>
                                         )}
                                         <button
-                                            className={`btn-primary btn-start ${completed ? 'btn-review' : ''}`}
+                                            className="btn-primary"
                                             onClick={() => startLevel(level.id)}
                                         >
                                             {completed ? t('review') : t('start')} <ArrowRight size={18} />
@@ -135,6 +139,6 @@ export default function LessonsPage() {
                     <button className="btn-primary btn-locked">{t('locked')}</button>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

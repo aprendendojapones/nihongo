@@ -11,7 +11,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     const hasSidebar = !!session;
 
     return (
-        <div style={{ display: 'flex' }}>
+        <div className="flex">
             <Sidebar />
             <main className={`main-content ${hasSidebar ? (isHome ? 'with-sidebar-expanded' : 'with-sidebar-minimized') : ''}`}>
                 {children}

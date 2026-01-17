@@ -221,6 +221,38 @@ export const KANJI_N3: JapaneseItem[] = [
     { id: 'n3_degree', char: '度', romaji: 'do', level: 'N3', type: 'kanji', meaning: 'Grau/Vez' },
 ];
 
+export const KANJI_N2: JapaneseItem[] = [
+    { id: 'n2_party', char: '党', romaji: 'tou', level: 'N2', type: 'kanji', meaning: 'Partido/Facção' },
+    { id: 'n2_cooperate', char: '協', romaji: 'kyou', level: 'N2', type: 'kanji', meaning: 'Cooperar' },
+    { id: 'n2_total', char: '総', romaji: 'sou', level: 'N2', type: 'kanji', meaning: 'Total/Geral' },
+    { id: 'n2_district', char: '区', romaji: 'ku', level: 'N2', type: 'kanji', meaning: 'Distrito/Ala' },
+    { id: 'n2_leader', char: '領', romaji: 'ryou', level: 'N2', type: 'kanji', meaning: 'Território/Líder' },
+];
+
+export const VOCAB_N2: JapaneseItem[] = [
+    { id: 'v2_party', char: '政党', romaji: 'seitou', level: 'N2', type: 'vocabulary', meaning: 'Partido Político' },
+    { id: 'v2_cooperation', char: '協力', romaji: 'kyouryoku', level: 'N2', type: 'vocabulary', meaning: 'Cooperação' },
+    { id: 'v2_total_v', char: '総合', romaji: 'sougou', level: 'N2', type: 'vocabulary', meaning: 'Síntese/Geral' },
+    { id: 'v2_district_v', char: '地区', romaji: 'chiku', level: 'N2', type: 'vocabulary', meaning: 'Distrito/Área' },
+    { id: 'v2_territory', char: '領土', romaji: 'ryoudo', level: 'N2', type: 'vocabulary', meaning: 'Território' },
+];
+
+export const KANJI_N1: JapaneseItem[] = [
+    { id: 'n1_state', char: '州', romaji: 'shuu', level: 'N1', type: 'kanji', meaning: 'Estado/Província' },
+    { id: 'n1_plan', char: '企', romaji: 'ki', level: 'N1', type: 'kanji', meaning: 'Planejar/Empreender' },
+    { id: 'n1_foundation', char: '基', romaji: 'ki', level: 'N1', type: 'kanji', meaning: 'Base/Fundação' },
+    { id: 'n1_policy', char: '策', romaji: 'saku', level: 'N1', type: 'kanji', meaning: 'Política/Esquema' },
+    { id: 'n1_source', char: '源', romaji: 'gen', level: 'N1', type: 'kanji', meaning: 'Fonte/Origem' },
+];
+
+export const VOCAB_N1: JapaneseItem[] = [
+    { id: 'v1_state', char: '九州', romaji: 'kyuushuu', level: 'N1', type: 'vocabulary', meaning: 'Kyushu (região)' },
+    { id: 'v1_enterprise', char: '企業', romaji: 'kigyou', level: 'N1', type: 'vocabulary', meaning: 'Empresa/Empreendimento' },
+    { id: 'v1_foundation_v', char: '基礎', romaji: 'kiso', level: 'N1', type: 'vocabulary', meaning: 'Fundação/Base' },
+    { id: 'v1_policy_v', char: '政策', romaji: 'seisaku', level: 'N1', type: 'vocabulary', meaning: 'Política (governamental)' },
+    { id: 'v1_source_v', char: '資源', romaji: 'shigen', level: 'N1', type: 'vocabulary', meaning: 'Recursos' },
+];
+
 export const VOCAB_N3: JapaneseItem[] = [
     { id: 'v3_politics', char: '政治', romaji: 'seiji', level: 'N3', type: 'vocabulary', meaning: 'Política' },
     { id: 'v3_economy', char: '経済', romaji: 'keizai', level: 'N3', type: 'vocabulary', meaning: 'Economia' },
@@ -244,4 +276,6 @@ export const JAPANESE_DATA = {
     n4_vocab: VOCAB_N4,
     n4_final: [...KANJI_N4, ...VOCAB_N4],
     n3: [...KANJI_N3, ...VOCAB_N3],
+    n2: [...KANJI_N2, ...VOCAB_N2],
+    n1: [...KANJI_N1, ...VOCAB_N1],
 };

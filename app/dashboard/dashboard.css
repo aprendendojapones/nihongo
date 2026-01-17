@@ -165,3 +165,23 @@
     background: var(--accent-secondary);
     border: none;
 }
+
+/* New Utility Classes */
+.full-height-center {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.text-bold {
+    font-weight: bold;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
