@@ -11,7 +11,8 @@ import {
     School,
     Settings,
     Home,
-    Languages
+    Languages,
+    User
 } from 'lucide-react';
 import { useTranslation } from './TranslationContext';
 import './sidebar.css';
@@ -30,6 +31,7 @@ const Sidebar = () => {
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
         { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard'), href: '/dashboard' },
+        { id: 'profile', icon: User, label: t('profile') || 'Perfil', href: '/profile' },
         { id: 'lessons', icon: BookOpen, label: t('learning_path'), href: '/lessons' },
         { id: 'game', icon: Gamepad2, label: t('game_mode'), href: '/game' },
     ];
