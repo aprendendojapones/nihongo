@@ -19,32 +19,20 @@ export const metadata: Metadata = {
     description: "Master Japanese with gamified learning and real-time handwriting practice.",
 };
 
-"use client";
-
-import Sidebar from "@/components/Sidebar";
-import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import ClientLayout from "@/components/ClientLayout";
 
 export default function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const pathname = usePathname();
-    const { data: session } = useSession();
-    const isHome = pathname === '/';
-    const hasSidebar = !!session;
-
     return (
         <html lang="pt-BR" className={`${inter.variable} ${notoTabsJP.variable}`}>
             <body>
                 <Providers>
-                    <div style={{ display: 'flex' }}>
-                        <Sidebar />
-                        <main className={`main-content ${hasSidebar ? (isHome ? 'with-sidebar-expanded' : 'with-sidebar-minimized') : ''}`}>
-                            {children}
-                        </main>
-                    </div>
+                    <ClientLayout>
+                        {children}
+                    </ClientLayout>
                 </Providers>
             </body>
         </html>
