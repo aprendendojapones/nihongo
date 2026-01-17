@@ -140,7 +140,6 @@ export default function AdminDashboard() {
                     ) : (
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('invite_desc')}</p>
                     )}
-                    )}
                 </section>
 
                 <section className="glass-card admin-section">
