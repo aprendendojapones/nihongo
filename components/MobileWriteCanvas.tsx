@@ -37,11 +37,17 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
         if (!isDrawing) return;
         setIsDrawing(false);
 
-        // Send stroke to Supabase
-        await supabase
-            .from('handwriting_sessions')
-            .update({ current_stroke: { points, color: '#ff3e3e', width: 5 } })
-            .eq('pc_session_id', sessionId);
+        // Send stroke to PC via Broadcast
+        const channel = supabase.channel(`session:${sessionId}`);
+        channel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await channel.send({
+                    type: 'broadcast',
+                    event: 'stroke',
+                    payload: { points, color: '#ff3e3e', width: 5 }
+                });
+            }
+        });
     };
 
     const getPos = (e: React.TouchEvent | React.MouseEvent) => {

@@ -20,16 +20,11 @@ export default function PCHandwritingView() {
         QRCode.toDataURL(mobileUrl, { width: 300, margin: 2, color: { dark: '#ff3e3e', light: '#00000000' } })
             .then(url => setQrCodeUrl(url));
 
-        // Subscribe to real-time updates for this session
+        // Subscribe to real-time broadcast for this session
         const channel = supabase
             .channel(`session:${id}`)
-            .on('postgres_changes', {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'handwriting_sessions',
-                filter: `pc_session_id=eq.${id}`
-            }, (payload) => {
-                setCurrentStroke(payload.new.current_stroke);
+            .on('broadcast', { event: 'stroke' }, (payload) => {
+                setCurrentStroke(payload.payload);
             })
             .subscribe();
 
