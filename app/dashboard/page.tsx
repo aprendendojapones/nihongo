@@ -3,9 +3,11 @@
 import { Trophy, Star, Flame, BookOpen, User, LogOut } from 'lucide-react';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
     const { data: session } = useSession();
+    const router = useRouter();
     const user = session?.user as any;
 
     const userStats = {
@@ -59,7 +61,13 @@ export default function Dashboard() {
                             <div style={{ background: 'var(--accent-primary)', width: '65%', height: '100%' }} />
                         </div>
                         <p style={{ color: 'var(--text-muted)' }}>65% do nível N5 concluído</p>
-                        <button className="btn-primary" style={{ marginTop: '1.5rem' }}>Continuar Estudando</button>
+                        <button
+                            className="btn-primary"
+                            style={{ marginTop: '1.5rem' }}
+                            onClick={() => router.push('/game')}
+                        >
+                            Continuar Estudando
+                        </button>
                     </section>
 
                     <PCHandwritingView />
