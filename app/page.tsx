@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Home() {
     const router = useRouter();
+    const { data: session } = useSession();
 
     return (
         <main style={{
@@ -62,14 +64,33 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div style={{ marginTop: '4rem' }}>
-                    <button
-                        className="btn-primary"
-                        style={{ fontSize: '1.1rem', padding: '16px 48px' }}
-                        onClick={() => router.push('/dashboard')}
-                    >
-                        Começar Agora
-                    </button>
+                <div style={{ marginTop: '4rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                    {session ? (
+                        <>
+                            <button
+                                className="btn-primary"
+                                style={{ fontSize: '1.1rem', padding: '16px 48px' }}
+                                onClick={() => router.push('/dashboard')}
+                            >
+                                Ir para o Painel
+                            </button>
+                            <button
+                                className="btn-primary"
+                                style={{ fontSize: '1.1rem', padding: '16px 48px', background: 'transparent', border: '1px solid var(--accent-primary)' }}
+                                onClick={() => signOut()}
+                            >
+                                Sair
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            className="btn-primary"
+                            style={{ fontSize: '1.1rem', padding: '16px 48px' }}
+                            onClick={() => signIn('google')}
+                        >
+                            Entrar com Google
+                        </button>
+                    )}
                 </div>
             </div>
         </main>

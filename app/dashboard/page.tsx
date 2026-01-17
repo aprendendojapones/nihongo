@@ -1,21 +1,37 @@
 "use client";
 
-import { Trophy, Star, Flame, BookOpen } from 'lucide-react';
+import { Trophy, Star, Flame, BookOpen, User, LogOut } from 'lucide-react';
 import PCHandwritingView from '@/components/PCHandwritingView';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function Dashboard() {
+    const { data: session } = useSession();
+    const user = session?.user as any;
+
     const userStats = {
-        level: 'N5',
-        xp: 1250,
+        level: user?.level || 'N5',
+        xp: user?.xp || 0,
         rank: 42,
-        streak: 5
+        streak: user?.streak || 0
     };
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <h1 className="gradient-text" style={{ fontSize: '2.5rem' }}>Painel de Estudo</h1>
-                <div style={{ display: 'flex', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    {user?.image ? (
+                        <img src={user.image} alt="Avatar" style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--accent-primary)' }} />
+                    ) : (
+                        <div className="glass-card" style={{ width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <User size={32} />
+                        </div>
+                    )}
+                    <div>
+                        <h1 className="gradient-text" style={{ fontSize: '2.5rem' }}>Olá, {user?.name || 'Estudante'}!</h1>
+                        <p style={{ color: 'var(--text-muted)' }}>Nível Atual: {userStats.level}</p>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                     <div className="glass-card" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Flame color="var(--accent-primary)" size={20} />
                         <span>{userStats.streak} Dias</span>
@@ -24,6 +40,12 @@ export default function Dashboard() {
                         <Star color="var(--accent-secondary)" size={20} />
                         <span>{userStats.xp} XP</span>
                     </div>
+                    <button
+                        onClick={() => signOut()}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <LogOut size={20} /> Sair
+                    </button>
                 </div>
             </header>
 

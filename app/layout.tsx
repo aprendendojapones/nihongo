@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -26,7 +27,9 @@ export default function RootLayout({
     return (
         <html lang="pt-BR" className={`${inter.variable} ${notoTabsJP.variable}`}>
             <body>
-                {children}
+                <Providers>
+                    {children}
+                </Providers>
             </body>
         </html>
     );
