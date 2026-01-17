@@ -10,7 +10,6 @@ import './register-school.css';
 export default function RegisterSchool() {
     const router = useRouter();
     const { data: session } = useSession();
-    const { data: session } = useSession();
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
