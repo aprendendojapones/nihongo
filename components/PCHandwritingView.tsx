@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { supabase } from '@/lib/supabase';
 import { useHandwriting } from '@/hooks/useHandwriting';
-import { fetchKanjiData, KanjiData } from '@/lib/kanji';
+import { fetchKanjiData, KanjiData, validateStroke } from '@/lib/kanji';
 import './handwriting.css';
 
 interface PCHandwritingViewProps {

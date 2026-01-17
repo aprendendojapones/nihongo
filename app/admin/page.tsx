@@ -17,6 +17,10 @@ export default function AdminDashboard() {
     const [showMsgModal, setShowMsgModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [msgContent, setMsgContent] = useState('');
+    const [schools, setSchools] = useState<any[]>([]);
+    const [newSchoolName, setNewSchoolName] = useState('');
+    const [invitationLink, setInvitationLink] = useState('');
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         if (user && user.role !== 'admin') {
