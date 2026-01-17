@@ -9,7 +9,7 @@ import { useTranslation } from '@/components/TranslationContext';
 import './admin.css';
 
 export default function AdminDashboard() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
     const { t } = useTranslation();
     const user = session?.user as any;
@@ -21,15 +21,43 @@ export default function AdminDashboard() {
     const [newSchoolName, setNewSchoolName] = useState('');
     const [invitationLink, setInvitationLink] = useState('');
     const [copied, setCopied] = useState(false);
+    const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
-        if (user && user.role !== 'admin') {
-            router.push('/dashboard');
-        } else {
-            fetchSchools();
-            fetchUsers();
-        }
-    }, [user]);
+        const checkAuth = async () => {
+            if (status === 'loading') return;
+
+            if (!session || !user) {
+                router.push('/');
+                return;
+            }
+
+            // First check session role
+            if (user.role === 'admin') {
+                setIsAuthorized(true);
+                fetchSchools();
+                fetchUsers();
+                return;
+            }
+
+            // Fallback: Check Supabase directly
+            const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('email', user.email)
+                .single();
+
+            if (data?.role === 'admin') {
+                setIsAuthorized(true);
+                fetchSchools();
+                fetchUsers();
+            } else {
+                router.push('/dashboard');
+            }
+        };
+
+        checkAuth();
+    }, [session, status, user]);
 
     const fetchSchools = async () => {
         const { data } = await supabase.from('schools').select('*, profiles(full_name)');
@@ -97,7 +125,9 @@ export default function AdminDashboard() {
         }
     };
 
-    if (!user || user.role !== 'admin') return null;
+    if (status === 'loading' || !isAuthorized) {
+        return <div className="flex items-center justify-center h-screen text-white">Loading admin panel...</div>;
+    }
 
     return (
         <div className="admin-container">

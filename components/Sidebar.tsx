@@ -52,11 +52,13 @@ const Sidebar = () => {
         { id: 'game', icon: Gamepad2, label: t('game_mode'), href: '/game' },
     ];
 
+    const effectiveRole = user?.role || directRole;
+
     const roleItems = [];
-    if (['director', 'teacher'].includes(user?.role)) {
+    if (['director', 'teacher'].includes(effectiveRole)) {
         roleItems.push({ id: 'school', icon: School, label: t('school_panel'), href: '/school' });
     }
-    if (user?.role === 'admin') {
+    if (effectiveRole === 'admin') {
         roleItems.push({ id: 'admin', icon: Settings, label: t('admin_panel'), href: '/admin' });
     }
 
