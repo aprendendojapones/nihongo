@@ -30,7 +30,7 @@ function GameContent() {
     const [score, setScore] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [showHint, setShowHint] = useState(false);
-
+    
     // New Features State
     const [hintMultiplier, setHintMultiplier] = useState(1.0);
     const [correctList, setCorrectList] = useState<any[]>([]);
@@ -50,14 +50,12 @@ function GameContent() {
             setHintMultiplier(state.hintMultiplier);
             setCorrectList(state.correctList);
             setWrongList(state.wrongList);
-            setUserInput(state.userInput || (state.shuffledData[state.currentIndex]?.romaji.charAt(0) || ''));
+            setUserInput(state.userInput || '');
         } else {
             // Shuffle data for new game
             const shuffled = [...levelData].sort(() => Math.random() - 0.5);
             setShuffledData(shuffled);
-            if (shuffled.length > 0) {
-                setUserInput(shuffled[0].romaji.charAt(0));
-            }
+            setUserInput('');
         }
         setIsLoaded(true);
     }, [levelId]);
@@ -88,8 +86,13 @@ function GameContent() {
     const currentItem = shuffledData[currentIndex];
 
     const handleHint = () => {
-        if (!showHint) {
+        if (!showHint && currentItem) {
             setShowHint(true);
+            // Pre-fill first letter ONLY when hint is requested
+            if (userInput.length === 0) {
+                setUserInput(currentItem.romaji.charAt(0));
+            }
+            // Penalty logic: first hint 50%, then -10% each
             setHintMultiplier(prev => {
                 if (prev > 0.5) return 0.5;
                 return Math.max(0.1, prev - 0.1);
@@ -112,7 +115,7 @@ function GameContent() {
         const pointsGained = Math.round(10 * hintMultiplier);
         setScore(s => s + pointsGained);
         setCorrectList(prev => [...prev, currentItem]);
-
+        
         if (!showHint) {
             setHintMultiplier(prev => Math.min(1.0, prev + 0.1));
         }
@@ -123,7 +126,7 @@ function GameContent() {
             setTimeout(() => {
                 const nextIndex = currentIndex + 1;
                 setCurrentIndex(nextIndex);
-                setUserInput(shuffledData[nextIndex].romaji.charAt(0));
+                setUserInput(''); // No auto-fill for next item
                 setFeedback(null);
                 setShowHint(false);
             }, 1000);
@@ -146,7 +149,7 @@ function GameContent() {
     const finishGame = async () => {
         setIsFinished(true);
         localStorage.removeItem(`game_state_${levelId}`);
-
+        
         confetti({
             particleCount: 150,
             spread: 70,
