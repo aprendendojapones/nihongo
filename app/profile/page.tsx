@@ -319,7 +319,6 @@ export default function ProfilePage() {
                                         console.info(error);
                                     }
                                 }}
-                                style={{ width: '100%' }}
                                 constraints={{ facingMode: 'environment' }}
                             />
                         </div>
