@@ -50,10 +50,14 @@ function GameContent() {
             setHintMultiplier(state.hintMultiplier);
             setCorrectList(state.correctList);
             setWrongList(state.wrongList);
+            setUserInput(state.userInput || (state.shuffledData[state.currentIndex]?.romaji.charAt(0) || ''));
         } else {
             // Shuffle data for new game
             const shuffled = [...levelData].sort(() => Math.random() - 0.5);
             setShuffledData(shuffled);
+            if (shuffled.length > 0) {
+                setUserInput(shuffled[0].romaji.charAt(0));
+            }
         }
         setIsLoaded(true);
     }, [levelId]);
@@ -67,11 +71,12 @@ function GameContent() {
                 score,
                 hintMultiplier,
                 correctList,
-                wrongList
+                wrongList,
+                userInput
             };
             localStorage.setItem(`game_state_${levelId}`, JSON.stringify(state));
         }
-    }, [isLoaded, isFinished, shuffledData, currentIndex, score, hintMultiplier, correctList, wrongList, levelId]);
+    }, [isLoaded, isFinished, shuffledData, currentIndex, score, hintMultiplier, correctList, wrongList, levelId, userInput]);
 
     // Auto-focus input
     useEffect(() => {
@@ -85,7 +90,6 @@ function GameContent() {
     const handleHint = () => {
         if (!showHint) {
             setShowHint(true);
-            // Penalty logic: first hint 50%, then -10% each
             setHintMultiplier(prev => {
                 if (prev > 0.5) return 0.5;
                 return Math.max(0.1, prev - 0.1);
@@ -93,34 +97,44 @@ function GameContent() {
         }
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setUserInput(value);
+
+        if (currentItem && value.toLowerCase().trim() === currentItem.romaji.toLowerCase()) {
+            triggerCorrect();
+        }
+    };
+
+    const triggerCorrect = () => {
+        if (feedback) return;
+        setFeedback('correct');
+        const pointsGained = Math.round(10 * hintMultiplier);
+        setScore(s => s + pointsGained);
+        setCorrectList(prev => [...prev, currentItem]);
+
+        if (!showHint) {
+            setHintMultiplier(prev => Math.min(1.0, prev + 0.1));
+        }
+
+        if (currentIndex === shuffledData.length - 1) {
+            setTimeout(finishGame, 1000);
+        } else {
+            setTimeout(() => {
+                const nextIndex = currentIndex + 1;
+                setCurrentIndex(nextIndex);
+                setUserInput(shuffledData[nextIndex].romaji.charAt(0));
+                setFeedback(null);
+                setShowHint(false);
+            }, 1000);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (feedback || !currentItem) return;
-
-        const isCorrect = userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase();
-
-        if (isCorrect) {
-            setFeedback('correct');
-            const pointsGained = Math.round(10 * hintMultiplier);
-            setScore(s => s + pointsGained);
-            setCorrectList(prev => [...prev, currentItem]);
-
-            // Bonus logic: increase multiplier by 10% if not at 100%
-            if (!showHint) {
-                setHintMultiplier(prev => Math.min(1.0, prev + 0.1));
-            }
-
-            if (currentIndex === shuffledData.length - 1) {
-                setTimeout(finishGame, 1000);
-            } else {
-                setTimeout(() => {
-                    setCurrentIndex(i => i + 1);
-                    setUserInput('');
-                    setFeedback(null);
-                    setShowHint(false);
-                }, 1000);
-            }
-        } else {
+        if (currentItem && userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase()) {
+            triggerCorrect();
+        } else if (!feedback) {
             setFeedback('wrong');
             if (!wrongList.find(item => item.char === currentItem.char)) {
                 setWrongList(prev => [...prev, currentItem]);
@@ -246,7 +260,7 @@ function GameContent() {
                             ref={inputRef}
                             type="text"
                             value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
+                            onChange={handleInputChange}
                             placeholder={t('type_romaji')}
                             className="game-input"
                             disabled={!!feedback}
