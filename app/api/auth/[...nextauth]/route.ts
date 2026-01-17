@@ -11,8 +11,12 @@ const handler = NextAuth({
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
+    session: {
+        strategy: "jwt",
+    },
     callbacks: {
         async signIn({ user, account, profile }) {
+            console.log('SignIn callback triggered for:', user.email);
             try {
                 if (!user.email) return false;
 
