@@ -23,6 +23,27 @@ const Sidebar = () => {
     const { t, lang, setLang } = useTranslation();
     const user = session?.user as any;
     const [directRole, setDirectRole] = React.useState<string | null>(null);
+    const [isExpanded, setIsExpanded] = React.useState<boolean>(true);
+
+    // Load sidebar state from localStorage
+    React.useEffect(() => {
+        const savedState = localStorage.getItem('sidebarExpanded');
+        if (savedState !== null) {
+            setIsExpanded(savedState === 'true');
+        } else {
+            // Default behavior: expanded on home, minimized elsewhere
+            setIsExpanded(pathname === '/');
+        }
+    }, [pathname]);
+
+    // Persist sidebar state to localStorage
+    const toggleSidebar = () => {
+        const newState = !isExpanded;
+        setIsExpanded(newState);
+        localStorage.setItem('sidebarExpanded', String(newState));
+        // Dispatch custom event for same-tab sync
+        window.dispatchEvent(new Event('sidebarToggle'));
+    };
 
     React.useEffect(() => {
         const fetchRole = async () => {
@@ -41,8 +62,7 @@ const Sidebar = () => {
 
     if (!session) return null;
 
-    const isHome = pathname === '/';
-    const isExpanded = isHome;
+    const effectiveRole = user?.role || directRole;
 
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
@@ -51,8 +71,6 @@ const Sidebar = () => {
         { id: 'lessons', icon: BookOpen, label: t('learning_path'), href: '/lessons' },
         { id: 'game', icon: Gamepad2, label: t('game_mode'), href: '/game' },
     ];
-
-    const effectiveRole = user?.role || directRole;
 
     const roleItems = [];
     if (['director', 'teacher'].includes(effectiveRole)) {
@@ -71,6 +89,13 @@ const Sidebar = () => {
                     <BookOpen size={32} />
                 </div>
                 <span className="logo-text gradient-text">Nihongo Master</span>
+                <button
+                    onClick={toggleSidebar}
+                    className="toggle-btn"
+                    title={isExpanded ? 'Minimizar' : 'Expandir'}
+                >
+                    {isExpanded ? '◀' : '▶'}
+                </button>
             </div>
 
             <nav className="sidebar-nav">
