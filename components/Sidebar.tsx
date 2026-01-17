@@ -19,7 +19,7 @@ import './sidebar.css';
 
 const Sidebar = () => {
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const { data: session, update } = useSession();
     const { t, lang, setLang } = useTranslation();
     const user = session?.user as any;
 
@@ -86,6 +86,12 @@ const Sidebar = () => {
             <div className="sidebar-footer">
                 <div style={{ fontSize: '10px', color: '#666', padding: '0 1rem', marginBottom: '0.5rem' }}>
                     Debug Role: {user?.role || 'undefined'}
+                    <button
+                        onClick={() => update()}
+                        style={{ marginLeft: '10px', background: 'none', border: '1px solid #444', color: '#888', borderRadius: '4px', cursor: 'pointer', fontSize: '10px' }}
+                    >
+                        Refresh
+                    </button>
                 </div>
                 <div className="lang-switcher">
                     <div className="nav-item" style={{ padding: '0.5rem 1rem', cursor: 'default', background: 'transparent' }}>

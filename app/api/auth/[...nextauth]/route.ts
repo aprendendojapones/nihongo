@@ -66,8 +66,29 @@ const handler = NextAuth({
             }
 
             // Update token if session is updated
-            if (trigger === "update" && session) {
-                return { ...token, ...session.user };
+            if (trigger === "update") {
+                // Force fetch from Supabase to ensure fresh data
+                const supabaseAdmin = createClient(
+                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+                );
+
+                const { data } = await supabaseAdmin
+                    .from('profiles')
+                    .select('*, schools(name)')
+                    .eq('email', token.email)
+                    .single();
+
+                if (data) {
+                    return {
+                        ...token,
+                        role: data.role,
+                        schoolName: data.schools?.name,
+                        full_name: data.full_name,
+                        id: data.id,
+                        ...session?.user // Allow client to pass other updates if needed
+                    };
+                }
             }
 
             // Try to fetch profile data to persist in token
