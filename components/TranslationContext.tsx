@@ -103,7 +103,11 @@ const translations: Record<Language, Record<string, string>> = {
         level_n4_final_desc: "O teste definitivo do nível N4.",
         level_n3_title: "JLPT N3",
         level_n3_desc: "Nível intermediário.",
-        language: "Idioma"
+        language: "Idioma",
+        wrong: "Errados",
+        correct: "Corretos",
+        confirm_reset_game: "Deseja reiniciar o progresso deste nível?",
+        reset_game: "Reiniciar Jogo"
     },
     jp: {
         welcome: "ようこそ",
@@ -196,7 +200,11 @@ const translations: Record<Language, Record<string, string>> = {
         level_n4_final_desc: "N4レベルの総仕上げテストです。",
         level_n3_title: "JLPT N3",
         level_n3_desc: "中級レベルです。",
-        language: "言語"
+        language: "言語",
+        wrong: "間違い",
+        correct: "正解",
+        confirm_reset_game: "このレベルの進捗をリセットしますか？",
+        reset_game: "ゲームをリセット"
     },
     en: {
         welcome: "Welcome",
@@ -289,7 +297,11 @@ const translations: Record<Language, Record<string, string>> = {
         level_n4_final_desc: "The definitive test for N4 level.",
         level_n3_title: "JLPT N3",
         level_n3_desc: "Intermediate level.",
-        language: "Language"
+        language: "Language",
+        wrong: "Wrong",
+        correct: "Correct",
+        confirm_reset_game: "Reset progress for this level?",
+        reset_game: "Reset Game"
     },
     fil: { welcome: "Maligayang pagdating" },
     zh: { welcome: "欢迎" },
