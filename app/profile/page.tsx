@@ -23,7 +23,8 @@ export default function ProfilePage() {
         address: '',
         phone_public: false,
         address_public: false,
-        language_pref: 'pt'
+        language_pref: 'pt',
+        schoolName: ''
     });
 
     useEffect(() => {
@@ -31,7 +32,8 @@ export default function ProfilePage() {
             if (user?.id) {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('*')
+                    .from('profiles')
+                    .select('*, schools(name)')
                     .eq('id', user.id)
                     .single();
 
@@ -43,7 +45,8 @@ export default function ProfilePage() {
                         address: data.address || '',
                         phone_public: data.phone_public || false,
                         address_public: data.address_public || false,
-                        language_pref: data.language_pref || 'pt'
+                        language_pref: data.language_pref || 'pt',
+                        schoolName: data.schools?.name || ''
                     });
                     if (data.language_pref) {
                         setLang(data.language_pref);
@@ -150,6 +153,17 @@ export default function ProfilePage() {
                                 onChange={handleChange}
                                 placeholder="Seu nome completo"
                                 className="input-field"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Escola</label>
+                            <input
+                                type="text"
+                                value={formData.schoolName || 'Nenhuma escola vinculada'}
+                                disabled
+                                className="input-field disabled"
+                                style={{ opacity: 0.7, cursor: 'not-allowed' }}
                             />
                         </div>
                     </div>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, Users, School, Link as LinkIcon, Check, Copy } from 'lucide-react';
+import { Plus, Users, School, Link as LinkIcon, Check, Copy, Trophy } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
 import './admin.css';
@@ -140,6 +140,18 @@ export default function AdminDashboard() {
                     ) : (
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('invite_desc')}</p>
                     )}
+                    )}
+                </section>
+
+                <section className="glass-card admin-section">
+                    <h2 className="admin-section-title">
+                        <Trophy size={24} /> Acesso Rápido
+                    </h2>
+                    <div className="admin-actions-grid">
+                        <button className="btn-primary" onClick={() => router.push('/rankings')}>
+                            Ver Ranking Global
+                        </button>
+                    </div>
                 </section>
             </div>
 
