@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -141,9 +142,9 @@ export default function ProfilePage() {
     };
 
     // Dynamically import QrReader to avoid SSR issues
-    const QrReader = typeof window !== 'undefined'
-        ? require('react-qr-reader').QrReader
-        : () => null;
+    const QrReader = dynamic(() => import('react-qr-reader').then(mod => mod.QrReader), {
+        ssr: false
+    });
 
     if (loading) return <div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>;
 
