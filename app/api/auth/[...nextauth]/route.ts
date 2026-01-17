@@ -24,23 +24,25 @@ const handler = NextAuth({
 
                 if (error && error.code === 'PGRST116') {
                     // User doesn't exist, create profile
+                    const isSuperAdmin = user.email === 'maicontsuda@gmail.com';
                     const { error: insertError } = await supabase
                         .from('profiles')
                         .insert({
                             email: user.email,
                             full_name: user.name,
                             avatar_url: user.image,
+                            role: isSuperAdmin ? 'admin' : 'student',
                             xp: 0,
                             streak: 0,
-                            level: 'N5'
+                            level: 'N5',
+                            language_pref: 'pt'
                         });
                     if (insertError) {
                         console.error('Error creating profile in Supabase:', insertError);
-                        // We still allow sign in even if profile creation fails, 
-                        // but it's better to know why it failed.
                     }
-                } else if (error) {
-                    console.error('Supabase error during signIn:', error);
+                } else if (data) {
+                    // Update system language if it changed
+                    // (Optional: implement auto-update logic here)
                 }
 
                 return true;
@@ -54,14 +56,15 @@ const handler = NextAuth({
                 // Fetch extra data from Supabase
                 const { data } = await supabase
                     .from('profiles')
-                    .select('*')
+                    .select('*, schools(name)')
                     .eq('email', session.user.email)
                     .single();
 
                 if (data) {
                     session.user = {
                         ...session.user,
-                        ...data
+                        ...data,
+                        schoolName: data.schools?.name
                     };
                 }
             }

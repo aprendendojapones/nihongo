@@ -4,10 +4,13 @@ import { Trophy, Star, Flame, BookOpen, User, LogOut } from 'lucide-react';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/components/TranslationContext';
+import './dashboard.css';
 
 export default function Dashboard() {
     const { data: session } = useSession();
     const router = useRouter();
+    const { t } = useTranslation();
     const user = session?.user as any;
 
     const userStats = {
@@ -18,88 +21,116 @@ export default function Dashboard() {
     };
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div className="dashboard-container">
+            <header className="dashboard-header">
+                <div className="user-profile">
                     {user?.image ? (
-                        <img src={user.image} alt="Avatar" style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px solid var(--accent-primary)' }} />
+                        <img src={user.image} alt="Avatar" className="user-avatar-img" />
                     ) : (
-                        <div className="glass-card" style={{ width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="glass-card user-avatar-placeholder">
                             <User size={32} />
                         </div>
                     )}
-                    <div>
-                        <h1 className="gradient-text" style={{ fontSize: '2.5rem' }}>Olá, {user?.name || 'Estudante'}!</h1>
-                        <p style={{ color: 'var(--text-muted)' }}>Nível Atual: {userStats.level}</p>
+                    <div className="user-info">
+                        <h1 className="gradient-text">{t('welcome')}, {user?.name || 'Estudante'}!</h1>
+                        <p>
+                            {t('level')}: {userStats.level}
+                            {user?.schoolName && ` • ${user.schoolName}`}
+                            {user?.role === 'admin' && ` • Admin`}
+                        </p>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                    <div className="glass-card" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="header-stats">
+                    <div className="glass-card stat-badge">
                         <Flame color="var(--accent-primary)" size={20} />
-                        <span>{userStats.streak} Dias</span>
+                        <span>{userStats.streak} {t('days')}</span>
                     </div>
-                    <div className="glass-card" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div className="glass-card stat-badge">
                         <Star color="var(--accent-secondary)" size={20} />
                         <span>{userStats.xp} XP</span>
                     </div>
                     <button
                         onClick={() => signOut()}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        className="logout-button"
                     >
-                        <LogOut size={20} /> Sair
+                        <LogOut size={20} /> {t('logout')}
                     </button>
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <section className="glass-card" style={{ padding: '2rem' }}>
-                        <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
-                            < BookOpen size={24} /> Próxima Lição: Hiragana Básico
+            <div className="dashboard-grid">
+                <div className="main-column">
+                    <section className="glass-card next-lesson-section">
+                        <h2 className="next-lesson-title">
+                            <BookOpen size={24} /> {t('next_lesson')}: {t('level_hiragana_title')}
                         </h2>
-                        <div style={{ background: 'rgba(255,255,255,0.05)', height: '10px', borderRadius: '5px', overflow: 'hidden', marginBottom: '1rem' }}>
-                            <div style={{ background: 'var(--accent-primary)', width: '65%', height: '100%' }} />
+                        <div className="progress-bar-container">
+                            <div className="progress-bar-fill" style={{ width: '65%' }} />
                         </div>
-                        <p style={{ color: 'var(--text-muted)' }}>65% do nível N5 concluído</p>
+                        <p className="progress-text">65% do nível {userStats.level} concluído</p>
                         <button
-                            className="btn-primary"
-                            style={{ marginTop: '1.5rem' }}
-                            onClick={() => router.push('/game')}
+                            className="btn-primary continue-button"
+                            onClick={() => router.push('/lessons')}
                         >
-                            Continuar Estudando
+                            {t('continue_studying')}
                         </button>
                     </section>
 
                     <PCHandwritingView />
                 </div>
 
-                <aside style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <section className="glass-card" style={{ padding: '1.5rem' }}>
-                        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Trophy size={20} color="var(--accent-secondary)" /> Ranking Global
+                <aside className="side-column">
+                    <section className="glass-card ranking-section">
+                        <h3 className="ranking-title">
+                            <Trophy size={20} color="var(--accent-secondary)" /> {t('global_ranking')}
                         </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div className="ranking-list">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', borderRadius: '8px', background: i === 3 ? 'rgba(255,255,255,0.1)' : 'transparent' }}>
-                                    <span style={{ color: i <= 3 ? 'var(--accent-secondary)' : 'var(--text-muted)' }}>#{i}</span>
-                                    <span>Usuário {i}</span>
-                                    <span style={{ fontWeight: 'bold' }}>{5000 - i * 500}</span>
+                                <div key={i} className={`ranking-item ${i === 3 ? 'active' : ''}`}>
+                                    <span className={`rank-number ${i <= 3 ? 'top' : 'other'}`}>#{i}</span>
+                                    <span>{t('student')} {i}</span>
+                                    <span className="rank-score">{5000 - i * 500}</span>
                                 </div>
                             ))}
                         </div>
                     </section>
 
-                    <section className="glass-card" style={{ padding: '1.5rem' }}>
-                        <h3>Seu Nível: {userStats.level}</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            Faltam 750 XP para o nível N4.
+                    <section className="glass-card level-section">
+                        <h3>{t('level')}: {userStats.level}</h3>
+                        <p className="xp-needed-text">
+                            {t('xp_needed').replace('{xp}', '750').replace('{next}', 'N4')}
                         </p>
-                        <button className="btn-primary" style={{ width: '100%', marginTop: '1rem', background: 'transparent', border: '1px solid var(--accent-primary)' }}>
-                            Ver Conquistas
+                        <button
+                            className="btn-primary achievements-button"
+                            onClick={() => router.push('/lessons')}
+                        >
+                            {t('achievements')}
                         </button>
                     </section>
                 </aside>
             </div>
+
+            {['director', 'teacher'].includes(user?.role) && (
+                <div className="admin-actions">
+                    <button
+                        className="btn-primary btn-admin-panel"
+                        onClick={() => router.push('/school')}
+                    >
+                        {t('school_panel')}
+                    </button>
+                </div>
+            )}
+
+            {user?.role === 'admin' && (
+                <div className="admin-actions">
+                    <button
+                        className="btn-primary btn-admin-panel"
+                        onClick={() => router.push('/admin')}
+                    >
+                        {t('admin_panel')}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

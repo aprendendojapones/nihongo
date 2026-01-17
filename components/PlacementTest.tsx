@@ -1,63 +1,101 @@
 "use client";
 
 import { useState } from 'react';
-import { PLACEMENT_TEST_QUESTIONS, calculateStartingLevel } from '@/lib/placement';
-import styles from './placement.module.css';
+import { Trophy, ArrowRight, Star, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from './TranslationContext';
+import './placement.css';
 
-export default function PlacementTest() {
+interface Question {
+    id: number;
+    text: string;
+    options: string[];
+    correct: number;
+}
+
+const QUESTIONS: Question[] = [
+    { id: 1, text: 'Qual o som de あ?', options: ['a', 'i', 'u', 'e'], correct: 0 },
+    { id: 2, text: 'Qual o som de カ?', options: ['ka', 'ki', 'ku', 'ke'], correct: 0 },
+    { id: 3, text: 'O que significa 先生?', options: ['Estudante', 'Escola', 'Professor', 'Livro'], correct: 2 },
+    { id: 4, text: 'Como se diz "Água" em japonês?', options: ['Mizu', 'Hon', 'Niku', 'Sakana'], correct: 0 },
+    { id: 5, text: 'Qual o kanji para "Sol/Dia"?', options: ['月', '日', '火', '水'], correct: 1 },
+];
+
+export default function PlacementTest({ onComplete }: { onComplete: (level: string) => void }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [score, setScore] = useState(0);
-    const [finished, setFinished] = useState(false);
-    const [assignedLevel, setAssignedLevel] = useState('');
+    const [isFinished, setIsFinished] = useState(false);
+    const { t } = useTranslation();
 
-    const handleAnswer = (answer: string) => {
-        if (answer === PLACEMENT_TEST_QUESTIONS[currentStep].correctAnswer) {
-            setScore(score + 1);
+    const handleAnswer = (index: number) => {
+        if (index === QUESTIONS[currentStep].correct) {
+            setScore(s => s + 1);
         }
 
-        if (currentStep + 1 < PLACEMENT_TEST_QUESTIONS.length) {
-            setCurrentStep(currentStep + 1);
+        if (currentStep < QUESTIONS.length - 1) {
+            setCurrentStep(s => s + 1);
         } else {
-            const level = calculateStartingLevel(score + (answer === PLACEMENT_TEST_QUESTIONS[currentStep].correctAnswer ? 1 : 0), PLACEMENT_TEST_QUESTIONS.length);
-            setAssignedLevel(level);
-            setFinished(true);
+            setIsFinished(true);
         }
     };
 
-    if (finished) {
+    const getLevel = () => {
+        if (score === QUESTIONS.length) return 'N4';
+        if (score >= 3) return 'N5';
+        return 'Basics';
+    };
+
+    if (isFinished) {
+        const level = getLevel();
         return (
-            <div className="glass-card animate-fade-in" style={{ padding: '3rem', textAlign: 'center' }}>
-                <h2 className="gradient-text" style={{ fontSize: '2.5rem' }}>Teste Concluído!</h2>
-                <p style={{ marginTop: '1rem', fontSize: '1.2rem' }}>Seu nível inicial recomendado é:</p>
-                <div style={{ fontSize: '4rem', fontWeight: 'bold', color: 'var(--accent-secondary)', margin: '1rem 0' }}>
-                    {assignedLevel}
+            <div className="placement-container">
+                <div className="glass-card result-card animate-fade-in">
+                    <Trophy size={80} color="var(--accent-secondary)" className="result-icon" />
+                    <h2 className="result-title">{t('test_completed')}!</h2>
+                    <p>{t('recommended_level')}:</p>
+                    <div className="result-level">{level}</div>
+                    <button className="btn-primary" onClick={() => onComplete(level)}>
+                        {t('start_learning')} <ArrowRight size={20} />
+                    </button>
                 </div>
-                <button className="btn-primary" onClick={() => window.location.href = '/dashboard'}>
-                    Começar Estudos
-                </button>
             </div>
         );
     }
 
-    const question = PLACEMENT_TEST_QUESTIONS[currentStep];
+    const question = QUESTIONS[currentStep];
 
     return (
-        <div className="glass-card animate-fade-in" style={{ padding: '3rem', width: '100%', maxWidth: '600px' }}>
-            <div style={{ marginBottom: '2rem', color: 'var(--text-muted)' }}>
-                Questão {currentStep + 1} de {PLACEMENT_TEST_QUESTIONS.length}
+        <div className="placement-container">
+            <header className="placement-header">
+                <h1 className="gradient-text">{t('placement_test')}</h1>
+                <p>{t('placement_test_desc')}</p>
+            </header>
+
+            <div className="glass-card question-card">
+                <h2 className="question-text">{question.text}</h2>
+                <div className="options-grid">
+                    {question.options.map((opt, i) => (
+                        <button
+                            key={i}
+                            className="option-button"
+                            onClick={() => handleAnswer(i)}
+                        >
+                            {opt}
+                        </button>
+                    ))}
+                </div>
             </div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>{question.text}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {question.options.map((option, index) => (
-                    <button
-                        key={index}
-                        className={styles.optionBtn}
-                        onClick={() => handleAnswer(option)}
-                    >
-                        {option}
-                    </button>
-                ))}
-            </div>
+
+            <footer className="placement-footer">
+                <span>{t('question')} {currentStep + 1} / {QUESTIONS.length}</span>
+                <div className="progress-dots">
+                    {QUESTIONS.map((_, i) => (
+                        <div
+                            key={i}
+                            className={`progress-dot ${i <= currentStep ? 'active' : 'inactive'}`}
+                        />
+                    ))}
+                </div>
+            </footer>
         </div>
     );
 }

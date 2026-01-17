@@ -1,0 +1,162 @@
+.game-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.game-header h1 {
+    font-size: 1.5rem;
+}
+
+.game-progress-container {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin: 0 2rem;
+    overflow: hidden;
+}
+
+.game-progress-fill {
+    height: 100%;
+    background: var(--accent-primary);
+    transition: width 0.3s ease;
+}
+
+.game-stats {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.game-card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+}
+
+.question-label {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.question-main {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+}
+
+.question-sub {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.game-input-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.game-input {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.5rem;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--glass-border);
+    border-radius: 12px;
+    color: white;
+}
+
+.game-input:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+}
+
+.feedback-message {
+    margin-top: 1.5rem;
+    font-weight: bold;
+}
+
+.feedback-correct {
+    color: var(--accent-primary);
+}
+
+.feedback-wrong {
+    color: #ff4e4e;
+}
+
+.game-footer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hint-button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.game-completion-card {
+    text-align: center;
+    padding: 4rem;
+}
+
+.completion-icon {
+    margin-bottom: 2rem;
+}
+
+.completion-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.completion-stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.completion-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.completion-stat-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.completion-stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.completion-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}

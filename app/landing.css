@@ -1,0 +1,61 @@
+.landing-main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.landing-content {
+    text-align: center;
+    max-width: 800px;
+}
+
+.landing-title {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    margin-bottom: 1rem;
+}
+
+.landing-desc {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.landing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+}
+
+.landing-card {
+    padding: 2rem;
+    cursor: pointer;
+}
+
+.landing-card h3 {
+    margin-bottom: 0.5rem;
+}
+
+.landing-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.landing-actions {
+    margin-top: 4rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-landing {
+    font-size: 1.1rem;
+    padding: 16px 48px;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--accent-primary);
+}

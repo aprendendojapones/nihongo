@@ -3,92 +3,72 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useTranslation } from "@/components/TranslationContext";
+import './landing.css';
 
 export default function Home() {
     const router = useRouter();
     const { data: session } = useSession();
+    const { t } = useTranslation();
 
     return (
-        <main style={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '2rem'
-        }}>
-            <div className="animate-fade-in" style={{ textAlign: 'center', maxWidth: '800px' }}>
-                <h1 className="gradient-text" style={{ fontSize: 'clamp(2.5rem, 8vw, 4rem)', marginBottom: '1rem' }}>
+        <main className="landing-main">
+            <div className="landing-content animate-fade-in">
+                <h1 className="gradient-text landing-title">
                     日本語 Master
                 </h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '2rem' }}>
-                    Aprenda Japonês do N5 ao N1 com gamificação e prática de escrita em tempo real.
+                <p className="landing-desc">
+                    {t('hero_desc')}
                 </p>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                    gap: '1.5rem',
-                    marginTop: '3rem'
-                }}>
+                <div className="landing-grid">
                     <div
-                        className="glass-card"
-                        style={{ padding: '2rem', cursor: 'pointer' }}
+                        className="glass-card landing-card"
                         onClick={() => router.push('/dashboard')}
                     >
-                        <h3>Níveis JLPT</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            Conteúdo estruturado do básico ao avançado.
-                        </p>
+                        <h3>{t('jlpt_levels')}</h3>
+                        <p>{t('jlpt_levels_desc')}</p>
                     </div>
 
                     <div
-                        className="glass-card"
-                        style={{ padding: '2rem', cursor: 'pointer' }}
+                        className="glass-card landing-card"
                         onClick={() => router.push('/game')}
                     >
-                        <h3>Modo Game</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            Aprenda brincando e suba no ranking global.
-                        </p>
+                        <h3>{t('game_mode')}</h3>
+                        <p>{t('game_mode_desc')}</p>
                     </div>
 
                     <div
-                        className="glass-card"
-                        style={{ padding: '2rem', cursor: 'pointer' }}
+                        className="glass-card landing-card"
                         onClick={() => router.push('/dashboard')}
                     >
-                        <h3>Escrita Real-time</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            Use seu celular como tablet de escrita para o PC.
-                        </p>
+                        <h3>{t('realtime_writing')}</h3>
+                        <p>{t('realtime_writing_desc')}</p>
                     </div>
                 </div>
 
-                <div style={{ marginTop: '4rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <div className="landing-actions">
                     {session ? (
                         <>
                             <button
-                                className="btn-primary"
-                                style={{ fontSize: '1.1rem', padding: '16px 48px' }}
+                                className="btn-primary btn-landing"
                                 onClick={() => router.push('/dashboard')}
                             >
-                                Ir para o Painel
+                                {t('go_to_dashboard')}
                             </button>
                             <button
-                                className="btn-primary"
-                                style={{ fontSize: '1.1rem', padding: '16px 48px', background: 'transparent', border: '1px solid var(--accent-primary)' }}
+                                className="btn-primary btn-landing btn-outline"
                                 onClick={() => signOut()}
                             >
-                                Sair
+                                {t('logout')}
                             </button>
                         </>
                     ) : (
                         <button
-                            className="btn-primary"
-                            style={{ fontSize: '1.1rem', padding: '16px 48px' }}
+                            className="btn-primary btn-landing"
                             onClick={() => signIn('google')}
                         >
-                            Entrar com Google
+                            {t('login')}
                         </button>
                     )}
                 </div>

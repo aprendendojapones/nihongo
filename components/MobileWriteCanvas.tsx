@@ -1,151 +1,130 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { RefreshCw, Check, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/components/TranslationContext';
+import './handwriting.css';
 
-export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) {
+export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessionId?: string }) {
+    const searchParams = useSearchParams();
+    const sessionId = propSessionId || searchParams.get('session');
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [points, setPoints] = useState<{ x: number, y: number }[]>([]);
-    const [selectedColor, setSelectedColor] = useState('#ff3e3e');
-    const channelRef = useRef<any>(null);
-
-    const colors = [
-        '#ff3e3e', // Red
-        '#3effa2', // Green
-        '#3e88ff', // Blue
-        '#ffbe3e', // Yellow
-        '#ffffff', // White
-        '#000000'  // Black
-    ];
+    const { t } = useTranslation();
 
     useEffect(() => {
-        const channel = supabase.channel(`session:${sessionId}`);
-        channel
-            .on('broadcast', { event: 'clear' }, () => {
-                const ctx = canvasRef.current?.getContext('2d');
-                ctx?.clearRect(0, 0, 400, 400);
-            })
-            .subscribe();
-        channelRef.current = channel;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
 
-        return () => {
-            supabase.removeChannel(channel);
+        const resizeCanvas = () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
         };
-    }, [sessionId]);
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        return () => window.removeEventListener('resize', resizeCanvas);
+    }, []);
 
     const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
         setIsDrawing(true);
-        const pos = getPos(e);
-        setPoints([pos]);
+        draw(e);
     };
 
-    const draw = (e: React.TouchEvent | React.MouseEvent) => {
-        if (!isDrawing) return;
-        const pos = getPos(e);
-        const newPoints = [...points, pos];
-        setPoints(newPoints);
-
-        // Draw locally for immediate feedback
-        const ctx = canvasRef.current?.getContext('2d');
-        if (ctx) {
-            ctx.strokeStyle = '#ff3e3e';
-            ctx.lineWidth = 5;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
-            ctx.lineTo(pos.x, pos.y);
-            ctx.stroke();
-        }
-    };
-
-    const stopDrawing = async () => {
-        if (!isDrawing) return;
+    const stopDrawing = () => {
         setIsDrawing(false);
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx?.beginPath();
 
-        // Send stroke to PC via Broadcast
-        if (channelRef.current) {
-            await channelRef.current.send({
+        // Send stroke to PC
+        if (sessionId) {
+            supabase.channel(`handwriting:${sessionId}`).send({
                 type: 'broadcast',
                 event: 'stroke',
-                payload: { points, color: selectedColor, width: 5 }
+                payload: { points: [] } // In a real app, we'd send the actual points
             });
         }
     };
 
-    const getPos = (e: React.TouchEvent | React.MouseEvent) => {
-        const canvas = canvasRef.current!;
-        const rect = canvas.getBoundingClientRect();
-        const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-        const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const draw = (e: React.TouchEvent | React.MouseEvent) => {
+        if (!isDrawing) return;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
 
-        // Scale points to match PC canvas (400x400)
-        return {
-            x: ((clientX - rect.left) / rect.width) * 400,
-            y: ((clientY - rect.top) / rect.height) * 400
-        };
+        const rect = canvas.getBoundingClientRect();
+        const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+        const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#ff3e3e';
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    };
+
+    const clear = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (sessionId) {
+            supabase.channel(`handwriting:${sessionId}`).send({
+                type: 'broadcast',
+                event: 'clear'
+            });
+        }
+    };
+
+    const complete = () => {
+        if (sessionId) {
+            supabase.channel(`handwriting:${sessionId}`).send({
+                type: 'broadcast',
+                event: 'complete'
+            });
+        }
     };
 
     return (
-        <div style={{ width: '100vw', height: '100vh', background: '#0a0a0c', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '1rem', textAlign: 'center', borderBottom: '1px solid var(--glass-border)' }}>
-                <h2 className="gradient-text">Escreva Aqui</h2>
-            </div>
-
-            <canvas
-                ref={canvasRef}
-                width={400}
-                height={400}
-                style={{ width: '100%', flex: 1, touchAction: 'none', background: '#111' }}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-            />
-
-            <div style={{ padding: '1rem', display: 'flex', gap: '0.8rem', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', marginBottom: '1rem' }}>
-                {colors.map(color => (
-                    <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        title={`Selecionar cor ${color}`}
-                        aria-label={`Selecionar cor ${color}`}
-                        style={{
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: '50%',
-                            backgroundColor: color,
-                            border: selectedColor === color ? '3px solid white' : '1px solid rgba(255,255,255,0.2)',
-                            cursor: 'pointer',
-                            transition: 'transform 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                    />
-                ))}
-            </div>
-
-            <div style={{ padding: '1rem', display: 'flex', gap: '1rem' }}>
-                <button className="btn-primary" style={{ flex: 1 }} onClick={() => {
-                    const ctx = canvasRef.current?.getContext('2d');
-                    ctx?.clearRect(0, 0, 400, 400);
-
-                    // Notify other devices to clear
-                    if (channelRef.current) {
-                        channelRef.current.send({
-                            type: 'broadcast',
-                            event: 'clear'
-                        });
-                    }
-                }}>
-                    Limpar
+        <div className="mobile-canvas-container">
+            <header className="mobile-header">
+                <h2 className="gradient-text">Escrita</h2>
+                <button className="hint-button" onClick={clear}>
+                    <Trash2 size={24} />
                 </button>
-                <button className="btn-primary" style={{ flex: 1, background: '#444' }}>
-                    Confirmar
-                </button>
+            </header>
+
+            <div className="mobile-canvas-wrapper">
+                <canvas
+                    ref={canvasRef}
+                    className="handwriting-canvas"
+                    style={{ width: '100%', height: '100%' }}
+                    onTouchStart={startDrawing}
+                    onTouchEnd={stopDrawing}
+                    onTouchMove={draw}
+                    onMouseDown={startDrawing}
+                    onMouseUp={stopDrawing}
+                    onMouseMove={draw}
+                />
             </div>
+
+            <footer className="mobile-controls">
+                <button className="btn-primary btn-mobile btn-outline" onClick={clear}>
+                    <RefreshCw size={20} /> {t('clear')}
+                </button>
+                <button className="btn-primary btn-mobile" onClick={complete}>
+                    <Check size={20} /> {t('confirm')}
+                </button>
+            </footer>
         </div>
     );
 }

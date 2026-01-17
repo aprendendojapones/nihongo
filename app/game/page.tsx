@@ -1,91 +1,195 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Trophy, ArrowLeft, RefreshCw } from 'lucide-react';
-import Link from 'next/link';
-import canvasConfetti from 'canvas-confetti';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Trophy, ArrowLeft, HelpCircle, CheckCircle2, XCircle, Star, RefreshCw } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
+import { JAPANESE_DATA } from '@/data/japanese';
+import PCHandwritingView from '@/components/PCHandwritingView';
+import { useTranslation } from '@/components/TranslationContext';
+import './game.css';
 
-const HIRAGANA_DATA = [
-    { char: 'あ', romaji: 'a' }, { char: 'い', romaji: 'i' }, { char: 'う', romaji: 'u' },
-    { char: 'え', romaji: 'e' }, { char: 'お', romaji: 'o' },
-    { char: 'か', romaji: 'ka' }, { char: 'き', romaji: 'ki' }, { char: 'く', romaji: 'ku' },
-    { char: 'け', romaji: 'ke' }, { char: 'こ', romaji: 'ko' }
-];
+function GameContent() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const { data: session } = useSession();
+    const { t } = useTranslation();
+    const user = session?.user as any;
 
-export default function GameMode() {
+    const levelId = searchParams.get('level') || 'katakana';
+    const isTest = searchParams.get('mode') === 'test';
+
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [inputValue, setInputValue] = useState('');
-    const [score, setScore] = useState(0);
+    const [userInput, setUserInput] = useState('');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [score, setScore] = useState(0);
+    const [isFinished, setIsFinished] = useState(false);
+    const [showHint, setShowHint] = useState(false);
 
-    const currentChar = HIRAGANA_DATA[currentIndex];
+    const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+    const currentItem = levelData[currentIndex];
 
-    const handleCheck = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (inputValue.toLowerCase() === currentChar.romaji) {
-            setScore(s => s + 100);
-            setFeedback('correct');
-            canvasConfetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ff3e3e', '#ffd700', '#ffffff']
-            });
+        if (feedback) return;
 
-            setTimeout(() => {
-                setFeedback(null);
-                setInputValue('');
-                setCurrentIndex((prev) => (prev + 1) % HIRAGANA_DATA.length);
-            }, 1000);
+        const isCorrect = userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase();
+
+        if (isCorrect) {
+            setFeedback('correct');
+            setScore(s => s + 10);
+            if (currentIndex === levelData.length - 1) {
+                setTimeout(finishGame, 1000);
+            } else {
+                setTimeout(() => {
+                    setCurrentIndex(i => i + 1);
+                    setUserInput('');
+                    setFeedback(null);
+                    setShowHint(false);
+                }, 1000);
+            }
         } else {
             setFeedback('wrong');
-            setTimeout(() => setFeedback(null), 500);
+            setTimeout(() => setFeedback(null), 1000);
         }
     };
 
+    const finishGame = async () => {
+        setIsFinished(true);
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#3effa2', '#ff3e3e', '#ffffff']
+        });
+
+        if (user) {
+            const xpGained = score + (isTest ? 500 : 100);
+            await supabase.rpc('increment_xp', { user_id: user.id, amount: xpGained });
+
+            if (isTest && score >= levelData.length * 8) {
+                const { data: progress } = await supabase
+                    .from('user_progress')
+                    .upsert({
+                        user_id: user.id,
+                        lesson_id: `${levelId}_test`,
+                        completed: true,
+                        score: score
+                    });
+            } else {
+                await supabase
+                    .from('user_progress')
+                    .upsert({
+                        user_id: user.id,
+                        lesson_id: levelId,
+                        completed: true,
+                        score: score
+                    });
+            }
+        }
+    };
+
+    if (isFinished) {
+        return (
+            <div className="game-container">
+                <div className="glass-card game-completion-card animate-fade-in">
+                    <Trophy size={80} color="var(--accent-secondary)" className="completion-icon" />
+                    <h1 className="gradient-text completion-title">{t('congratulations')}!</h1>
+                    <p>{t('level_completed').replace('{level}', levelId)}</p>
+
+                    <div className="completion-stats">
+                        <div className="completion-stat-item">
+                            <span className="completion-stat-label">Score</span>
+                            <span className="completion-stat-value">{score}</span>
+                        </div>
+                        <div className="completion-stat-item">
+                            <span className="completion-stat-label">XP</span>
+                            <span className="completion-stat-value">+{score + (isTest ? 500 : 100)}</span>
+                        </div>
+                    </div>
+
+                    <div className="completion-actions">
+                        <button className="btn-primary" onClick={() => router.push('/lessons')}>
+                            {t('back_to_lessons')}
+                        </button>
+                        <button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent-primary)' }} onClick={() => window.location.reload()}>
+                            <RefreshCw size={18} /> {t('play_again')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div style={{ minHeight: '100vh', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <header style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem' }}>
-                <Link href="/dashboard" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-                    <ArrowLeft size={20} /> Voltar
-                </Link>
-                <div className="glass-card" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Trophy size={20} color="var(--accent-secondary)" />
-                    <span style={{ fontWeight: 'bold' }}>{score} XP</span>
+        <div className="game-container">
+            <header className="game-header">
+                <button className="hint-button" onClick={() => router.back()}>
+                    <ArrowLeft size={24} />
+                </button>
+                <div className="game-progress-container">
+                    <div
+                        className="game-progress-fill"
+                        style={{ width: `${(currentIndex / levelData.length) * 100}%` }}
+                    />
+                </div>
+                <div className="game-stats">
+                    <Star size={20} color="var(--accent-secondary)" />
+                    <span style={{ fontWeight: 'bold' }}>{score}</span>
                 </div>
             </header>
 
-            <main className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '4rem 2rem', textAlign: 'center', position: 'relative' }}>
-                <div style={{ fontSize: '8rem', marginBottom: '2rem', fontFamily: 'var(--font-jp)' }} className={feedback === 'correct' ? 'animate-fade-in' : ''}>
-                    {currentChar.char}
-                </div>
+            <main className="glass-card game-card">
+                <p className="question-label">{isTest ? t('test_mode') : t('practice_mode')}</p>
+                <h2 className="question-main">{currentItem.char}</h2>
+                {showHint && <p className="question-sub">{currentItem.romaji}</p>}
 
-                <form onSubmit={handleCheck}>
+                {currentItem.type === 'kanji' && (
+                    <div style={{ width: '100%', marginBottom: '2rem' }}>
+                        <PCHandwritingView />
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="game-input-container">
                     <input
                         type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        placeholder="Digite o romaji..."
                         autoFocus
-                        style={{
-                            width: '100%',
-                            padding: '1rem',
-                            fontSize: '1.2rem',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: `2px solid ${feedback === 'correct' ? '#4caf50' : feedback === 'wrong' ? '#f44336' : 'var(--glass-border)'}`,
-                            borderRadius: '12px',
-                            color: 'white',
-                            textAlign: 'center',
-                            outline: 'none',
-                            transition: 'all 0.3s ease'
-                        }}
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder={t('type_romaji')}
+                        className="game-input"
+                        disabled={!!feedback}
                     />
                 </form>
 
-                <p style={{ marginTop: '2rem', color: 'var(--text-muted)' }}>
-                    Escreva a pronúncia em romaji (ex: a, ka, sa)
-                </p>
+                {feedback && (
+                    <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
+                        {feedback === 'correct' ? (
+                            <><CheckCircle2 size={24} /> {t('correct')}!</>
+                        ) : (
+                            <><XCircle size={24} /> {t('try_again')}</>
+                        )}
+                    </div>
+                )}
             </main>
+
+            <footer className="game-footer">
+                <button className="hint-button" onClick={() => setShowHint(!showHint)}>
+                    <HelpCircle size={20} /> {t('hint')}
+                </button>
+                <p style={{ color: 'var(--text-muted)' }}>{currentIndex + 1} / {levelData.length}</p>
+            </footer>
         </div>
+    );
+}
+
+export default function GamePage() {
+    const { t } = useTranslation();
+    return (
+        <Suspense fallback={<div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>}>
+            <GameContent />
+        </Suspense>
     );
 }
