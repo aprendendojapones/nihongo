@@ -22,6 +22,22 @@ const Sidebar = () => {
     const { data: session, update } = useSession();
     const { t, lang, setLang } = useTranslation();
     const user = session?.user as any;
+    const [directRole, setDirectRole] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        const fetchRole = async () => {
+            if (session?.user?.email) {
+                const { supabase } = await import('@/lib/supabase');
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('email', session.user.email)
+                    .single();
+                setDirectRole(data?.role || 'null');
+            }
+        };
+        fetchRole();
+    }, [session?.user?.email]);
 
     if (!session) return null;
 
@@ -85,12 +101,13 @@ const Sidebar = () => {
 
             <div className="sidebar-footer">
                 <div style={{ fontSize: '10px', color: '#666', padding: '0 1rem', marginBottom: '0.5rem' }}>
-                    Debug Role: {user?.role || 'undefined'}
+                    <div>Debug Role: {user?.role || 'undefined'}</div>
+                    <div>Direct Role: {directRole || 'loading...'}</div>
                     <button
                         onClick={() => update()}
-                        style={{ marginLeft: '10px', background: 'none', border: '1px solid #444', color: '#888', borderRadius: '4px', cursor: 'pointer', fontSize: '10px' }}
+                        style={{ marginTop: '5px', background: 'none', border: '1px solid #444', color: '#888', borderRadius: '4px', cursor: 'pointer', fontSize: '10px' }}
                     >
-                        Refresh
+                        Refresh Session
                     </button>
                 </div>
                 <div className="lang-switcher">
