@@ -32,7 +32,6 @@ export default function ProfilePage() {
             if (user?.id) {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .from('profiles')
                     .select('*, schools(name)')
                     .eq('id', user.id)
                     .single();
