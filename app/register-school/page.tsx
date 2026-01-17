@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
@@ -9,7 +9,7 @@ import './register-school.css';
 
 export default function RegisterSchool() {
     const router = useRouter();
-    const searchParams = useSearchParams();
+    const { data: session } = useSession();
     const { data: session } = useSession();
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
