@@ -11,7 +11,12 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
 
     useEffect(() => {
         const channel = supabase.channel(`session:${sessionId}`);
-        channel.subscribe();
+        channel
+            .on('broadcast', { event: 'clear' }, () => {
+                const ctx = canvasRef.current?.getContext('2d');
+                ctx?.clearRect(0, 0, 400, 400);
+            })
+            .subscribe();
         channelRef.current = channel;
 
         return () => {
@@ -94,6 +99,14 @@ export default function MobileWriteCanvas({ sessionId }: { sessionId: string }) 
                 <button className="btn-primary" style={{ flex: 1 }} onClick={() => {
                     const ctx = canvasRef.current?.getContext('2d');
                     ctx?.clearRect(0, 0, 400, 400);
+
+                    // Notify other devices to clear
+                    if (channelRef.current) {
+                        channelRef.current.send({
+                            type: 'broadcast',
+                            event: 'clear'
+                        });
+                    }
                 }}>
                     Limpar
                 </button>

@@ -10,6 +10,7 @@ export default function PCHandwritingView() {
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [currentStroke, setCurrentStroke] = useState<any>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const channelRef = useRef<any>(null);
 
     useEffect(() => {
         const id = uuidv4();
@@ -26,7 +27,13 @@ export default function PCHandwritingView() {
             .on('broadcast', { event: 'stroke' }, (payload) => {
                 setCurrentStroke(payload.payload);
             })
+            .on('broadcast', { event: 'clear' }, () => {
+                const ctx = canvasRef.current?.getContext('2d');
+                ctx?.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+            })
             .subscribe();
+
+        channelRef.current = channel;
 
         return () => {
             supabase.removeChannel(channel);
@@ -60,6 +67,14 @@ export default function PCHandwritingView() {
         if (canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d');
             ctx?.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+            // Notify other devices to clear
+            if (channelRef.current) {
+                channelRef.current.send({
+                    type: 'broadcast',
+                    event: 'clear'
+                });
+            }
         }
     };
 
