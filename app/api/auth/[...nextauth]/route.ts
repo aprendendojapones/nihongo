@@ -55,9 +55,19 @@ const handler = NextAuth({
                 return true;
             }
         },
-        async session({ session, token }) {
-            if (session.user?.email) {
-                // Use service role key to ensure we can read the profile regardless of RLS
+        async jwt({ token, user, trigger, session }) {
+            if (user) {
+                token.id = user.id;
+                token.email = user.email;
+            }
+
+            // Update token if session is updated
+            if (trigger === "update" && session) {
+                return { ...token, ...session.user };
+            }
+
+            // Try to fetch profile data to persist in token
+            if (token.email && !token.role) {
                 const supabaseAdmin = createClient(
                     process.env.NEXT_PUBLIC_SUPABASE_URL!,
                     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -66,16 +76,29 @@ const handler = NextAuth({
                 const { data } = await supabaseAdmin
                     .from('profiles')
                     .select('*, schools(name)')
-                    .eq('email', session.user.email)
+                    .eq('email', token.email)
                     .single();
 
                 if (data) {
-                    session.user = {
-                        ...session.user,
-                        ...data,
-                        schoolName: data.schools?.name
-                    };
+                    token.role = data.role;
+                    token.schoolName = data.schools?.name;
+                    token.full_name = data.full_name;
+                    token.id = data.id;
                 }
+            }
+
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user) {
+                // Pass data from token to session
+                session.user = {
+                    ...session.user,
+                    id: token.id as string,
+                    role: token.role as string,
+                    schoolName: token.schoolName as string,
+                    full_name: token.full_name as string
+                };
             }
             return session;
         },
