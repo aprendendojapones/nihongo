@@ -171,7 +171,21 @@ export default function AdminDashboard() {
                             <button className="btn-primary" style={{ background: 'transparent', border: '1px solid #444' }} onClick={() => setInvitationLink('')}>{t('generate_another')}</button>
                         </div>
                     ) : (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('invite_desc')}</p>
+                        <>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>{t('invite_desc')}</p>
+                            <button
+                                className="btn-primary"
+                                onClick={() => {
+                                    const baseUrl = window.location.origin;
+                                    const inviteUrl = `${baseUrl}/register-school`;
+                                    setInvitationLink(inviteUrl);
+                                    setCopied(false);
+                                }}
+                                style={{ width: '100%', marginBottom: '0.5rem' }}
+                            >
+                                Gerar Convite para Registrar Escola
+                            </button>
+                        </>
                     )}
                 </section>
 
