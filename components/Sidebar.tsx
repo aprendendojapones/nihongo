@@ -23,6 +23,7 @@ const Sidebar = () => {
     const { t, lang, setLang } = useTranslation();
     const user = session?.user as any;
     const [isExpanded, setIsExpanded] = React.useState<boolean>(true);
+    const [directRole, setDirectRole] = React.useState<string | null>(null);
 
     // Load sidebar state from localStorage
     React.useEffect(() => {
@@ -44,9 +45,25 @@ const Sidebar = () => {
         window.dispatchEvent(new Event('sidebarToggle'));
     };
 
+    // Fetch role from database
+    React.useEffect(() => {
+        const fetchRole = async () => {
+            if (session?.user?.email) {
+                const { supabase } = await import('@/lib/supabase');
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('email', session.user.email)
+                    .single();
+                setDirectRole(data?.role || null);
+            }
+        };
+        fetchRole();
+    }, [session?.user?.email]);
+
     if (!session) return null;
 
-    const effectiveRole = user?.role;
+    const effectiveRole = user?.role || directRole;
 
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
