@@ -23,6 +23,23 @@ const Sidebar = () => {
     const { t, lang, setLang } = useTranslation();
     const user = session?.user as any;
     const [dbRole, setDbRole] = React.useState<string | null>(null);
+    const [isExpanded, setIsExpanded] = React.useState<boolean>(true);
+
+    // Load sidebar state from localStorage
+    React.useEffect(() => {
+        const savedState = localStorage.getItem('sidebarExpanded');
+        if (savedState !== null) {
+            setIsExpanded(savedState === 'true');
+        }
+    }, []);
+
+    // Persist sidebar state to localStorage
+    const toggleSidebar = () => {
+        const newState = !isExpanded;
+        setIsExpanded(newState);
+        localStorage.setItem('sidebarExpanded', String(newState));
+        window.dispatchEvent(new Event('sidebarToggle'));
+    };
 
     // Fetch role from database
     React.useEffect(() => {
@@ -36,6 +53,7 @@ const Sidebar = () => {
                     .single();
                 if (data?.role) {
                     setDbRole(data.role);
+                    console.log('Sidebar - Fetched role from DB:', data.role);
                 }
             }
         };
@@ -45,7 +63,6 @@ const Sidebar = () => {
     if (!session) return null;
 
     const isHome = pathname === '/';
-    const isExpanded = isHome;
 
     // Use role from session or database
     const effectiveRole = user?.role || dbRole;
@@ -75,6 +92,13 @@ const Sidebar = () => {
                     <BookOpen size={32} />
                 </div>
                 <span className="logo-text gradient-text">Nihongo Master</span>
+                <button
+                    onClick={toggleSidebar}
+                    className="toggle-btn"
+                    title={isExpanded ? 'Minimizar' : 'Expandir'}
+                >
+                    {isExpanded ? '◀' : '▶'}
+                </button>
             </div>
 
             <nav className="sidebar-nav">
