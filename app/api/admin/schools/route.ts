@@ -11,9 +11,15 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+        console.error('Error: SUPABASE_SERVICE_ROLE_KEY is missing');
+        return NextResponse.json({ error: 'Server Configuration Error: Missing Service Role Key' }, { status: 500 });
+    }
+
     const supabaseAdmin = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        serviceRoleKey
     );
 
     // Robust Admin Check: If role is not in session, check DB
