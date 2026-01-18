@@ -455,12 +455,19 @@ export default function AdminPage() {
                                 {filteredAndSortedUsers.map((user) => (
                                     <tr key={user.id} style={{ background: user.is_favorite ? '#ff4d4d10' : 'transparent' }}>
                                         <td>
-                                            <button
-                                                onClick={() => toggleFavorite(user.id, user.is_favorite || false)}
-                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: user.is_favorite ? '#ffd700' : '#555' }}
-                                            >
-                                                <i className={`fa${user.is_favorite ? 's' : 'r'} fa-star`}></i>
-                                            </button>
+                                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={user.is_favorite || false}
+                                                    onChange={() => toggleFavorite(user.id, user.is_favorite || false)}
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        width: '18px',
+                                                        height: '18px',
+                                                        accentColor: '#ffd700'
+                                                    }}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
                                             <div className="user-info">
