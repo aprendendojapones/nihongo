@@ -35,7 +35,7 @@ const handler = NextAuth({
 
                 if (error && error.code === 'PGRST116') {
                     // User doesn't exist, create profile
-                    const isSuperAdmin = user.email === 'maicontsuda@gmail.com';
+                    const isSuperAdmin = user.email === 'maicontsuda@gmail.com.br';
                     const { error: insertError } = await supabaseAdmin
                         .from('profiles')
                         .insert({

@@ -22,11 +22,33 @@ const Sidebar = () => {
     const { data: session, update } = useSession();
     const { t, lang, setLang } = useTranslation();
     const user = session?.user as any;
+    const [dbRole, setDbRole] = React.useState<string | null>(null);
+
+    // Fetch role from database
+    React.useEffect(() => {
+        const fetchRole = async () => {
+            if (session?.user?.email) {
+                const { supabase } = await import('@/lib/supabase');
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('email', session.user.email)
+                    .single();
+                if (data?.role) {
+                    setDbRole(data.role);
+                }
+            }
+        };
+        fetchRole();
+    }, [session?.user?.email]);
 
     if (!session) return null;
 
     const isHome = pathname === '/';
     const isExpanded = isHome;
+
+    // Use role from session or database
+    const effectiveRole = user?.role || dbRole;
 
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
@@ -37,10 +59,10 @@ const Sidebar = () => {
     ];
 
     const roleItems = [];
-    if (['director', 'teacher'].includes(user?.role)) {
+    if (['director', 'teacher'].includes(effectiveRole)) {
         roleItems.push({ id: 'school', icon: School, label: t('school_panel'), href: '/school' });
     }
-    if (user?.role === 'admin') {
+    if (effectiveRole === 'admin') {
         roleItems.push({ id: 'admin', icon: Settings, label: t('admin_panel'), href: '/admin' });
     }
 
