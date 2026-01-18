@@ -95,7 +95,8 @@ export default function ProfilePage() {
             if (!error) {
                 alert('Perfil atualizado com sucesso!');
             } else {
-                alert('Erro ao atualizar perfil.');
+                console.error('Error updating profile:', error);
+                alert(`Erro ao atualizar perfil: ${error.message}`);
             }
         }
         setSaving(false);
