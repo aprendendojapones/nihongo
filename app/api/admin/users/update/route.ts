@@ -38,15 +38,19 @@ export async function PATCH(request: Request) {
 
     try {
         const body = await request.json();
-        const { userId, is_favorite } = body;
+        const { userId, is_favorite, level } = body;
 
         if (!userId) {
             return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
 
+        const updates: any = {};
+        if (is_favorite !== undefined) updates.is_favorite = is_favorite;
+        if (level !== undefined) updates.level = level;
+
         const { error } = await supabaseAdmin
             .from('profiles')
-            .update({ is_favorite })
+            .update(updates)
             .eq('id', userId);
 
         if (error) throw error;
