@@ -491,7 +491,7 @@ export default function AdminPage() {
                                             <button
                                                 className="btn-icon"
                                                 title="Enviar Mensagem Privada"
-                                                onClick={() => openMsgModal(u)}
+                                                onClick={() => openMsgModal(user)}
                                             >
                                                 <Users size={18} />
                                             </button>
@@ -501,6 +501,7 @@ export default function AdminPage() {
                             </tbody>
                         </table>
                     </div>
+                </div>
             </section>
 
             {showMsgModal && (
