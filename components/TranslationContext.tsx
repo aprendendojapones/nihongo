@@ -9,7 +9,7 @@ type Language = 'pt' | 'jp' | 'en' | 'fil' | 'zh' | 'hi';
 interface TranslationContextType {
     lang: Language;
     setLang: (lang: Language) => void;
-    t: (key: string) => string;
+    t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 const translations: Record<Language, Record<string, string>> = {
@@ -359,8 +359,16 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         }
     };
 
-    const t = (key: string) => {
-        return translations[lang][key] || translations['en'][key] || key;
+    const t = (key: string, params?: Record<string, string | number>) => {
+        let text = translations[lang][key] || translations['en'][key] || key;
+
+        if (params) {
+            Object.entries(params).forEach(([key, value]) => {
+                text = text.replace(`{${key}}`, String(value));
+            });
+        }
+
+        return text;
     };
 
     return (
