@@ -61,8 +61,14 @@ export default function AdminDashboard() {
     }, [session, status, user]);
 
     const fetchSchools = async () => {
-        const { data } = await supabase.from('schools').select('*, profiles(full_name)');
-        if (data) setSchools(data);
+        try {
+            const response = await fetch('/api/admin/schools');
+            if (!response.ok) throw new Error('Failed to fetch schools');
+            const data = await response.json();
+            setSchools(data);
+        } catch (error) {
+            console.error('Error fetching schools:', error);
+        }
     };
 
     const fetchUsers = async () => {

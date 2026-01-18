@@ -30,30 +30,15 @@ export async function GET() {
     }
 
     try {
-        const { data: profiles, error } = await supabaseAdmin
-            .from('profiles')
-            .select('*')
-            .order('created_at', { ascending: false });
+        const { data: schools, error } = await supabaseAdmin
+            .from('schools')
+            .select('*, profiles(full_name)');
 
         if (error) throw error;
 
-        // Fetch school names manually if needed, or use a join if foreign keys are set up correctly
-        // Since we have the service role, we can just do a join if we want, but let's stick to the previous logic or improve it.
-        // Let's try to fetch schools as well to be efficient.
-        const { data: schools } = await supabaseAdmin
-            .from('schools')
-            .select('id, name');
-
-        const schoolMap = new Map(schools?.map((s: any) => [s.id, s.name]));
-
-        const profilesWithSchool = profiles.map(profile => ({
-            ...profile,
-            schools: profile.school_id ? { name: schoolMap.get(profile.school_id) } : null
-        }));
-
-        return NextResponse.json(profilesWithSchool);
+        return NextResponse.json(schools);
     } catch (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching schools:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
