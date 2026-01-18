@@ -39,31 +39,9 @@ export default function AdminDashboard() {
     const fetchUsers = async () => {
         const { data } = await supabase
             .from('profiles')
-            .select('*');
-
-        if (error) {
-            console.error('Error fetching users:', error);
-            return;
-        }
-
-        if (data) {
-            console.log('Fetched users:', data);
-            // Manually fetch school names for users with school_id
-            const usersWithSchools = await Promise.all(
-                data.map(async (user) => {
-                    if (user.school_id) {
-                        const { data: school } = await supabase
-                            .from('schools')
-                            .select('name')
-                            .eq('id', user.school_id)
-                            .single();
-                        return { ...user, schools: school };
-                    }
-                    return { ...user, schools: null };
-                })
-            );
-            setUsersList(usersWithSchools);
-        }
+            .select('*, schools(name)')
+            .order('created_at', { ascending: false });
+        if (data) setUsersList(data);
     };
 
     const createSchool = async () => {
