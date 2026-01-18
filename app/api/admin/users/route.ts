@@ -48,7 +48,6 @@ export async function GET() {
         const { data: profiles, error } = await supabaseAdmin
             .from('profiles')
             .select('*')
-            .order('is_favorite', { ascending: false })
             .order('created_at', { ascending: false });
 
         if (error) throw error;
