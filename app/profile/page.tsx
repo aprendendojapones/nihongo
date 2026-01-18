@@ -77,7 +77,7 @@ export default function ProfilePage() {
         e.preventDefault();
         setSaving(true);
 
-        if (user?.id) {
+        if (user?.email) {
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -87,10 +87,9 @@ export default function ProfilePage() {
                     address: formData.address,
                     phone_public: formData.phone_public,
                     address_public: formData.address_public,
-                    language_pref: formData.language_pref,
-                    updated_at: new Date().toISOString()
+                    language_pref: formData.language_pref
                 })
-                .eq('id', user.id);
+                .eq('email', user.email);
 
             if (!error) {
                 alert('Perfil atualizado com sucesso!');
