@@ -37,7 +37,7 @@ export default function AdminDashboard() {
     };
 
     const fetchUsers = async () => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('profiles')
             .select('*');
 
