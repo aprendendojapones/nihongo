@@ -109,6 +109,54 @@ export default function AdminDashboard() {
         }
     };
 
+    const generateDirectorInvite = async () => {
+        try {
+            const response = await fetch('/api/admin/generate-invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: 'director' })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setInvitationLink(data.invitationUrl);
+                setCopied(false);
+            } else {
+                alert('Erro ao gerar convite: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error generating invite:', error);
+            alert('Erro ao gerar convite');
+        }
+    };
+
+    const updateUserRole = async (userId: string, newRole: string) => {
+        if (!confirm(`Tem certeza que deseja alterar a função deste usuário para "${newRole}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/update-role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, newRole })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert('Função atualizada com sucesso!');
+                fetchUsers(); // Refresh user list
+            } else {
+                alert('Erro ao atualizar função: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error updating role:', error);
+            alert('Erro ao atualizar função');
+        }
+    };
+
     const generateInvite = (schoolId: string, role: string) => {
         const baseUrl = window.location.origin;
         const inviteUrl = `${baseUrl}/invite?schoolId=${schoolId}&role=${role}`;
@@ -191,7 +239,16 @@ export default function AdminDashboard() {
                             <button className="btn-primary" style={{ background: 'transparent', border: '1px solid #444' }} onClick={() => setInvitationLink('')}>{t('generate_another')}</button>
                         </div>
                     ) : (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{t('invite_desc')}</p>
+                        <>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>{t('invite_desc')}</p>
+                            <button
+                                className="btn-primary"
+                                onClick={generateDirectorInvite}
+                                style={{ width: '100%', marginBottom: '0.5rem' }}
+                            >
+                                Gerar Convite para Diretor
+                            </button>
+                        </>
                     )}
                 </section>
 
@@ -238,6 +295,9 @@ export default function AdminDashboard() {
                                 <th>Usuário</th>
                                 <th>Email</th>
                                 <th>Escola</th>
+                                <th>Nível</th>
+                                <th>Telefone</th>
+                                <th>Endereço</th>
                                 <th>Função</th>
                                 <th>Ações</th>
                             </tr>
@@ -247,13 +307,27 @@ export default function AdminDashboard() {
                                 <tr key={u.id}>
                                     <td>
                                         <div className="flex items-center gap-2">
-                                            {u.avatar_url && <img src={u.avatar_url} className="w-6 h-6 rounded-full" />}
+                                            {u.avatar_url && <img src={u.avatar_url} className="w-6 h-6 rounded-full" alt="Avatar" />}
                                             {u.username || u.full_name || 'Sem nome'}
                                         </div>
                                     </td>
                                     <td>{u.email}</td>
                                     <td>{u.schools?.name || '-'}</td>
-                                    <td><span className={`role-tag role-${u.role}`}>{u.role}</span></td>
+                                    <td><span className="level-badge">{u.level || 'N5'}</span></td>
+                                    <td>{u.phone_public && u.phone ? u.phone : '-'}</td>
+                                    <td>{u.address_public && u.address ? u.address : '-'}</td>
+                                    <td>
+                                        <select
+                                            value={u.role}
+                                            onChange={(e) => updateUserRole(u.id, e.target.value)}
+                                            className="role-select"
+                                        >
+                                            <option value="student">student</option>
+                                            <option value="teacher">teacher</option>
+                                            <option value="director">director</option>
+                                            <option value="admin">admin</option>
+                                        </select>
+                                    </td>
                                     <td>
                                         <button
                                             className="btn-icon"
