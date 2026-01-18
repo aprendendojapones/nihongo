@@ -148,7 +148,9 @@ export default function AdminDashboard() {
         }
     };
 
-    if (!user || user.role !== 'admin') return null;
+    if (status === 'loading' || !isAuthorized) {
+        return <div className="flex items-center justify-center h-screen text-white">Loading admin panel...</div>;
+    }
 
     return (
         <div className="admin-container">
