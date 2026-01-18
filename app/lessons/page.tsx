@@ -20,13 +20,31 @@ interface Level {
 const LEVELS: Level[] = [
     { id: 'katakana', titleKey: 'level_katakana_title', descriptionKey: 'level_katakana_desc', type: 'katakana', xpReward: 500 },
     { id: 'hiragana', titleKey: 'level_hiragana_title', descriptionKey: 'level_hiragana_desc', type: 'hiragana', requiredLevel: 'katakana_test', xpReward: 500 },
+
+    // N5
     { id: 'kanji_basics', titleKey: 'level_n5_kanji_title', descriptionKey: 'level_n5_kanji_desc', type: 'kanji', requiredLevel: 'hiragana_test', xpReward: 1000 },
     { id: 'n5_vocab', titleKey: 'level_n5_vocab_title', descriptionKey: 'level_n5_vocab_desc', type: 'jlpt', requiredLevel: 'kanji_basics_test', xpReward: 1000 },
     { id: 'n5_final', titleKey: 'level_n5_final_title', descriptionKey: 'level_n5_final_desc', type: 'jlpt', requiredLevel: 'n5_vocab_test', xpReward: 2000 },
+
+    // N4
     { id: 'n4_kanji', titleKey: 'level_n4_kanji_title', descriptionKey: 'level_n4_kanji_desc', type: 'kanji', requiredLevel: 'n5_final_test', xpReward: 1500 },
     { id: 'n4_vocab', titleKey: 'level_n4_vocab_title', descriptionKey: 'level_n4_vocab_desc', type: 'jlpt', requiredLevel: 'n4_kanji_test', xpReward: 1500 },
     { id: 'n4_final', titleKey: 'level_n4_final_title', descriptionKey: 'level_n4_final_desc', type: 'jlpt', requiredLevel: 'n4_vocab_test', xpReward: 3000 },
-    { id: 'n3', titleKey: 'level_n3_title', descriptionKey: 'level_n3_desc', type: 'jlpt', requiredLevel: 'n4_final_test', xpReward: 5000 },
+
+    // N3
+    { id: 'n3_kanji', titleKey: 'level_n3_kanji_title', descriptionKey: 'level_n3_kanji_desc', type: 'kanji', requiredLevel: 'n4_final_test', xpReward: 2000 },
+    { id: 'n3_vocab', titleKey: 'level_n3_vocab_title', descriptionKey: 'level_n3_vocab_desc', type: 'jlpt', requiredLevel: 'n3_kanji_test', xpReward: 2000 },
+    { id: 'n3_final', titleKey: 'level_n3_final_title', descriptionKey: 'level_n3_final_desc', type: 'jlpt', requiredLevel: 'n3_vocab_test', xpReward: 4000 },
+
+    // N2
+    { id: 'n2_kanji', titleKey: 'level_n2_kanji_title', descriptionKey: 'level_n2_kanji_desc', type: 'kanji', requiredLevel: 'n3_final_test', xpReward: 3000 },
+    { id: 'n2_vocab', titleKey: 'level_n2_vocab_title', descriptionKey: 'level_n2_vocab_desc', type: 'jlpt', requiredLevel: 'n2_kanji_test', xpReward: 3000 },
+    { id: 'n2_final', titleKey: 'level_n2_final_title', descriptionKey: 'level_n2_final_desc', type: 'jlpt', requiredLevel: 'n2_vocab_test', xpReward: 6000 },
+
+    // N1
+    { id: 'n1_kanji', titleKey: 'level_n1_kanji_title', descriptionKey: 'level_n1_kanji_desc', type: 'kanji', requiredLevel: 'n2_final_test', xpReward: 5000 },
+    { id: 'n1_vocab', titleKey: 'level_n1_vocab_title', descriptionKey: 'level_n1_vocab_desc', type: 'jlpt', requiredLevel: 'n1_kanji_test', xpReward: 5000 },
+    { id: 'n1_final', titleKey: 'level_n1_final_title', descriptionKey: 'level_n1_final_desc', type: 'jlpt', requiredLevel: 'n1_vocab_test', xpReward: 10000 },
 ];
 
 export default function LessonsPage() {
