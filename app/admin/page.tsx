@@ -63,7 +63,11 @@ export default function AdminDashboard() {
     const fetchSchools = async () => {
         try {
             const response = await fetch('/api/admin/schools');
-            if (!response.ok) throw new Error('Failed to fetch schools');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                console.error('Failed to fetch schools:', response.status, err);
+                throw new Error('Failed to fetch schools');
+            }
             const data = await response.json();
             setSchools(data);
         } catch (error) {
@@ -74,7 +78,11 @@ export default function AdminDashboard() {
     const fetchUsers = async () => {
         try {
             const response = await fetch('/api/admin/users');
-            if (!response.ok) throw new Error('Failed to fetch users');
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                console.error('Failed to fetch users:', response.status, err);
+                throw new Error('Failed to fetch users');
+            }
             const data = await response.json();
             console.log('Fetched users:', data);
             setUsersList(data);
