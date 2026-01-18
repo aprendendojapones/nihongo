@@ -21,8 +21,13 @@ export default function AdminDashboard() {
     const [newSchoolName, setNewSchoolName] = useState('');
     const [invitationLink, setInvitationLink] = useState('');
     const [copied, setCopied] = useState(false);
+    const [debugError, setDebugError] = useState<string | null>(null);
 
     const [isAuthorized, setIsAuthorized] = useState(false);
+
+    useEffect(() => {
+        console.log('Admin Dashboard vDebug loaded');
+    }, []);
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -65,7 +70,9 @@ export default function AdminDashboard() {
             const response = await fetch('/api/admin/schools');
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                console.error('Failed to fetch schools:', response.status, err);
+                const errMsg = `Schools API Error ${response.status}: ${JSON.stringify(err)}`;
+                console.error(errMsg);
+                setDebugError(prev => prev ? prev + '\n' + errMsg : errMsg);
                 throw new Error('Failed to fetch schools');
             }
             const data = await response.json();
@@ -80,7 +87,9 @@ export default function AdminDashboard() {
             const response = await fetch('/api/admin/users');
             if (!response.ok) {
                 const err = await response.json().catch(() => ({}));
-                console.error('Failed to fetch users:', response.status, err);
+                const errMsg = `Users API Error ${response.status}: ${JSON.stringify(err)}`;
+                console.error(errMsg);
+                setDebugError(prev => prev ? prev + '\n' + errMsg : errMsg);
                 throw new Error('Failed to fetch users');
             }
             const data = await response.json();
