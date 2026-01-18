@@ -65,6 +65,9 @@ const Sidebar = () => {
 
     const effectiveRole = user?.role || directRole;
 
+    // Debug log
+    console.log('Sidebar - User role:', user?.role, 'Direct role:', directRole, 'Effective:', effectiveRole);
+
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
         { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard'), href: '/dashboard' },
