@@ -185,7 +185,7 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
                 {levelResult?.passed ? (
                     <>
                         <CheckCircle2 size={64} className="mx-auto text-green-500 mb-6" />
-                        <h2 className="text-2xl font-bold mb-2">{t('level_passed', { level: levelResult.level })}</h2>
+                        <h2 className="text-2xl font-bold mb-2">{t('level_passed', { level: levelResult.level || '?' })}</h2>
                         <p className="text-gray-300 mb-6">
                             {t('score')}: {levelResult.score}/{questions.length}
                         </p>
@@ -197,7 +197,7 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
                 ) : (
                     <>
                         <XCircle size={64} className="mx-auto text-red-500 mb-6" />
-                        <h2 className="text-2xl font-bold mb-2">{t('level_failed', { level: levelResult?.level })}</h2>
+                        <h2 className="text-2xl font-bold mb-2">{t('level_failed', { level: levelResult?.level || '?' })}</h2>
                         <p className="text-gray-300 mb-6">
                             {t('score')}: {levelResult?.score}/{questions.length}
                         </p>
