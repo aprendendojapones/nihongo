@@ -65,12 +65,16 @@ export default function AdminDashboard() {
     };
 
     const fetchUsers = async () => {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('profiles')
-            .select('*, schools(name)')
-            .order('created_at', { ascending: false });
+            .select('*, schools(name)');
+
+        if (error) {
+            console.error('Error fetching users:', error);
+        }
+
         if (data) {
-            // Ensure all users are shown, including admin
+            console.log('Fetched users:', data);
             setUsersList(data);
         }
     };
