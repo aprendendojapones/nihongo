@@ -29,6 +29,8 @@ CREATE TABLE profiles (
   xp INTEGER DEFAULT 0,
   streak INTEGER DEFAULT 0,
   level TEXT DEFAULT 'N5',
+  is_favorite BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 

@@ -8,26 +8,91 @@ import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
 import './admin.css';
 
-export default function AdminDashboard() {
+interface User {
+    id: string;
+    email: string;
+    role: string;
+    schools: { name: string } | null;
+    full_name?: string;
+    level?: string;
+    phone?: string;
+    address?: string;
+    is_favorite?: boolean;
+    created_at?: string;
+}
+
+interface School {
+    id: string;
+    name: string;
+    director_id?: string;
+    profiles?: { full_name: string };
+}
+
+export default function AdminPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const { t } = useTranslation();
     const user = session?.user as any;
-    const [usersList, setUsersList] = useState<any[]>([]);
+    const [usersList, setUsersList] = useState<User[]>([]);
     const [showMsgModal, setShowMsgModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<any>(null);
     const [msgContent, setMsgContent] = useState('');
-    const [schools, setSchools] = useState<any[]>([]);
+    const [schools, setSchools] = useState<School[]>([]);
     const [newSchoolName, setNewSchoolName] = useState('');
     const [invitationLink, setInvitationLink] = useState('');
     const [copied, setCopied] = useState(false);
     const [debugError, setDebugError] = useState<string | null>(null);
+
+    // New State for Filters and Sorting
+    const [activeTab, setActiveTab] = useState<'all' | 'admin' | 'staff' | 'student'>('all');
+    const [sortOption, setSortOption] = useState<'date' | 'name'>('date');
 
     const [isAuthorized, setIsAuthorized] = useState(false);
 
     useEffect(() => {
         console.log('Admin Dashboard vDebug loaded');
     }, []);
+
+    const toggleFavorite = async (userId: string, currentStatus: boolean) => {
+        try {
+            // Optimistic update
+            setUsersList(prev => prev.map(u => u.id === userId ? { ...u, is_favorite: !currentStatus } : u));
+
+            const response = await fetch('/api/admin/users/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, is_favorite: !currentStatus })
+            });
+
+            if (!response.ok) throw new Error('Failed to update favorite');
+        } catch (error) {
+            console.error('Error updating favorite:', error);
+            // Revert on error
+            setUsersList(prev => prev.map(u => u.id === userId ? { ...u, is_favorite: currentStatus } : u));
+        }
+    };
+
+    const filteredAndSortedUsers = usersList
+        .filter(user => {
+            if (activeTab === 'all') return true;
+            if (activeTab === 'admin') return user.role === 'admin';
+            if (activeTab === 'staff') return user.role === 'director' || user.role === 'teacher';
+            if (activeTab === 'student') return user.role === 'student';
+            return true;
+        })
+        .sort((a, b) => {
+            // Favorites always on top
+            if (a.is_favorite && !b.is_favorite) return -1;
+            if (!a.is_favorite && b.is_favorite) return 1;
+
+            // Then sort by selected option
+            if (sortOption === 'name') {
+                return (a.full_name || a.email).localeCompare(b.full_name || b.email);
+            } else {
+                // Date (Newest first)
+                return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+            }
+        });
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -334,63 +399,108 @@ export default function AdminDashboard() {
             </section>
 
             <section className="glass-card admin-section" style={{ marginTop: '2rem' }}>
-                <h2 className="admin-section-title">
-                    <Users size={24} /> Gerenciamento de Usuários
-                </h2>
-                <div className="users-list-container">
-                    <table className="users-table">
-                        <thead>
-                            <tr>
-                                <th>Usuário</th>
-                                <th>Email</th>
-                                <th>Escola</th>
-                                <th>Nível</th>
-                                <th>Telefone</th>
-                                <th>Endereço</th>
-                                <th>Função</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {usersList.map(u => (
-                                <tr key={u.id}>
-                                    <td>
-                                        <div className="flex items-center gap-2">
-                                            {u.avatar_url && <img src={u.avatar_url} className="w-6 h-6 rounded-full" alt="Avatar" />}
-                                            {u.username || u.full_name || 'Sem nome'}
-                                        </div>
-                                    </td>
-                                    <td>{u.email}</td>
-                                    <td>{u.schools?.name || '-'}</td>
-                                    <td><span className="level-badge">{u.level || 'N5'}</span></td>
-                                    <td>{u.phone_public && u.phone ? u.phone : '-'}</td>
-                                    <td>{u.address_public && u.address ? u.address : '-'}</td>
-                                    <td>
-                                        <select
-                                            value={u.role}
-                                            onChange={(e) => updateUserRole(u.id, e.target.value)}
-                                            className="role-select"
-                                        >
-                                            <option value="student">student</option>
-                                            <option value="teacher">teacher</option>
-                                            <option value="director">director</option>
-                                            <option value="admin">admin</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="btn-icon"
-                                            title="Enviar Mensagem Privada"
-                                            onClick={() => openMsgModal(u)}
-                                        >
-                                            <Users size={18} />
-                                        </button>
-                                    </td>
+                <div className="admin-section">
+                    <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h2><i className="fas fa-users"></i> {t('user_management')}</h2>
+
+                        <div className="controls" style={{ display: 'flex', gap: '1rem' }}>
+                            <select
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value as 'date' | 'name')}
+                                style={{ padding: '0.5rem', borderRadius: '4px', background: '#333', color: '#fff', border: '1px solid #555' }}
+                            >
+                                <option value="date">📅 Data de Criação</option>
+                                <option value="name">🔤 Ordem Alfabética</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
+                        {['all', 'admin', 'staff', 'student'].map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: activeTab === tab ? '#ff4d4d' : '#888',
+                                    fontWeight: activeTab === tab ? 'bold' : 'normal',
+                                    cursor: 'pointer',
+                                    padding: '0.5rem 1rem',
+                                    borderBottom: activeTab === tab ? '2px solid #ff4d4d' : 'none'
+                                }}
+                            >
+                                {tab === 'all' ? 'Todos' : tab === 'staff' ? 'Diretores/Professores' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="table-container">
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Fav</th>
+                                    <th>{t('user')}</th>
+                                    <th>{t('email')}</th>
+                                    <th>{t('school')}</th>
+                                    <th>Nível</th>
+                                    <th>Telefone</th>
+                                    <th>Endereço</th>
+                                    <th>{t('role')}</th>
+                                    <th>Data</th>
+                                    <th>Ações</th> {/* Added Ações column */}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {filteredAndSortedUsers.map((user) => (
+                                    <tr key={user.id} style={{ background: user.is_favorite ? '#ff4d4d10' : 'transparent' }}>
+                                        <td>
+                                            <button
+                                                onClick={() => toggleFavorite(user.id, user.is_favorite || false)}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: user.is_favorite ? '#ffd700' : '#555' }}
+                                            >
+                                                <i className={`fa${user.is_favorite ? 's' : 'r'} fa-star`}></i>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <div className="user-info">
+                                                <div className="user-avatar">
+                                                    {user.full_name ? user.full_name[0].toUpperCase() : user.email[0].toUpperCase()}
+                                                </div>
+                                                <span>{user.full_name || 'Sem nome'}</span>
+                                            </div>
+                                        </td>
+                                        <td>{user.email}</td>
+                                        <td>{user.schools?.name || '-'}</td>
+                                        <td>{user.level || '-'}</td>
+                                        <td>{user.phone || '-'}</td>
+                                        <td>{user.address || '-'}</td>
+                                        <td>
+                                            <select
+                                                value={user.role}
+                                                onChange={(e) => updateUserRole(user.id, e.target.value)}
+                                                className="role-select"
+                                            >
+                                                <option value="student">student</option>
+                                                <option value="teacher">teacher</option>
+                                                <option value="director">director</option>
+                                                <option value="admin">admin</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="btn-icon"
+                                                title="Enviar Mensagem Privada"
+                                                onClick={() => openMsgModal(u)}
+                                            >
+                                                <Users size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
             </section>
 
             {showMsgModal && (
