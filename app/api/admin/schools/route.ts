@@ -45,7 +45,7 @@ export async function GET() {
     try {
         const { data: schools, error } = await supabaseAdmin
             .from('schools')
-            .select('*, profiles(full_name)');
+            .select('*, director:profiles!fk_director(full_name)');
 
         if (error) throw error;
 
