@@ -66,32 +66,14 @@ export default function AdminDashboard() {
     };
 
     const fetchUsers = async () => {
-        const { data, error } = await supabase
-            .from('profiles')
-            .select('*');
-
-        if (error) {
-            console.error('Error fetching users:', error);
-            return;
-        }
-
-        if (data) {
+        try {
+            const response = await fetch('/api/admin/users');
+            if (!response.ok) throw new Error('Failed to fetch users');
+            const data = await response.json();
             console.log('Fetched users:', data);
-            // Manually fetch school names for users with school_id
-            const usersWithSchools = await Promise.all(
-                data.map(async (user) => {
-                    if (user.school_id) {
-                        const { data: school } = await supabase
-                            .from('schools')
-                            .select('name')
-                            .eq('id', user.school_id)
-                            .single();
-                        return { ...user, schools: school };
-                    }
-                    return { ...user, schools: null };
-                })
-            );
-            setUsersList(usersWithSchools);
+            setUsersList(data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
         }
     };
 
