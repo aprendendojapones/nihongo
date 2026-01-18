@@ -41,18 +41,6 @@
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    animation: scaleIn 0.3s ease;
-}
-
-.list-item.correct {
-    color: var(--accent-primary);
-    border: 1px solid rgba(62, 255, 162, 0.2);
-}
-
-.list-item.wrong {
     color: #ff4e4e;
     border: 1px solid rgba(255, 78, 78, 0.2);
 }

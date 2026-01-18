@@ -10,6 +10,7 @@ import { JAPANESE_DATA } from '@/data/japanese';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useTranslation } from '@/components/TranslationContext';
 import FinalExam from '@/components/FinalExam';
+import VirtualKeyboard from '@/components/VirtualKeyboard';
 import './game.css';
 
 function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
@@ -29,6 +30,7 @@ function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
     const [score, setScore] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [showHint, setShowHint] = useState(false);
+    const [showKeyboard, setShowKeyboard] = useState(false);
 
     // New Features State
     const [hintMultiplier, setHintMultiplier] = useState(1.0);
@@ -103,7 +105,10 @@ function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
         const value = e.target.value;
         setUserInput(value);
 
-        if (currentItem && value.toLowerCase().trim() === currentItem.romaji.toLowerCase()) {
+        if (currentItem && (
+            value.toLowerCase().trim() === currentItem.romaji.toLowerCase() ||
+            value === currentItem.char
+        )) {
             triggerCorrect();
         }
     };
@@ -134,7 +139,10 @@ function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (currentItem && userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase()) {
+        if (currentItem && (
+            userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase() ||
+            userInput === currentItem.char
+        )) {
             triggerCorrect();
         } else if (!feedback) {
             setFeedback('wrong');
@@ -247,6 +255,13 @@ function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
                 </header>
 
                 <main className="game-main">
+                    <div className="game-question-display">
+                        <span className="game-char">{currentItem.char}</span>
+                        {currentItem.meaning && (
+                            <span className="game-meaning">{currentItem.meaning}</span>
+                        )}
+                    </div>
+
                     <form onSubmit={handleSubmit} className="game-input-container">
                         <input
                             ref={inputRef}
