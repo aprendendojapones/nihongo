@@ -479,26 +479,6 @@ export default function AdminPage() {
                                         </td>
                                         <td>{user.email}</td>
                                         <td>{user.schools?.name || '-'}</td>
-    const updateUserLevel = async (userId: string, newLevel: string) => {
-        try {
-                                            // Optimistic update
-                                            setUsersList(prev => prev.map(u => u.id === userId ? { ...u, level: newLevel } : u));
-
-                                        const response = await fetch('/api/admin/users/update', {
-                                            method: 'PATCH',
-                                        headers: {'Content-Type': 'application/json' },
-                                        body: JSON.stringify({userId, level: newLevel })
-            });
-
-                                        if (!response.ok) throw new Error('Failed to update level');
-        } catch (error) {
-                                            console.error('Error updating level:', error);
-            // Revert on error (would need previous state, but for now just log)
-        }
-    };
-
-                                        // ... inside render ...
-                                        <td>{user.schools?.name || '-'}</td>
                                         <td>
                                             <select
                                                 value={user.level || 'N5'}
