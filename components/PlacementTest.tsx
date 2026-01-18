@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, ArrowRight, Trophy, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, Trophy, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { JAPANESE_DATA } from '@/data/japanese';
 import './placement.css';
+import { useTranslation } from '@/components/TranslationContext';
 
 const LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+const QUESTIONS_PER_LEVEL = 10;
+const PASSING_SCORE = 8; // 80%
 
 export default function PlacementTest({ onComplete }: { onComplete: (level: string) => void }) {
     const { data: session } = useSession();
     const user = session?.user as any;
+    const { t } = useTranslation();
 
-    const [currentLevel, setCurrentLevel] = useState('N5');
+    const [currentLevelIndex, setCurrentLevelIndex] = useState(0); // Start at N5 (index 0)
     const [questions, setQuestions] = useState<any[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState<number[]>([]);
@@ -21,20 +25,42 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
     const [isFinished, setIsFinished] = useState(false);
     const [finalPlacement, setFinalPlacement] = useState('');
     const [loading, setLoading] = useState(true);
+    const [showLevelResult, setShowLevelResult] = useState(false);
+    const [levelResult, setLevelResult] = useState<{ passed: boolean, score: number, level: string } | null>(null);
 
     useEffect(() => {
-        generateQuestionsForLevel(currentLevel);
-    }, [currentLevel]);
+        generateQuestionsForLevel(LEVELS[currentLevelIndex]);
+    }, [currentLevelIndex]);
 
     const generateQuestionsForLevel = (level: string) => {
         setLoading(true);
-        const data = JAPANESE_DATA[level.toLowerCase() as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.n5;
+        // Get data for the specific level (e.g., n5, n4)
+        // Combine kanji and vocab for that level
+        const levelKey = level.toLowerCase();
+        // Check if specific level data exists, otherwise fallback to generic or empty
+        let data: any[] = [];
 
-        // Shuffle and pick 5
-        const shuffled = [...data].sort(() => Math.random() - 0.5).slice(0, 5);
+        if (JAPANESE_DATA[levelKey as keyof typeof JAPANESE_DATA]) {
+            data = JAPANESE_DATA[levelKey as keyof typeof JAPANESE_DATA];
+        } else {
+            // Fallback strategy if direct key doesn't exist (though it should based on data file)
+            // Try to combine kanji and vocab manually if needed, but JAPANESE_DATA structure seems to have keys like 'n5', 'n4'
+            data = JAPANESE_DATA.n5; // Default to N5 if something goes wrong
+        }
+
+        if (!data || data.length === 0) {
+            console.error(`No data found for level ${level}`);
+            data = JAPANESE_DATA.n5;
+        }
+
+        // Shuffle and pick QUESTIONS_PER_LEVEL
+        // Ensure we have enough questions, otherwise take all
+        const count = Math.min(data.length, QUESTIONS_PER_LEVEL);
+        const shuffled = [...data].sort(() => Math.random() - 0.5).slice(0, count);
 
         const newQuestions = shuffled.map(item => {
             const correctMeaning = item.meaning;
+            // Get distractors from the SAME level to make it fair but challenging
             const otherMeanings = data
                 .filter(d => d.id !== item.id)
                 .sort(() => Math.random() - 0.5)
@@ -46,6 +72,8 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
             return {
                 id: item.id,
                 text: item.type === 'kanji' ? `Qual o significado de ${item.char}?` : `O que significa "${item.char}"?`,
+                char: item.char,
+                romaji: item.romaji,
                 options,
                 correct: options.indexOf(correctMeaning),
                 level
@@ -54,7 +82,9 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
 
         setQuestions(newQuestions);
         setCurrentQuestionIndex(0);
+        setAnswers([]); // Reset answers for new level
         setLevelScore(0);
+        setShowLevelResult(false);
         setLoading(false);
     };
 
@@ -70,22 +100,38 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(i => i + 1);
         } else {
-            // Level finished, check if passed
-            // Strict: Need 4/5 (80%) to proceed
-            if (newScore >= 4) {
-                const nextLevelIndex = LEVELS.indexOf(currentLevel) + 1;
-                if (nextLevelIndex < LEVELS.length) {
-                    setCurrentLevel(LEVELS[nextLevelIndex]);
-                } else {
-                    // Finished all levels!
-                    finishTest('N1');
-                }
+            // Level finished
+            evaluateLevel(newScore);
+        }
+    };
+
+    const evaluateLevel = (score: number) => {
+        const currentLevel = LEVELS[currentLevelIndex];
+        const passed = score >= PASSING_SCORE;
+
+        setLevelResult({
+            passed,
+            score,
+            level: currentLevel
+        });
+        setShowLevelResult(true);
+    };
+
+    const handleNextLevel = () => {
+        if (levelResult?.passed) {
+            // Passed! Move to next level if available
+            if (currentLevelIndex < LEVELS.length - 1) {
+                setCurrentLevelIndex(prev => prev + 1);
             } else {
-                // Failed this level, determine placement
-                // If failed N5, place in Basics. If passed N5 but failed N4, place in N5.
-                const placement = newScore >= 4 ? currentLevel : (currentLevel === 'N5' ? 'Basics' : LEVELS[LEVELS.indexOf(currentLevel) - 1]);
-                finishTest(placement);
+                // Passed N1!
+                finishTest('N1');
             }
+        } else {
+            // Failed. Placement is the PREVIOUS level (or N5 if failed N5)
+            // Actually, if they fail N5, maybe 'Basics'? But for now let's say N5 is the floor.
+            // Or if they passed N5 but failed N4, they are N5.
+            const placement = currentLevelIndex === 0 ? 'N5' : LEVELS[currentLevelIndex - 1];
+            finishTest(placement);
         }
     };
 
@@ -94,37 +140,73 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
         setIsFinished(true);
 
         if (user) {
-            await supabase.from('profiles').update({ level }).eq('id', user.id);
+            try {
+                const { error } = await supabase.from('profiles').update({ level }).eq('id', user.id);
+                if (error) throw error;
+            } catch (err) {
+                console.error("Error updating level:", err);
+            }
         }
     };
 
-    if (loading) return <div className="loading-state">Gerando teste...</div>;
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-12">
+                <Loader2 className="animate-spin text-blue-500 mb-4" size={48} />
+                <p className="text-gray-400">{t('loading_questions')}...</p>
+            </div>
+        );
+    }
 
     if (isFinished) {
         return (
-            <div className="glass-card result-card animate-fade-in">
-                <Trophy size={64} color="var(--accent-secondary)" className="result-icon" />
-                <h2 className="result-title">Avaliação Concluída!</h2>
-                <p className="result-desc">Com base no seu desempenho, seu nível recomendado é:</p>
+            <div className="glass-card p-8 text-center max-w-2xl mx-auto animate-fade-in">
+                <Trophy size={64} className="mx-auto text-yellow-400 mb-6" />
+                <h2 className="text-3xl font-bold mb-4">{t('test_completed')}</h2>
+                <p className="text-xl text-gray-300 mb-8">
+                    {t('your_level_is')}: <span className="text-4xl font-bold text-blue-400 block mt-4">{finalPlacement}</span>
+                </p>
+                <p className="text-gray-400 mb-8">
+                    {t('level_assigned_desc')}
+                </p>
+                <button
+                    onClick={() => onComplete(finalPlacement)}
+                    className="btn-primary w-full py-4 text-lg"
+                >
+                    {t('continue_to_dashboard')} <ArrowRight className="ml-2" />
+                </button>
+            </div>
+        );
+    }
 
-                <div className="result-level">{finalPlacement}</div>
-
-                <div className="result-stats">
-                    <div className="stat-item">
-                        <span className="stat-label">Último Nível Tentado</span>
-                        <span className="stat-value">{currentLevel}</span>
-                    </div>
-                    <div className="stat-item">
-                        <span className="stat-label">Acertos no Nível</span>
-                        <span className="stat-value">{levelScore}/5</span>
-                    </div>
-                </div>
-
-                <div className="result-actions">
-                    <button className="btn-primary" onClick={() => onComplete(finalPlacement)}>
-                        Começar Jornada <ArrowRight size={20} />
-                    </button>
-                </div>
+    if (showLevelResult) {
+        return (
+            <div className="glass-card p-8 text-center max-w-2xl mx-auto animate-fade-in">
+                {levelResult?.passed ? (
+                    <>
+                        <CheckCircle2 size={64} className="mx-auto text-green-500 mb-6" />
+                        <h2 className="text-2xl font-bold mb-2">{t('level_passed', { level: levelResult.level })}</h2>
+                        <p className="text-gray-300 mb-6">
+                            {t('score')}: {levelResult.score}/{questions.length}
+                        </p>
+                        <p className="text-gray-400 mb-8">{t('moving_to_next_level')}</p>
+                        <button onClick={handleNextLevel} className="btn-primary w-full">
+                            {t('next_level')} <ArrowRight className="ml-2" />
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <XCircle size={64} className="mx-auto text-red-500 mb-6" />
+                        <h2 className="text-2xl font-bold mb-2">{t('level_failed', { level: levelResult?.level })}</h2>
+                        <p className="text-gray-300 mb-6">
+                            {t('score')}: {levelResult?.score}/{questions.length}
+                        </p>
+                        <p className="text-gray-400 mb-8">{t('placement_determined')}</p>
+                        <button onClick={handleNextLevel} className="btn-primary w-full">
+                            {t('see_result')} <ArrowRight className="ml-2" />
+                        </button>
+                    </>
+                )}
             </div>
         );
     }
@@ -132,55 +214,130 @@ export default function PlacementTest({ onComplete }: { onComplete: (level: stri
     const currentQuestion = questions[currentQuestionIndex];
 
     return (
-        <div className="placement-container">
-            <header className="placement-header">
-                <h1>Teste de Nivelamento</h1>
-                <p>Descubra seu nível de japonês</p>
+        <div className="glass-card p-6 max-w-3xl mx-auto">
+            <div className="flex justify-between items-center mb-6">
+                <span className="text-sm font-medium text-gray-400">
+                    {t('level')} {LEVELS[currentLevelIndex]}
+                </span>
+                <span className="text-sm font-medium text-gray-400">
+                    {t('question')} {currentQuestionIndex + 1}/{questions.length}
+                </span>
+            </div>
 
-                <div className="level-progress">
-                    {LEVELS.map((l, i) => (
-                        <div
-                            key={l}
-                            className={`level-dot ${l === currentLevel ? 'active' : ''} ${LEVELS.indexOf(l) < LEVELS.indexOf(currentLevel) ? 'completed' : ''}`}
-                        >
-                            {l}
-                        </div>
-                    ))}
-                </div>
-            </header>
+            <div className="mb-2 h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${((currentQuestionIndex) / questions.length) * 100}%` }}
+                />
+            </div>
 
-            <main className="glass-card question-card animate-slide-up">
-                <div className="question-header">
-                    <span>Questão {currentQuestionIndex + 1}/5</span>
-                    <span className="question-level-badge">{currentLevel}</span>
-                </div>
+            <div className="py-8 text-center">
+                <h2 className="text-2xl font-bold mb-4">{currentQuestion.text}</h2>
+                <div className="text-6xl font-bold mb-2 text-white">{currentQuestion.char}</div>
+                {/* <div className="text-sm text-gray-500 mb-8">{currentQuestion.romaji}</div> */}
+            </div>
 
-                <h2 className="question-text">{currentQuestion.text}</h2>
-
-                <div className="options-grid">
-                    {currentQuestion.options.map((option: string, index: number) => (
-                        <button
-                            key={index}
-                            className="option-button"
-                            onClick={() => handleAnswer(index)}
-                        >
-                            {option}
-                        </button>
-                    ))}
-                </div>
-            </main>
-
-            <footer className="placement-footer">
-                <span>Progresso do Nível</span>
-                <div className="progress-dots">
-                    {[0, 1, 2, 3, 4].map(i => (
-                        <div
-                            key={i}
-                            className={`progress-dot ${i <= currentQuestionIndex ? 'active' : ''} ${i < currentQuestionIndex ? 'completed' : ''}`}
-                        />
-                    ))}
-                </div>
-            </footer>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                {currentQuestion.options.map((option: string, idx: number) => (
+                    <button
+                        key={idx}
+                        onClick={() => handleAnswer(idx)}
+                        className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 transition-all text-left"
+                    >
+                        <span className="inline-block w-6 h-6 rounded-full bg-white/10 text-center text-sm leading-6 mr-3">
+                            {String.fromCharCode(65 + idx)}
+                        </span>
+                        {option}
+                    </button>
+                ))}
+            </div>
         </div>
     );
+}
+
+if (loading) return <div className="loading-state">Gerando teste...</div>;
+
+if (isFinished) {
+    return (
+        <div className="glass-card result-card animate-fade-in">
+            <Trophy size={64} color="var(--accent-secondary)" className="result-icon" />
+            <h2 className="result-title">Avaliação Concluída!</h2>
+            <p className="result-desc">Com base no seu desempenho, seu nível recomendado é:</p>
+
+            <div className="result-level">{finalPlacement}</div>
+
+            <div className="result-stats">
+                <div className="stat-item">
+                    <span className="stat-label">Último Nível Tentado</span>
+                    <span className="stat-value">{currentLevel}</span>
+                </div>
+                <div className="stat-item">
+                    <span className="stat-label">Acertos no Nível</span>
+                    <span className="stat-value">{levelScore}/5</span>
+                </div>
+            </div>
+
+            <div className="result-actions">
+                <button className="btn-primary" onClick={() => onComplete(finalPlacement)}>
+                    Começar Jornada <ArrowRight size={20} />
+                </button>
+            </div>
+        </div>
+    );
+}
+
+const currentQuestion = questions[currentQuestionIndex];
+
+return (
+    <div className="placement-container">
+        <header className="placement-header">
+            <h1>Teste de Nivelamento</h1>
+            <p>Descubra seu nível de japonês</p>
+
+            <div className="level-progress">
+                {LEVELS.map((l, i) => (
+                    <div
+                        key={l}
+                        className={`level-dot ${l === currentLevel ? 'active' : ''} ${LEVELS.indexOf(l) < LEVELS.indexOf(currentLevel) ? 'completed' : ''}`}
+                    >
+                        {l}
+                    </div>
+                ))}
+            </div>
+        </header>
+
+        <main className="glass-card question-card animate-slide-up">
+            <div className="question-header">
+                <span>Questão {currentQuestionIndex + 1}/5</span>
+                <span className="question-level-badge">{currentLevel}</span>
+            </div>
+
+            <h2 className="question-text">{currentQuestion.text}</h2>
+
+            <div className="options-grid">
+                {currentQuestion.options.map((option: string, index: number) => (
+                    <button
+                        key={index}
+                        className="option-button"
+                        onClick={() => handleAnswer(index)}
+                    >
+                        {option}
+                    </button>
+                ))}
+            </div>
+        </main>
+
+        <footer className="placement-footer">
+            <span>Progresso do Nível</span>
+            <div className="progress-dots">
+                {[0, 1, 2, 3, 4].map(i => (
+                    <div
+                        key={i}
+                        className={`progress-dot ${i <= currentQuestionIndex ? 'active' : ''} ${i < currentQuestionIndex ? 'completed' : ''}`}
+                    />
+                ))}
+            </div>
+        </footer>
+    </div>
+);
 }
