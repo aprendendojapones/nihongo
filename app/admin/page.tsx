@@ -269,15 +269,59 @@ export default function AdminDashboard() {
                     <School size={24} /> {t('registered_schools')}
                 </h2>
                 <div className="school-list">
-                    {schools.map(school => (
-                        <div key={school.id} className="school-item">
-                            <div className="school-info">
-                                <h3>{school.name}</h3>
-                                <p>{t('director')}: {school.profiles?.full_name || t('not_assigned')}</p>
+                    {schools.map((school: any) => (
+                        <div key={school.id} className="school-item" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="school-info">
+                                    <h3>{school.name}</h3>
+                                    <p>{t('director')}: {school.directorName}</p>
+                                </div>
+                                <div className="school-actions">
+                                    <button className="btn-primary btn-director" onClick={() => generateInvite(school.id, 'director')}>{t('invite_director')}</button>
+                                    <button className="btn-primary btn-teacher" onClick={() => generateInvite(school.id, 'teacher')}>{t('invite_teacher')}</button>
+                                </div>
                             </div>
-                            <div className="school-actions">
-                                <button className="btn-primary btn-director" onClick={() => generateInvite(school.id, 'director')}>{t('invite_director')}</button>
-                                <button className="btn-primary btn-teacher" onClick={() => generateInvite(school.id, 'teacher')}>{t('invite_teacher')}</button>
+
+                            <div className="school-stats">
+                                <div className="school-stats-grid">
+                                    <div className="stat-item">
+                                        <div className="stat-label">Professores</div>
+                                        <div className="stat-value">{school.teacherCount || 0}</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-label">Alunos</div>
+                                        <div className="stat-value">{school.studentCount || 0}</div>
+                                    </div>
+                                    <div className="stat-item">
+                                        <div className="stat-label">XP Total</div>
+                                        <div className="stat-value text-accent-primary">{(school.totalXp || 0).toLocaleString()}</div>
+                                    </div>
+                                </div>
+
+                                {school.topStudent && (
+                                    <div className="top-students">
+                                        <div className="text-sm text-muted-foreground mb-2">Melhor Aluno (Geral)</div>
+                                        <div className="top-student-item">
+                                            <span className="top-student-name">{school.topStudent.full_name || 'Sem nome'}</span>
+                                            <span className="top-student-xp">{school.topStudent.xp?.toLocaleString()} XP</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="top-students">
+                                    <div className="text-sm text-muted-foreground mb-2">Melhores por Nível</div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {['N5', 'N4', 'N3', 'N2', 'N1'].map(level => (
+                                            school.bestPerLevel && school.bestPerLevel[level] ? (
+                                                <div key={level} className="top-student-item text-xs">
+                                                    <span className="font-bold mr-2 text-accent-secondary">{level}</span>
+                                                    <span className="truncate flex-1">{school.bestPerLevel[level].full_name}</span>
+                                                    <span className="ml-2 text-accent-primary">{school.bestPerLevel[level].xp} XP</span>
+                                                </div>
+                                            ) : null
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
