@@ -8,6 +8,22 @@ export async function GET() {
     const user = session?.user as any;
 
     if (!session || !session.user?.email) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+        console.error('Error: SUPABASE_SERVICE_ROLE_KEY is missing');
+        return NextResponse.json({
+            error: 'Configuration Error',
+            details: 'SUPABASE_SERVICE_ROLE_KEY is missing in environment variables'
+        }, { status: 503 });
+    }
+
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        serviceRoleKey
+    );
 
     // Robust Admin Check: If role is not in session, check DB
     if (user.role !== 'admin') {
