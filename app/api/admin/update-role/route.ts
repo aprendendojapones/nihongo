@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
         const { userId, newRole } = await req.json();
 
-        if (!['admin', 'director', 'teacher', 'student'].includes(newRole)) {
+        if (!['admin', 'director', 'teacher', 'student', 'friend'].includes(newRole)) {
             return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
         }
 

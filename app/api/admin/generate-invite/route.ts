@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
         const { role } = await req.json();
 
-        if (!['director', 'teacher'].includes(role)) {
+        if (!['director', 'teacher', 'friend'].includes(role)) {
             return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
         }
 
