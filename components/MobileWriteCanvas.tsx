@@ -87,6 +87,26 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         ctx.moveTo(x, y);
     };
 
+    const clear = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx?.clearRect(0, 0, canvas.width, canvas.height);
+        pointsRef.current = [];
+
+        if (sessionId) {
+            supabase.channel(`session:${sessionId}`).send({
+                type: 'broadcast',
+                event: 'clear',
+                payload: {}
+            });
+        }
+    };
+
+    const complete = () => {
+        clear();
+    };
+
     return (
         <div className="mobile-canvas-container" style={{ height: '100vh', width: '100vw', position: 'fixed', top: 0, left: 0, zIndex: 100, background: 'white' }}>
             <header className="mobile-header" style={{ position: 'absolute', top: 10, left: 10, zIndex: 101 }}>
