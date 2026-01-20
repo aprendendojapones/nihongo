@@ -82,7 +82,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
         };
     };
 
-    const handleValidationResult = (isCorrect: boolean, stroke: any) => {
+    const handleValidationResult = useCallback((isCorrect: boolean, stroke: any) => {
         if (isCorrect) {
             setStrokeFeedback('correct');
             incrementStrokeCount();
@@ -99,7 +99,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
             // In a real app, we'd redraw valid strokes. For now, just clear and let user retry.
             // Ideally we should keep a history of valid strokes to redraw.
         }
-    };
+    }, [kanjiData, strokeCount, incrementStrokeCount, onComplete]);
 
     useEffect(() => {
         if (currentStroke && canvasRef.current && inputMode === 'mobile') {
@@ -142,7 +142,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                 }
             }
         }
-    }, [currentStroke, kanjiData, strokeCount, inputMode]);
+    }, [currentStroke, kanjiData, strokeCount, inputMode, handleValidationResult, lastValidatedStroke]);
 
     return (
         <div className="glass-card handwriting-container">

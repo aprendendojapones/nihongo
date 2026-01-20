@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, ArrowRight } from 'lucide-react';
+import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, ArrowRight, Check } from 'lucide-react';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
