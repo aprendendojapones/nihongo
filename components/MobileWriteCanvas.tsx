@@ -13,6 +13,7 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
     const [isDrawing, setIsDrawing] = useState(false);
+    const { t } = useTranslation();
 
     useEffect(() => {
         const canvas = canvasRef.current;
