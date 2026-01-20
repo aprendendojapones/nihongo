@@ -194,7 +194,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                 <div className="input-toggle" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', margin: '10px 0' }}>
                     <span style={{ fontSize: '0.9rem', color: useMobile ? 'var(--accent-primary)' : 'var(--text-muted)' }}>Celular</span>
                     <label className="switch">
-                        <input type="checkbox" checked={!useMobile} onChange={(e) => setUseMobile(e.target.checked)} />
+                        <input type="checkbox" checked={!useMobile} onChange={(e) => setUseMobile(!e.target.checked)} />
                         <span className="slider round"></span>
                     </label>
                     <span style={{ fontSize: '0.9rem', color: !useMobile ? 'var(--accent-primary)' : 'var(--text-muted)' }}>Mouse</span>
