@@ -524,6 +524,7 @@ export default function AdminPage() {
                                                 <option value="teacher">teacher</option>
                                                 <option value="director">director</option>
                                                 <option value="admin">admin</option>
+                                                <option value="friend">friend</option>
                                             </select>
                                         </td>
                                         <td>
