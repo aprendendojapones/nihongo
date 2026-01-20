@@ -62,39 +62,62 @@ export default function Dashboard() {
 
             <main className="dashboard-grid">
                 <section className="main-column">
-                    <div className="glass-card next-lesson-section">
-                        <div className="next-lesson-title">
-                            <BookOpen size={24} color="var(--accent-primary)" />
-                            <h2>{t('next_lesson')}</h2>
+                    {/* 1. Trilha de Aprendizado */}
+                    <div className="glass-card dashboard-card" onClick={() => router.push('/lessons')}>
+                        <div className="card-icon-wrapper">
+                            <BookOpen size={32} color="var(--accent-primary)" />
                         </div>
-                        <h3>{t('katakana_basics')}</h3>
-                        <p style={{ color: 'var(--text-muted)' }}>Master the basic characters</p>
-
-                        <div className="progress-bar-container">
-                            <div className="progress-bar-fill" style={{ width: '45%' }}></div>
+                        <div className="card-content">
+                            <h3>Trilha de Aprendizado</h3>
+                            <p>Sua jornada do zero à fluência.</p>
                         </div>
-                        <div className="flex-between" style={{ color: 'var(--text-muted)' }}>
-                            <span>45% {t('completed')}</span>
-                            <span>5/12 {t('lessons')}</span>
-                        </div>
-
-                        <button className="btn-primary continue-button" onClick={() => router.push('/lessons')}>
-                            {t('continue_learning')} <ArrowRight size={20} />
-                        </button>
+                        <ArrowRight size={24} className="card-arrow" />
                     </div>
 
-                    <div className="glass-card level-section">
-                        <div className="flex-between">
-                            <h3>{t('current_level')}</h3>
-                            <span style={{ fontWeight: 'bold', color: 'var(--accent-secondary)' }}>{userStats.level}</span>
+                    {/* 2. Níveis JLPT */}
+                    <div className="glass-card dashboard-card" onClick={() => router.push('/lessons')}>
+                        <div className="card-icon-wrapper">
+                            <Star size={32} color="#FFD700" />
                         </div>
-                        <div className="progress-bar-container" style={{ marginTop: '1rem' }}>
-                            <div className="progress-bar-fill" style={{ width: `${(userStats.xp / xpNeededForNextLevel) * 100}%` }}></div>
+                        <div className="card-content">
+                            <h3>Níveis JLPT</h3>
+                            <p>Conteúdo estruturado do básico ao avançado.</p>
                         </div>
-                        <p className="xp-needed-text">{xpNeededForNextLevel - userStats.xp} XP {t('to_next_level')}</p>
+                        <ArrowRight size={24} className="card-arrow" />
                     </div>
 
-                    <PCHandwritingView />
+                    {/* 3. Modo Game */}
+                    <div className="glass-card dashboard-card" onClick={() => router.push('/game')}>
+                        <div className="card-icon-wrapper">
+                            <Trophy size={32} color="#FF4D4D" />
+                        </div>
+                        <div className="card-content">
+                            <h3>Modo Game</h3>
+                            <p>Aprenda brincando e suba no ranking.</p>
+                        </div>
+                        <ArrowRight size={24} className="card-arrow" />
+                    </div>
+
+                    {/* 4. Escreva pelo Celular (Handwriting) */}
+                    <div className="glass-card dashboard-card" style={{ cursor: 'default' }}>
+                        <div className="card-content-full">
+                            <h3>Escreva pelo Celular</h3>
+                            <p>Use seu celular como tablet ou use o mouse.</p>
+                            <PCHandwritingView />
+                        </div>
+                    </div>
+
+                    {/* 5. Prova de Avaliação de Nível */}
+                    <div className="glass-card dashboard-card" onClick={() => router.push('/placement')}>
+                        <div className="card-icon-wrapper">
+                            <Check size={32} color="#4CAF50" />
+                        </div>
+                        <div className="card-content">
+                            <h3>Prova de Avaliação de Nível</h3>
+                            <p>Teste seus conhecimentos (10 questões/nível).</p>
+                        </div>
+                        <ArrowRight size={24} className="card-arrow" />
+                    </div>
                 </section>
 
                 <aside className="side-column">

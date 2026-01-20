@@ -14,13 +14,15 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
     const [isDrawing, setIsDrawing] = useState(false);
     const { t } = useTranslation();
 
+    const pointsRef = useRef<{ x: number; y: number }[]>([]);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         const resizeCanvas = () => {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
         };
 
         resizeCanvas();
@@ -30,6 +32,8 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
 
     const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
         setIsDrawing(true);
+        const { x, y } = getCoordinates(e);
+        pointsRef.current = [{ x, y }];
         draw(e);
     };
 
@@ -41,13 +45,26 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         ctx?.beginPath();
 
         // Send stroke to PC
-        if (sessionId) {
-            supabase.channel(`handwriting:${sessionId}`).send({
+        if (sessionId && pointsRef.current.length > 0) {
+            supabase.channel(`session:${sessionId}`).send({
                 type: 'broadcast',
                 event: 'stroke',
-                payload: { points: [] } // In a real app, we'd send the actual points
+                payload: {
+                    points: pointsRef.current,
+                    color: '#ff3e3e',
+                    width: 5
+                }
             });
         }
+    };
+
+    const getCoordinates = (e: React.TouchEvent | React.MouseEvent) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { x: 0, y: 0 };
+        const rect = canvas.getBoundingClientRect();
+        const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+        const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+        return { x, y };
     };
 
     const draw = (e: React.TouchEvent | React.MouseEvent) => {
@@ -57,9 +74,8 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-        const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
+        const { x, y } = getCoordinates(e);
+        pointsRef.current.push({ x, y });
 
         ctx.lineWidth = 5;
         ctx.lineCap = 'round';
@@ -71,32 +87,9 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         ctx.moveTo(x, y);
     };
 
-    const clear = () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        ctx?.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (sessionId) {
-            supabase.channel(`handwriting:${sessionId}`).send({
-                type: 'broadcast',
-                event: 'clear'
-            });
-        }
-    };
-
-    const complete = () => {
-        if (sessionId) {
-            supabase.channel(`handwriting:${sessionId}`).send({
-                type: 'broadcast',
-                event: 'complete'
-            });
-        }
-    };
-
     return (
-        <div className="mobile-canvas-container">
-            <header className="mobile-header">
+        <div className="mobile-canvas-container" style={{ height: '100vh', width: '100vw', position: 'fixed', top: 0, left: 0, zIndex: 100, background: 'white' }}>
+            <header className="mobile-header" style={{ position: 'absolute', top: 10, left: 10, zIndex: 101 }}>
                 <h2 className="gradient-text">Escrita</h2>
                 <button className="hint-button" onClick={clear}>
                     <Trash2 size={24} />
