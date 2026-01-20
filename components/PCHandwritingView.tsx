@@ -45,7 +45,9 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                     event: 'target_char',
                     payload: { char: targetChar }
                 });
-                ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                if (ctx && canvasRef.current) {
+                    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                }
                 setLastValidatedStroke(null);
                 return;
             }
