@@ -16,6 +16,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
     const { sessionId, currentStroke, clearCanvas, resetStrokeCount, strokeCount, incrementStrokeCount } = useHandwriting();
     const [inputMode, setInputMode] = useState<'mobile' | 'mouse'>('mobile');
     const [isDrawing, setIsDrawing] = useState(false);
+    const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
     const pointsRef = useRef<{ x: number; y: number }[]>([]);
 
     useEffect(() => {
