@@ -1,7 +1,6 @@
 "use client";
 
 import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, ArrowRight, Gamepad2, GraduationCap, Library, Smartphone } from 'lucide-react';
-import PCHandwritingView from '@/components/PCHandwritingView';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/components/TranslationContext';
@@ -105,95 +104,57 @@ export default function Home() {
                 </div>
             </header>
 
-            <main className="dashboard-grid">
-                <section className="main-column">
+            <main className="landing-main" style={{ paddingTop: '2rem' }}>
+                <div className="landing-grid">
                     {/* 1. Trilha de Aprendizado */}
-                    <div className="glass-card dashboard-card" onClick={() => router.push('/lessons')}>
-                        <div className="card-icon-wrapper" style={{ background: 'rgba(255, 62, 62, 0.1)' }}>
-                            <BookOpen size={32} color="var(--accent-primary)" />
-                        </div>
-                        <div className="card-content">
-                            <h2>{t('learning_path')}</h2>
-                            <p>{t('learning_path_desc')}</p>
-                            <div className="progress-bar-container">
-                                <div className="progress-bar-fill" style={{ width: '45%' }}></div>
-                            </div>
-                            <span className="progress-text">45% {t('completed')}</span>
-                        </div>
-                        <ArrowRight size={24} className="card-arrow" />
+                    <div
+                        className="glass-card landing-card"
+                        onClick={() => router.push('/lessons')}
+                    >
+                        <BookOpen size={48} color="var(--accent-primary)" />
+                        <h3>{t('learning_path')}</h3>
+                        <p>{t('learning_path_desc')}</p>
                     </div>
 
-                    <div className="dashboard-cards-grid">
-                        {/* 2. Níveis JLPT */}
-                        <div className="glass-card dashboard-card-small" onClick={() => router.push('/lessons')}>
-                            <Library size={28} color="var(--accent-secondary)" />
-                            <h3>{t('jlpt_levels')}</h3>
-                            <p>{t('jlpt_levels_desc')}</p>
-                        </div>
-
-                        {/* 3. Modo Game */}
-                        <div className="glass-card dashboard-card-small" onClick={() => router.push('/game')}>
-                            <Gamepad2 size={28} color="#4ade80" />
-                            <h3>{t('game_mode')}</h3>
-                            <p>{t('game_mode_desc')}</p>
-                        </div>
+                    {/* 2. Níveis JLPT */}
+                    <div
+                        className="glass-card landing-card"
+                        onClick={() => router.push('/lessons')}
+                    >
+                        <Library size={48} color="var(--accent-secondary)" />
+                        <h3>{t('jlpt_levels')}</h3>
+                        <p>{t('jlpt_levels_desc')}</p>
                     </div>
 
-                    {/* 4. Escreva pelo Celular */}
-                    <div className="glass-card handwriting-section">
-                        <div className="section-header">
-                            <Smartphone size={24} color="var(--accent-primary)" />
-                            <h2>{t('realtime_writing')}</h2>
-                        </div>
-                        <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>{t('realtime_writing_desc')}</p>
-                        <PCHandwritingView />
+                    {/* 3. Modo Game */}
+                    <div
+                        className="glass-card landing-card"
+                        onClick={() => router.push('/game')}
+                    >
+                        <Gamepad2 size={48} color="#4ade80" />
+                        <h3>{t('game_mode')}</h3>
+                        <p>{t('game_mode_desc')}</p>
                     </div>
 
-                    {/* 5. Prova de Avaliação de Nível */}
-                    <div className="glass-card dashboard-card" onClick={() => router.push('/placement')} style={{ background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 0, 0, 0))' }}>
-                        <div className="card-icon-wrapper" style={{ background: 'rgba(255, 215, 0, 0.2)' }}>
-                            <GraduationCap size={32} color="#ffd700" />
-                        </div>
-                        <div className="card-content">
-                            <h2>{t('placement_test')}</h2>
-                            <p>{t('placement_test_desc')}</p>
-                        </div>
-                        <ArrowRight size={24} className="card-arrow" />
+                    {/* 4. Escrita Real-time */}
+                    <div
+                        className="glass-card landing-card"
+                        onClick={() => router.push('/write')}
+                    >
+                        <Smartphone size={48} color="var(--accent-primary)" />
+                        <h3>{t('realtime_writing')}</h3>
+                        <p>{t('realtime_writing_desc')}</p>
                     </div>
-                </section>
+                </div>
 
-                <aside className="side-column">
-                    <section className="glass-card ranking-section">
-                        <h3 className="ranking-title">
-                            <Trophy size={20} color="var(--accent-secondary)" /> {t('global_ranking')}
-                        </h3>
-                        <div className="ranking-list">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="ranking-item">
-                                    <div className="rank-position">#{i}</div>
-                                    <div className="rank-user-info">
-                                        <div className="rank-avatar-placeholder"><User size={16} /></div>
-                                        <div className="rank-details">
-                                            <span className="rank-username">User {i}</span>
-                                            <span className="rank-school">School Name</span>
-                                        </div>
-                                    </div>
-                                    <div className="rank-xp">{5000 - i * 100} XP</div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-
-                    <section className="glass-card chat-section">
-                        <h3 className="ranking-title">
-                            <Users size={20} color="var(--accent-primary)" /> {t('school_chat')}
-                        </h3>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Conecte-se com sua escola.</p>
-                        <button className="btn-primary" style={{ width: '100%' }} onClick={() => router.push('/chat')}>
-                            {t('open_chat')}
-                        </button>
-                    </section>
-                </aside>
+                <div className="landing-actions" style={{ marginTop: '2rem' }}>
+                    <button
+                        className="btn-primary btn-landing"
+                        onClick={() => router.push('/dashboard')}
+                    >
+                        Ver Painel Completo
+                    </button>
+                </div>
             </main>
 
             {['director', 'teacher'].includes(user?.role) && (
