@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, Users, School, Link as LinkIcon, Check, Copy, Trophy } from 'lucide-react';
+import { Plus, Users, School, Link as LinkIcon, Check, Copy, Trophy, Edit2, X, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
 import './admin.css';
@@ -19,6 +19,10 @@ interface User {
     address?: string;
     is_favorite?: boolean;
     created_at?: string;
+    username?: string;
+    phone_public?: boolean;
+    address_public?: boolean;
+    language_pref?: string;
 }
 
 interface School {
@@ -42,6 +46,12 @@ export default function AdminPage() {
     const [invitationLink, setInvitationLink] = useState('');
     const [copied, setCopied] = useState(false);
     const [debugError, setDebugError] = useState<string | null>(null);
+
+    // Edit Modal State
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [editFormData, setEditFormData] = useState<Partial<User>>({});
+    const [isSaving, setIsSaving] = useState(false);
 
     // New State for Filters and Sorting
     const [activeTab, setActiveTab] = useState<'all' | 'admin' | 'staff' | 'student'>('all');
@@ -280,7 +290,57 @@ export default function AdminPage() {
             if (!response.ok) throw new Error('Failed to update level');
         } catch (error) {
             console.error('Error updating level:', error);
-            // Revert on error (would need previous state, but for now just log)
+        }
+    };
+
+    const openEditModal = (user: User) => {
+        setEditingUser(user);
+        setEditFormData({
+            username: user.username || '',
+            full_name: user.full_name || '',
+            phone: user.phone || '',
+            address: user.address || '',
+            phone_public: user.phone_public || false,
+            address_public: user.address_public || false,
+            language_pref: user.language_pref || 'pt'
+        });
+        setShowEditModal(true);
+    };
+
+    const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        const checked = (e.target as HTMLInputElement).checked;
+
+        setEditFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const saveUserChanges = async () => {
+        if (!editingUser) return;
+        setIsSaving(true);
+
+        try {
+            const response = await fetch('/api/admin/users/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: editingUser.id,
+                    ...editFormData
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to update user');
+
+            alert('Usuário atualizado com sucesso!');
+            setShowEditModal(false);
+            fetchUsers(); // Refresh list
+        } catch (error) {
+            console.error('Error updating user:', error);
+            alert('Erro ao atualizar usuário.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -535,6 +595,14 @@ export default function AdminPage() {
                                             >
                                                 <Users size={18} />
                                             </button>
+                                            <button
+                                                className="btn-icon"
+                                                title="Editar Usuário"
+                                                onClick={() => openEditModal(user)}
+                                                style={{ marginLeft: '0.5rem' }}
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -558,6 +626,103 @@ export default function AdminPage() {
                         <div className="modal-actions">
                             <button className="btn-secondary" onClick={() => setShowMsgModal(false)}>Cancelar</button>
                             <button className="btn-primary" onClick={sendPrivateMessage}>Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showEditModal && editingUser && (
+                <div className="modal-overlay">
+                    <div className="modal-content glass-card" style={{ maxWidth: '600px' }}>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3>Editar Usuário: {editingUser.email}</h3>
+                            <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-white">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="form-group">
+                                <label>Nome de Usuário</label>
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value={editFormData.username || ''}
+                                    onChange={handleEditChange}
+                                    className="admin-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Nome Completo</label>
+                                <input
+                                    type="text"
+                                    name="full_name"
+                                    value={editFormData.full_name || ''}
+                                    onChange={handleEditChange}
+                                    className="admin-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Telefone</label>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={editFormData.phone || ''}
+                                    onChange={handleEditChange}
+                                    className="admin-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Endereço</label>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={editFormData.address || ''}
+                                    onChange={handleEditChange}
+                                    className="admin-input"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Idioma</label>
+                                <select
+                                    name="language_pref"
+                                    value={editFormData.language_pref || 'pt'}
+                                    onChange={handleEditChange}
+                                    className="admin-input"
+                                >
+                                    <option value="pt">Português</option>
+                                    <option value="en">English</option>
+                                    <option value="jp">日本語</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 mt-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="phone_public"
+                                    checked={editFormData.phone_public || false}
+                                    onChange={handleEditChange}
+                                />
+                                <span className="text-sm">Telefone Público</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    name="address_public"
+                                    checked={editFormData.address_public || false}
+                                    onChange={handleEditChange}
+                                />
+                                <span className="text-sm">Endereço Público</span>
+                            </label>
+                        </div>
+
+                        <div className="modal-actions mt-6">
+                            <button className="btn-secondary" onClick={() => setShowEditModal(false)}>Cancelar</button>
+                            <button className="btn-primary" onClick={saveUserChanges} disabled={isSaving}>
+                                {isSaving ? 'Salvando...' : <><Save size={18} /> Salvar</>}
+                            </button>
                         </div>
                     </div>
                 </div>

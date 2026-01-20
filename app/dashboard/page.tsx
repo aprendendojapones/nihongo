@@ -1,6 +1,6 @@
 "use client";
 
-import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, ArrowRight, Check } from 'lucide-react';
+import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, ArrowRight, Gamepad2, GraduationCap, Library, Smartphone } from 'lucide-react';
 import PCHandwritingView from '@/components/PCHandwritingView';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -64,57 +64,54 @@ export default function Dashboard() {
                 <section className="main-column">
                     {/* 1. Trilha de Aprendizado */}
                     <div className="glass-card dashboard-card" onClick={() => router.push('/lessons')}>
-                        <div className="card-icon-wrapper">
+                        <div className="card-icon-wrapper" style={{ background: 'rgba(255, 62, 62, 0.1)' }}>
                             <BookOpen size={32} color="var(--accent-primary)" />
                         </div>
                         <div className="card-content">
-                            <h3>Trilha de Aprendizado</h3>
-                            <p>Sua jornada do zero à fluência.</p>
+                            <h2>{t('learning_path')}</h2>
+                            <p>{t('learning_path_desc')}</p>
+                            <div className="progress-bar-container">
+                                <div className="progress-bar-fill" style={{ width: '45%' }}></div>
+                            </div>
+                            <span className="progress-text">45% {t('completed')}</span>
                         </div>
                         <ArrowRight size={24} className="card-arrow" />
                     </div>
 
-                    {/* 2. Níveis JLPT */}
-                    <div className="glass-card dashboard-card" onClick={() => router.push('/lessons')}>
-                        <div className="card-icon-wrapper">
-                            <Star size={32} color="#FFD700" />
+                    <div className="dashboard-cards-grid">
+                        {/* 2. Níveis JLPT */}
+                        <div className="glass-card dashboard-card-small" onClick={() => router.push('/lessons')}>
+                            <Library size={28} color="var(--accent-secondary)" />
+                            <h3>{t('jlpt_levels')}</h3>
+                            <p>{t('jlpt_levels_desc')}</p>
                         </div>
-                        <div className="card-content">
-                            <h3>Níveis JLPT</h3>
-                            <p>Conteúdo estruturado do básico ao avançado.</p>
+
+                        {/* 3. Modo Game */}
+                        <div className="glass-card dashboard-card-small" onClick={() => router.push('/game')}>
+                            <Gamepad2 size={28} color="#4ade80" />
+                            <h3>{t('game_mode')}</h3>
+                            <p>{t('game_mode_desc')}</p>
                         </div>
-                        <ArrowRight size={24} className="card-arrow" />
                     </div>
 
-                    {/* 3. Modo Game */}
-                    <div className="glass-card dashboard-card" onClick={() => router.push('/game')}>
-                        <div className="card-icon-wrapper">
-                            <Trophy size={32} color="#FF4D4D" />
+                    {/* 4. Escreva pelo Celular */}
+                    <div className="glass-card handwriting-section">
+                        <div className="section-header">
+                            <Smartphone size={24} color="var(--accent-primary)" />
+                            <h2>{t('realtime_writing')}</h2>
                         </div>
-                        <div className="card-content">
-                            <h3>Modo Game</h3>
-                            <p>Aprenda brincando e suba no ranking.</p>
-                        </div>
-                        <ArrowRight size={24} className="card-arrow" />
-                    </div>
-
-                    {/* 4. Escreva pelo Celular (Handwriting) */}
-                    <div className="glass-card dashboard-card" style={{ cursor: 'default' }}>
-                        <div className="card-content-full">
-                            <h3>Escreva pelo Celular</h3>
-                            <p>Use seu celular como tablet ou use o mouse.</p>
-                            <PCHandwritingView />
-                        </div>
+                        <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>{t('realtime_writing_desc')}</p>
+                        <PCHandwritingView />
                     </div>
 
                     {/* 5. Prova de Avaliação de Nível */}
-                    <div className="glass-card dashboard-card" onClick={() => router.push('/placement')}>
-                        <div className="card-icon-wrapper">
-                            <Check size={32} color="#4CAF50" />
+                    <div className="glass-card dashboard-card" onClick={() => router.push('/placement')} style={{ background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(0, 0, 0, 0))' }}>
+                        <div className="card-icon-wrapper" style={{ background: 'rgba(255, 215, 0, 0.2)' }}>
+                            <GraduationCap size={32} color="#ffd700" />
                         </div>
                         <div className="card-content">
-                            <h3>Prova de Avaliação de Nível</h3>
-                            <p>Teste seus conhecimentos (10 questões/nível).</p>
+                            <h2>{t('placement_test')}</h2>
+                            <p>{t('placement_test_desc')}</p>
                         </div>
                         <ArrowRight size={24} className="card-arrow" />
                     </div>

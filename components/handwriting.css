@@ -31,14 +31,137 @@
     padding: 0.5rem 1rem;
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    background: var(--glass-bg);
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: all 0.2s;
-}
 
-.handwriting-btn:hover {
-    background: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
-}
+    .handwriting-container {
+        width: 100%;
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .handwriting-canvas-wrapper {
+        position: relative;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        touch-action: none;
+    }
+
+    .handwriting-canvas {
+        width: 100%;
+        height: 100%;
+        cursor: crosshair;
+    }
+
+    .handwriting-controls {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .handwriting-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--glass-bg);
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .handwriting-btn:hover {
+        background: var(--accent-primary);
+        color: white;
+        border-color: var(--accent-primary);
+    }
+
+    .mobile-canvas-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100dvh;
+        background: #000;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mobile-header {
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        text-align: center;
+        border-bottom: 1px solid #333;
+    }
+
+    .mobile-controls {
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    /* Switch Styles */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 24px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+    }
+
+    input:checked+.slider {
+        background-color: var(--accent-primary);
+    }
+
+    input:focus+.slider {
+        box-shadow: 0 0 1px var(--accent-primary);
+    }
+
+    input:checked+.slider:before {
+        -webkit-transform: translateX(16px);
+        -ms-transform: translateX(16px);
+        transform: translateX(16px);
+    }
+
+    /* Rounded sliders */
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }

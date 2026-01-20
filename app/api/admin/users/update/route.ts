@@ -48,6 +48,15 @@ export async function PATCH(request: Request) {
         if (is_favorite !== undefined) updates.is_favorite = is_favorite;
         if (level !== undefined) updates.level = level;
 
+        // New fields
+        if (body.username !== undefined) updates.username = body.username;
+        if (body.full_name !== undefined) updates.full_name = body.full_name;
+        if (body.phone !== undefined) updates.phone = body.phone;
+        if (body.address !== undefined) updates.address = body.address;
+        if (body.phone_public !== undefined) updates.phone_public = body.phone_public;
+        if (body.address_public !== undefined) updates.address_public = body.address_public;
+        if (body.language_pref !== undefined) updates.language_pref = body.language_pref;
+
         const { error } = await supabaseAdmin
             .from('profiles')
             .update(updates)
