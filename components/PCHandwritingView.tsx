@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 import { supabase } from '@/lib/supabase';
 import { useHandwriting } from '@/hooks/useHandwriting';
@@ -17,6 +17,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
     const [inputMode, setInputMode] = useState<'mobile' | 'mouse'>('mobile');
     const [isDrawing, setIsDrawing] = useState(false);
     const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const pointsRef = useRef<{ x: number; y: number }[]>([]);
 
     useEffect(() => {
@@ -30,7 +31,15 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
         }
     }, [sessionId, inputMode]);
 
-    // ... (keep existing useEffect for targetChar)
+    const [kanjiData, setKanjiData] = useState<KanjiData | null>(null);
+    const [strokeFeedback, setStrokeFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [lastValidatedStroke, setLastValidatedStroke] = useState<any>(null);
+
+    useEffect(() => {
+        if (targetChar) {
+            fetchKanjiData(targetChar).then(setKanjiData);
+        }
+    }, [targetChar]);
 
     // Mouse Mode Drawing Logic
     const startDrawing = (e: React.MouseEvent) => {
