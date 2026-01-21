@@ -569,8 +569,12 @@ function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
 function GamePageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { t } = useTranslation();
     const levelId = searchParams.get('level') || 'katakana';
     const mode = searchParams.get('mode') || 'study'; // study, game, test, final_exam
+
+    const [score, setScore] = useState(0);
+    const [isFinished, setIsFinished] = useState(false);
 
     const handleExamComplete = async (passed: boolean, score: number) => {
         if (passed) {
@@ -601,10 +605,41 @@ function GamePageContent() {
                 time_spent: timeSpent
             });
         }
-        // Show completion screen or redirect
         setScore(score);
         setIsFinished(true);
     };
+
+    if (isFinished) {
+        return (
+            <div className="game-container">
+                <div className="glass-card game-completion-card animate-fade-in">
+                    <Trophy size={80} color="var(--accent-secondary)" className="completion-icon" />
+                    <h1 className="gradient-text completion-title">{t('congratulations')}!</h1>
+                    <p>{t('level_completed').replace('{level}', levelId)}</p>
+
+                    <div className="completion-stats">
+                        <div className="completion-stat-item">
+                            <span className="completion-stat-label">Score</span>
+                            <span className="completion-stat-value">{score}</span>
+                        </div>
+                        <div className="completion-stat-item">
+                            <span className="completion-stat-label">XP</span>
+                            <span className="completion-stat-value">+{score}</span>
+                        </div>
+                    </div>
+
+                    <div className="completion-actions">
+                        <button className="btn-primary" onClick={() => router.push('/lessons')}>
+                            {t('back_to_lessons')}
+                        </button>
+                        <button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent-primary)' }} onClick={() => window.location.reload()}>
+                            <RefreshCw size={18} /> {t('play_again')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (mode === 'final_exam') {
         // Extract level (N5, N4, etc.) from levelId (e.g., n5_final -> N5)

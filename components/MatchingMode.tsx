@@ -129,7 +129,7 @@ export default function MatchingMode({ characters, onComplete }: MatchingModePro
         if (selectedLeft && selectedRight) {
             checkMatch();
         }
-    }, [selectedLeft, selectedRight, leftItems, rightItems, onComplete, score, leftItems.length]);
+    }, [selectedLeft, selectedRight, leftItems, rightItems, onComplete, score, leftItems.length, finishGame]);
 
     const updateItemState = (list: MatchItem[], setList: any, id: string, state: MatchItem['state']) => {
         setList((prev: MatchItem[]) => prev.map(item => item.id === id ? { ...item, state } : item));
