@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { JapaneseItem } from '@/data/japanese';
 import { Check, X, Clock } from 'lucide-react';
 import HandwritingCanvas from './HandwritingCanvas';
+import MultipleChoiceQuestion from './MultipleChoiceQuestion';
 
 interface QuizModeProps {
     characters: JapaneseItem[];
@@ -13,7 +14,7 @@ interface QuizModeProps {
 export default function QuizMode({ characters, onComplete }: QuizModeProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [userAnswer, setUserAnswer] = useState('');
-    const [options, setOptions] = useState<string[]>([]);
+    const [options, setOptions] = useState<{ id: string; text: string; isCorrect: boolean }[]>([]);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [score, setScore] = useState(0);
     const [startTime] = useState(Date.now());
@@ -35,9 +36,10 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
                     .filter(c => c.romaji !== correct)
                     .sort(() => Math.random() - 0.5)
                     .slice(0, 3)
-                    .map(c => c.romaji);
+                    .map(c => ({ id: c.romaji, text: c.romaji, isCorrect: false }));
 
-                const allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
+                const correctOption = { id: correct, text: correct, isCorrect: true };
+                const allOptions = [correctOption, ...wrongOptions].sort(() => Math.random() - 0.5);
                 setOptions(allOptions);
             }
         };
@@ -47,12 +49,19 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
         }
     }, [currentIndex, currentChar, characters]);
 
-    const handleAnswer = (answer: string) => {
-        const isCorrect = questionType === 'char-to-romaji'
-            ? answer === currentChar.romaji
-            : answer === currentChar.char;
+    const handleAnswer = (answer: string | boolean) => {
+        let isCorrect = false;
 
-        setUserAnswer(answer);
+        if (typeof answer === 'boolean') {
+            isCorrect = answer;
+            // For MCQ, we don't strictly need to set userAnswer string if we trust the component's validation
+            // But we can set it for consistency if needed, or just rely on isCorrect
+        } else {
+            // Canvas answer (string)
+            isCorrect = answer === currentChar.char;
+            setUserAnswer(answer);
+        }
+
         setFeedback(isCorrect ? 'correct' : 'wrong');
 
         if (isCorrect) {
@@ -86,44 +95,13 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
             </div>
 
             {questionType === 'char-to-romaji' ? (
-                <>
-                    {/* Show Japanese character, ask for romaji */}
-                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                        <div style={{ fontSize: '6rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
-                            {currentChar.char}
-                        </div>
-                        {currentChar.meaning && (
-                            <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>
-                                {currentChar.meaning}
-                            </p>
-                        )}
-                        <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                            Qual é o romaji?
-                        </p>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        {options.map((option, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleAnswer(option)}
-                                disabled={!!feedback}
-                                style={{
-                                    padding: '1.5rem',
-                                    fontSize: '1.5rem',
-                                    border: `2px solid ${feedback && option === userAnswer ? (feedback === 'correct' ? '#4ade80' : '#ff3e3e') : 'var(--glass-border)'}`,
-                                    borderRadius: '8px',
-                                    background: feedback && option === userAnswer ? (feedback === 'correct' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 62, 62, 0.1)') : 'var(--glass-bg)',
-                                    color: 'var(--text-primary)',
-                                    cursor: feedback ? 'default' : 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                {option}
-                            </button>
-                        ))}
-                    </div>
-                </>
+                <MultipleChoiceQuestion
+                    question={currentChar.char}
+                    questionSubtext={currentChar.meaning || 'Qual é o romaji?'}
+                    options={options}
+                    onAnswer={handleAnswer}
+                    disabled={!!feedback}
+                />
             ) : (
                 <>
                     {/* Show romaji, ask to draw character */}
