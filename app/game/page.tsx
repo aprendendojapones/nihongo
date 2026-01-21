@@ -15,6 +15,7 @@ import QuizMode from '@/components/QuizMode';
 import TimedMode from '@/components/TimedMode';
 import MemoryMode from '@/components/MemoryMode';
 import MatchingMode from '@/components/MatchingMode';
+import HandwritingCanvas from '@/components/HandwritingCanvas';
 import './game.css';
 
 // Repetition Mode: For Hiragana/Katakana
@@ -32,7 +33,9 @@ function RepetitionMode({ levelId }: { levelId: string }) {
     const [practiceCount, setPracticeCount] = useState(0); // 0-9 for practice phase
     const [testCorrectCount, setTestCorrectCount] = useState(0); // 0-4 for test phase
     const [phase, setPhase] = useState<'practice' | 'test'>('practice');
+    const [questionType, setQuestionType] = useState<'char-to-romaji' | 'romaji-to-char'>('char-to-romaji');
     const [userInput, setUserInput] = useState('');
+    const [debouncedInput, setDebouncedInput] = useState('');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [isFinished, setIsFinished] = useState(false);
     const [score, setScore] = useState(0);
