@@ -51,15 +51,10 @@ function RepetitionMode({ levelId }: { levelId: string }) {
     const currentItem = shuffledData[currentCharIndex];
 
     const handleNext = () => {
-        if (phase === 'practice') {
-            if (practiceCount < 9) {
-                setPracticeCount(practiceCount + 1);
-            } else {
-                // Move to test phase
-                setPhase('test');
-                setPracticeCount(0);
-                setTestCorrectCount(0);
-            }
+        if (currentCharIndex < shuffledData.length - 1) {
+            setCurrentCharIndex(currentCharIndex + 1);
+        } else {
+            finishGame();
         }
         setUserInput('');
         setFeedback(null);
@@ -68,9 +63,6 @@ function RepetitionMode({ levelId }: { levelId: string }) {
     const handleBack = () => {
         if (currentCharIndex > 0) {
             setCurrentCharIndex(currentCharIndex - 1);
-            setPhase('practice');
-            setPracticeCount(0);
-            setTestCorrectCount(0);
             setUserInput('');
             setFeedback(null);
         }
@@ -78,7 +70,7 @@ function RepetitionMode({ levelId }: { levelId: string }) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentItem) return;
+        if (!currentItem || !userInput.trim()) return;
 
         const isCorrect = userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase() ||
             userInput === currentItem.char;
@@ -87,36 +79,15 @@ function RepetitionMode({ levelId }: { levelId: string }) {
             setFeedback('correct');
             setScore(s => s + 10);
 
-            if (phase === 'test') {
-                if (testCorrectCount < 4) {
-                    setTestCorrectCount(testCorrectCount + 1);
-                    setTimeout(() => {
-                        setUserInput('');
-                        setFeedback(null);
-                    }, 800);
-                } else {
-                    // Completed test phase, move to next character
-                    setTimeout(() => {
-                        if (currentCharIndex === shuffledData.length - 1) {
-                            finishGame();
-                        } else {
-                            setCurrentCharIndex(currentCharIndex + 1);
-                            setPhase('practice');
-                            setPracticeCount(0);
-                            setTestCorrectCount(0);
-                            setUserInput('');
-                            setFeedback(null);
-                        }
-                    }, 800);
-                }
-            } else {
-                setTimeout(() => {
-                    handleNext();
-                }, 800);
-            }
+            setTimeout(() => {
+                handleNext();
+            }, 1500);
         } else {
             setFeedback('wrong');
-            setTimeout(() => setFeedback(null), 1000);
+            setTimeout(() => {
+                setFeedback(null);
+                setUserInput('');
+            }, 2000);
         }
     };
 
@@ -198,52 +169,46 @@ function RepetitionMode({ levelId }: { levelId: string }) {
             <main className="game-main">
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                     <span style={{
-                        background: phase === 'practice' ? 'rgba(62, 255, 162, 0.2)' : 'rgba(255, 62, 62, 0.2)',
+                        background: 'rgba(62, 255, 162, 0.2)',
                         padding: '0.5rem 1rem',
                         borderRadius: '20px',
                         fontSize: '0.9rem',
                         fontWeight: 'bold',
-                        color: phase === 'practice' ? '#3effa2' : '#ff3e3e'
+                        color: '#3effa2'
                     }}>
-                        {phase === 'practice' ? `Prática ${practiceCount + 1}/10` : `Teste ${testCorrectCount + 1}/5`}
+                        Prática {currentCharIndex + 1}/{shuffledData.length}
                     </span>
                 </div>
 
                 <div className="game-question-display">
                     <span className="game-char">{currentItem.char}</span>
-                    {phase === 'practice' && (
-                        <span className="game-meaning" style={{ fontSize: '1.5rem', color: 'var(--accent-primary)' }}>
-                            {currentItem.romaji}
+                    {currentItem.meaning && (
+                        <span className="game-meaning" style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginTop: '1rem' }}>
+                            {currentItem.meaning}
                         </span>
                     )}
                 </div>
 
-                {phase === 'practice' ? (
-                    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                        <button className="btn-primary" onClick={handleNext} style={{ minWidth: '200px' }}>
-                            <Eye size={20} /> Próximo
-                        </button>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSubmit} className="game-input-container">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={userInput}
-                            onChange={(e) => setUserInput(e.target.value)}
-                            placeholder={t('type_romaji')}
-                            className="game-input"
-                            disabled={!!feedback}
-                        />
-                    </form>
-                )}
+                <form onSubmit={handleSubmit} className="game-input-container">
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={userInput}
+                        onChange={(e) => setUserInput(e.target.value)}
+                        placeholder="Digite o romaji..."
+                        className="game-input"
+                        disabled={!!feedback}
+                        autoComplete="off"
+                        autoFocus
+                    />
+                </form>
 
                 {feedback && (
                     <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
                         {feedback === 'correct' ? (
-                            <><CheckCircle2 size={24} /> {t('correct')}!</>
+                            <><CheckCircle2 size={24} /> Correto! ({currentItem.romaji})</>
                         ) : (
-                            <><XCircle size={24} /> {t('try_again')}</>
+                            <><XCircle size={24} /> Incorreto. Era: {currentItem.romaji}</>
                         )}
                     </div>
                 )}
