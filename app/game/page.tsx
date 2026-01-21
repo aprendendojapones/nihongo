@@ -45,6 +45,8 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         setShuffledData([...levelData]);
     }, [levelId]);
 
+    const currentItem = shuffledData[currentCharIndex];
+
     useEffect(() => {
         if (!feedback && !isFinished && inputRef.current) {
             inputRef.current.focus();
@@ -89,8 +91,6 @@ function RepetitionMode({ levelId }: { levelId: string }) {
             }, 1500);
         }
     }, [debouncedInput, currentItem, feedback, phase, practiceCount]);
-
-    const currentItem = shuffledData[currentCharIndex];
 
     const handleNext = () => {
         if (currentCharIndex < shuffledData.length - 1) {
