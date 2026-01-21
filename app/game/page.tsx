@@ -16,6 +16,7 @@ import TimedMode from '@/components/TimedMode';
 import MemoryMode from '@/components/MemoryMode';
 import MatchingMode from '@/components/MatchingMode';
 import HandwritingCanvas from '@/components/HandwritingCanvas';
+import TrueFalseMode from '@/components/TrueFalseMode';
 import './game.css';
 
 // Repetition Mode: For Hiragana/Katakana
@@ -812,38 +813,10 @@ function GamePageContent() {
             <div className="game-container">
                 <header className="game-header">
                     <button className="icon-button" onClick={() => router.back()}>
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 className="gradient-text">Memória</h1>
-                    <div style={{ width: 40 }}></div>
-                </header>
-                <main className="game-main">
-                    <MemoryMode
                         characters={levelData}
                         onComplete={(score) => handlePracticeComplete(score, 100, 0)}
                     />
-                </main>
-            </div>
-        );
-    }
-
-    if (mode === 'matching') {
-        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
-        return (
-            <div className="game-container">
-                <header className="game-header">
-                    <button className="icon-button" onClick={() => router.back()}>
-                        <ArrowLeft size={24} />
-                    </button>
-                    <h1 className="gradient-text">Combinação</h1>
-                    <div style={{ width: 40 }}></div>
-                </header>
-                <main className="game-main">
-                    <MatchingMode
-                        characters={levelData}
-                        onComplete={(score) => handlePracticeComplete(score, 100, 0)}
-                    />
-                </main>
+                    </main>
             </div>
         );
     }

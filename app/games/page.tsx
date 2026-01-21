@@ -56,27 +56,6 @@ export default function GamesPage() {
             name: 'Matching Mode',
             description: 'Conecte caracteres com seus romaji correspondentes',
             icon: <Link2 size={48} />,
-            difficulty: 'easy',
-            estimatedTime: '5 min',
-            color: '#9c27b0',
-            available: true
-        },
-        {
-            id: 'truefalse',
-            name: 'True/False Mode',
-            description: 'Verdadeiro ou falso sobre caracteres japoneses',
-            icon: <CheckSquare size={48} />,
-            difficulty: 'easy',
-            estimatedTime: '3 min',
-            color: '#ff5722',
-            available: false
-        },
-        {
-            id: 'fillblank',
-            name: 'Fill Blank Mode',
-            description: 'Complete a palavra com o caractere correto',
-            icon: <FileText size={48} />,
-            difficulty: 'medium',
             estimatedTime: '5 min',
             color: '#4caf50',
             available: false
