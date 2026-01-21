@@ -51,6 +51,45 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         }
     }, [feedback, isFinished, currentCharIndex, phase]);
 
+    // Debounce input for automatic verification
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedInput(userInput);
+        }, 500); // Wait 500ms after last keystroke
+
+        return () => clearTimeout(timer);
+    }, [userInput]);
+
+    // Auto-verify when debounced input changes (only in practice phase)
+    useEffect(() => {
+        if (!debouncedInput.trim() || !currentItem || feedback || phase !== 'practice') return;
+
+        const isCorrect = debouncedInput.toLowerCase().trim() === currentItem.romaji.toLowerCase();
+
+        if (isCorrect) {
+            setFeedback('correct');
+            setScore(s => s + 10);
+
+            setTimeout(() => {
+                if (practiceCount < 9) {
+                    setPracticeCount(practiceCount + 1);
+                    setUserInput('');
+                    setFeedback(null);
+                    setDebouncedInput('');
+                } else {
+                    // Move to test phase after 10 practice rounds
+                    setPhase('test');
+                    setPracticeCount(0);
+                    setTestCorrectCount(0);
+                    setQuestionType('char-to-romaji');
+                    setUserInput('');
+                    setFeedback(null);
+                    setDebouncedInput('');
+                }
+            }, 1500);
+        }
+    }, [debouncedInput, currentItem, feedback, phase, practiceCount]);
+
     const currentItem = shuffledData[currentCharIndex];
 
     const handleNext = () => {
