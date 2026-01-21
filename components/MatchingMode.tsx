@@ -93,6 +93,21 @@ export default function MatchingMode({ characters, onComplete }: MatchingModePro
         }
     };
 
+    const updateItemState = (list: MatchItem[], setList: any, id: string, state: MatchItem['state']) => {
+        setList((prev: MatchItem[]) => prev.map(item => item.id === id ? { ...item, state } : item));
+    };
+
+    const clearSelection = () => {
+        setLeftItems(prev => prev.map(i => i.state === 'wrong' || i.state === 'selected' ? { ...i, state: 'idle' } : i));
+        setRightItems(prev => prev.map(i => i.state === 'wrong' || i.state === 'selected' ? { ...i, state: 'idle' } : i));
+        setSelectedLeft(null);
+        setSelectedRight(null);
+    };
+
+    const finishGame = useCallback((finalScore: number) => {
+        onComplete(finalScore);
+    }, [onComplete]);
+
     useEffect(() => {
         const checkMatch = () => {
             if (!selectedLeft || !selectedRight) return;
@@ -129,22 +144,7 @@ export default function MatchingMode({ characters, onComplete }: MatchingModePro
         if (selectedLeft && selectedRight) {
             checkMatch();
         }
-    }, [selectedLeft, selectedRight, leftItems, rightItems, onComplete, score, leftItems.length, finishGame]);
-
-    const updateItemState = (list: MatchItem[], setList: any, id: string, state: MatchItem['state']) => {
-        setList((prev: MatchItem[]) => prev.map(item => item.id === id ? { ...item, state } : item));
-    };
-
-    const clearSelection = () => {
-        setLeftItems(prev => prev.map(i => i.state === 'wrong' || i.state === 'selected' ? { ...i, state: 'idle' } : i));
-        setRightItems(prev => prev.map(i => i.state === 'wrong' || i.state === 'selected' ? { ...i, state: 'idle' } : i));
-        setSelectedLeft(null);
-        setSelectedRight(null);
-    };
-
-    const finishGame = useCallback((finalScore: number) => {
-        onComplete(finalScore);
-    }, [onComplete]);
+    }, [selectedLeft, selectedRight, leftItems, rightItems, onComplete, score, leftItems.length, finishGame, updateItemState]);
 
     const getItemStyle = (item: MatchItem) => {
         const baseStyle: any = {
