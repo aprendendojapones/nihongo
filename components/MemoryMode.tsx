@@ -57,7 +57,7 @@ export default function MemoryMode({ characters, onComplete }: MemoryModeProps) 
             setCards(newCards.sort(() => Math.random() - 0.5));
         };
         initializeGame();
-    }, []);
+    }, [characters]);
 
     const handleCardClick = (clickedCard: Card) => {
         if (isLocked || clickedCard.isFlipped || clickedCard.isMatched) return;

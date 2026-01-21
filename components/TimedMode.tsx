@@ -34,7 +34,7 @@ export default function TimedMode({ characters, timeLimit = 60, onComplete }: Ti
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isActive, score]);
+    }, [isActive, score, onComplete]);
 
     const handleSubmit = () => {
         if (userInput.toLowerCase().trim() === currentChar.romaji.toLowerCase()) {

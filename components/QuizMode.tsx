@@ -20,22 +20,24 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
     const currentChar = characters[currentIndex];
 
     useEffect(() => {
+        const generateOptions = () => {
+            if (!currentChar) return;
+
+            const correct = currentChar.romaji;
+            const wrongOptions = characters
+                .filter(c => c.romaji !== correct)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3)
+                .map(c => c.romaji);
+
+            const allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
+            setOptions(allOptions);
+        };
+
         if (currentChar) {
             generateOptions();
         }
-    }, [currentIndex]);
-
-    const generateOptions = () => {
-        const correct = currentChar.romaji;
-        const wrongOptions = characters
-            .filter(c => c.romaji !== correct)
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3)
-            .map(c => c.romaji);
-
-        const allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
-        setOptions(allOptions);
-    };
+    }, [currentIndex, currentChar, characters]);
 
     const handleAnswer = (answer: string) => {
         const isCorrect = answer === currentChar.romaji;
@@ -89,8 +91,8 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
                             padding: '1.5rem',
                             fontSize: '1.5rem',
                             border: `2px solid ${feedback && option === userAnswer
-                                    ? feedback === 'correct' ? '#4ade80' : '#ff3e3e'
-                                    : 'var(--glass-border)'
+                                ? feedback === 'correct' ? '#4ade80' : '#ff3e3e'
+                                : 'var(--glass-border)'
                                 }`,
                             borderRadius: '8px',
                             background: feedback && option === userAnswer
