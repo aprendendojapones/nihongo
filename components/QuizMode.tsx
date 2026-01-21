@@ -1,4 +1,3 @@
-```javascript
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -49,10 +48,10 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
     }, [currentIndex, currentChar, characters]);
 
     const handleAnswer = (answer: string) => {
-        const isCorrect = questionType === 'char-to-romaji' 
+        const isCorrect = questionType === 'char-to-romaji'
             ? answer === currentChar.romaji
             : answer === currentChar.char;
-            
+
         setUserAnswer(answer);
         setFeedback(isCorrect ? 'correct' : 'wrong');
 
@@ -112,15 +111,9 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
                                 style={{
                                     padding: '1.5rem',
                                     fontSize: '1.5rem',
-                                    border: `2px solid ${
-    feedback && option === userAnswer
-    ? feedback === 'correct' ? '#4ade80' : '#ff3e3e'
-    : 'var(--glass-border)'
-} `,
+                                    border: `2px solid ${feedback && option === userAnswer ? (feedback === 'correct' ? '#4ade80' : '#ff3e3e') : 'var(--glass-border)'}`,
                                     borderRadius: '8px',
-                                    background: feedback && option === userAnswer
-                                        ? feedback === 'correct' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 62, 62, 0.1)'
-                                        : 'var(--glass-bg)',
+                                    background: feedback && option === userAnswer ? (feedback === 'correct' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 62, 62, 0.1)') : 'var(--glass-bg)',
                                     color: 'var(--text-primary)',
                                     cursor: feedback ? 'default' : 'pointer',
                                     transition: 'all 0.3s ease'
@@ -155,8 +148,8 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
                     />
 
                     {feedback && (
-                        <div style={{ 
-                            marginTop: '1rem', 
+                        <div style={{
+                            marginTop: '1rem',
                             textAlign: 'center',
                             color: feedback === 'correct' ? '#4ade80' : '#ff3e3e',
                             fontSize: '1.2rem',
@@ -174,4 +167,3 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
         </div>
     );
 }
-```
