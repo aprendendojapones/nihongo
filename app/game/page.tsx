@@ -270,48 +270,92 @@ function RepetitionMode({ levelId }: { levelId: string }) {
             <main className="game-main">
                 <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                     <span style={{
-                        background: 'rgba(62, 255, 162, 0.2)',
+                        background: phase === 'practice' ? 'rgba(62, 255, 162, 0.2)' : 'rgba(255, 62, 62, 0.2)',
                         padding: '0.5rem 1rem',
                         borderRadius: '20px',
                         fontSize: '0.9rem',
                         fontWeight: 'bold',
-                        color: '#3effa2'
+                        color: phase === 'practice' ? '#3effa2' : '#ff3e3e'
                     }}>
-                        Prática {currentCharIndex + 1}/{shuffledData.length}
+                        {phase === 'practice' ? `Prática ${practiceCount + 1}/10` : `Teste ${testCorrectCount + 1}/5`}
                     </span>
                 </div>
 
                 <div className="game-question-display">
-                    <span className="game-char">{currentItem.char}</span>
-                    {currentItem.meaning && (
-                        <span className="game-meaning" style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginTop: '1rem' }}>
-                            {currentItem.meaning}
-                        </span>
+                    {phase === 'practice' || questionType === 'char-to-romaji' ? (
+                        <>
+                            <span className="game-char">{currentItem.char}</span>
+                            {phase === 'practice' && (
+                                <span className="game-meaning" style={{ fontSize: '1.5rem', color: 'var(--accent-primary)', marginTop: '1rem' }}>
+                                    {currentItem.romaji}
+                                </span>
+                            )}
+                            {currentItem.meaning && (
+                                <span className="game-meaning" style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                    {currentItem.meaning}
+                                </span>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                                Desenhe o caractere para:
+                            </p>
+                            <span style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--accent-secondary)' }}>
+                                {currentItem.romaji}
+                            </span>
+                            {currentItem.meaning && (
+                                <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                                    ({currentItem.meaning})
+                                </p>
+                            )}
+                        </>
                     )}
                 </div>
 
-                <form onSubmit={handleSubmit} className="game-input-container">
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={userInput}
-                        onChange={(e) => setUserInput(e.target.value)}
-                        placeholder="Digite o romaji..."
-                        className="game-input"
-                        disabled={!!feedback}
-                        autoComplete="off"
-                        autoFocus
-                    />
-                </form>
-
-                {feedback && (
-                    <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
-                        {feedback === 'correct' ? (
-                            <><CheckCircle2 size={24} /> Correto! ({currentItem.romaji})</>
-                        ) : (
-                            <><XCircle size={24} /> Incorreto. Era: {currentItem.romaji}</>
+                {phase === 'test' && questionType === 'romaji-to-char' ? (
+                    <>
+                        <HandwritingCanvas
+                            onRecognize={handleCanvasRecognize}
+                            expectedChar={currentItem.char}
+                            disabled={!!feedback}
+                        />
+                        {feedback && (
+                            <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
+                                {feedback === 'correct' ? (
+                                    <><CheckCircle2 size={24} /> Correto! ({currentItem.char})</>
+                                ) : (
+                                    <><XCircle size={24} /> Incorreto. Era: {currentItem.char}</>
+                                )}
+                            </div>
                         )}
-                    </div>
+                    </>
+                ) : (
+                    <>
+                        <form onSubmit={handleSubmit} className="game-input-container">
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={userInput}
+                                onChange={(e) => setUserInput(e.target.value)}
+                                placeholder="Digite o romaji..."
+                                className="game-input"
+                                disabled={!!feedback}
+                                autoComplete="off"
+                                autoFocus
+                            />
+                        </form>
+
+                        {feedback && (
+                            <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
+                                {feedback === 'correct' ? (
+                                    <><CheckCircle2 size={24} /> Correto! ({currentItem.romaji})</>
+                                ) : (
+                                    <><XCircle size={24} /> Incorreto. Era: {currentItem.romaji}</>
+                                )}
+                            </div>
+                        )}
+                    </>
                 )}
             </main>
 
