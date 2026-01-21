@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Trophy, ArrowRight, Lock, CheckCircle2, Star, Zap, Clock, Brain, Link2 } from 'lucide-react';
+import { Trophy, ArrowRight, Lock, CheckCircle2, Star, Zap, Clock, Brain, Link2, Gamepad2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -107,8 +107,18 @@ export default function LessonsPage() {
     return (
         <div className="lessons-container">
             <header className="lessons-header">
-                <h1 className="gradient-text">{t('learning_path')}</h1>
-                <p>{t('learning_path_desc')}</p>
+                <div>
+                    <h1 className="gradient-text">{t('learning_path')}</h1>
+                    <p>{t('learning_path_desc')}</p>
+                </div>
+                <button
+                    className="btn-games"
+                    onClick={() => router.push('/games')}
+                    title="Jogos"
+                >
+                    <Gamepad2 size={24} />
+                    <span>Jogos</span>
+                </button>
             </header>
 
             <div className="levels-grid">
