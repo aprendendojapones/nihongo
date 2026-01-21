@@ -75,11 +75,16 @@ export default function LessonsPage() {
     };
 
     const startLevel = (levelId: string, isTest: boolean = false) => {
-        let mode = isTest ? 'test' : 'study';
-        if (levelId.includes('final') && !isTest) {
-            mode = 'final_exam';
+        if (isTest) {
+            // Modo teste vai para o game
+            router.push(`/game?level=${levelId}&mode=test`);
+        } else if (levelId.includes('final')) {
+            // Exame final vai para o game
+            router.push(`/game?level=${levelId}&mode=final_exam`);
+        } else {
+            // Modo estudo vai para prática interativa
+            router.push(`/practice?type=${levelId}`);
         }
-        router.push(`/game?level=${levelId}&mode=${mode}`);
     };
 
     if (loading) return <div className="flex-center" style={{ height: '100vh' }}><div className="loader"></div></div>;
