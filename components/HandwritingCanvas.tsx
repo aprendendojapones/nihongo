@@ -2,6 +2,8 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { RotateCcw, Check } from 'lucide-react';
+import { Point, Stroke } from '@/data/character-patterns';
+import { analyzeStrokeDirection, recognizeCharacter, getRecognitionFeedback } from '@/lib/handwriting-recognition';
 
 interface HandwritingCanvasProps {
     onRecognize: (result: string) => void;
@@ -13,6 +15,9 @@ export default function HandwritingCanvas({ onRecognize, expectedChar, disabled 
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [hasDrawing, setHasDrawing] = useState(false);
+    const [strokes, setStrokes] = useState<Stroke[]>([]);
+    const [currentStroke, setCurrentStroke] = useState<Point[]>([]);
+    const [recognitionFeedback, setRecognitionFeedback] = useState<string>('');
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -50,6 +55,9 @@ export default function HandwritingCanvas({ onRecognize, expectedChar, disabled 
         const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
         const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
+        // Start new stroke
+        setCurrentStroke([{ x, y }]);
+
         ctx.beginPath();
         ctx.moveTo(x, y);
     };
@@ -67,12 +75,26 @@ export default function HandwritingCanvas({ onRecognize, expectedChar, disabled 
         const x = ('touches' in e) ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
         const y = ('touches' in e) ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
 
+        // Add point to current stroke
+        setCurrentStroke(prev => [...prev, { x, y }]);
+
         ctx.lineTo(x, y);
         ctx.stroke();
     };
 
     const stopDrawing = () => {
+        if (isDrawing && currentStroke.length > 2) {
+            // Analyze and save the completed stroke
+            const direction = analyzeStrokeDirection(currentStroke);
+            const newStroke: Stroke = {
+                points: currentStroke,
+                direction
+            };
+            setStrokes(prev => [...prev, newStroke]);
+        }
+
         setIsDrawing(false);
+        setCurrentStroke([]);
     };
 
     const clearCanvas = () => {
@@ -84,20 +106,39 @@ export default function HandwritingCanvas({ onRecognize, expectedChar, disabled 
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         setHasDrawing(false);
+        setStrokes([]);
+        setCurrentStroke([]);
+        setRecognitionFeedback('');
     };
 
     const recognizeDrawing = () => {
-        if (!hasDrawing) return;
+        if (!hasDrawing || strokes.length === 0) {
+            setRecognitionFeedback('Desenhe algo primeiro!');
+            return;
+        }
 
-        // For now, we'll use a simple approach: just return the expected character
-        // In a real implementation, this would use TensorFlow.js or an API
-        // to recognize the drawn character
+        // Use real recognition
+        const results = recognizeCharacter(strokes, expectedChar);
 
-        if (expectedChar) {
-            onRecognize(expectedChar);
+        if (results.length === 0) {
+            setRecognitionFeedback('Não consegui reconhecer. Tente novamente.');
+            return;
+        }
+
+        const topResult = results[0];
+        const feedback = getRecognitionFeedback(topResult.confidence);
+
+        setRecognitionFeedback(`${feedback.message} (${Math.round(topResult.confidence * 100)}%)`);
+
+        // If confidence is high enough, accept the result
+        if (topResult.confidence >= 0.5) {
+            setTimeout(() => {
+                onRecognize(topResult.char);
+            }, 800);
         } else {
-            // Placeholder: in real implementation, this would analyze the canvas
-            onRecognize('あ');
+            // Show alternatives
+            const alternatives = results.slice(0, 3).map(r => r.char).join(', ');
+            setRecognitionFeedback(`Talvez: ${alternatives}? Tente novamente.`);
         }
     };
 
@@ -114,6 +155,12 @@ export default function HandwritingCanvas({ onRecognize, expectedChar, disabled 
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
             />
+
+            {recognitionFeedback && (
+                <div className="recognition-feedback">
+                    {recognitionFeedback}
+                </div>
+            )}
 
             <div className="canvas-controls">
                 <button
@@ -188,6 +235,19 @@ export default function HandwritingCanvas({ onRecognize, expectedChar, disabled 
                     background: var(--accent-primary);
                     border-color: var(--accent-primary);
                     color: var(--bg-primary);
+                }
+
+                .recognition-feedback {
+                    text-align: center;
+                    padding: 0.8rem;
+                    border-radius: 8px;
+                    background: rgba(62, 255, 162, 0.1);
+                    color: var(--accent-primary);
+                    font-size: 0.9rem;
+                    min-height: 2.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
             `}</style>
         </div>
