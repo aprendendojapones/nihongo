@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import InteractivePractice from '@/components/InteractivePractice';
 import { HIRAGANA_DATA, KATAKANA_DATA, KANJI_N5, VOCAB_N5, JapaneseItem } from '@/data/japanese';
 import { ArrowLeft } from 'lucide-react';
 import '../dashboard/dashboard.css';
 
-export default function PracticePage() {
+function PracticePageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const type = searchParams.get('type') || 'hiragana';
@@ -21,8 +21,10 @@ export default function PracticePage() {
             case 'katakana':
                 return KATAKANA_DATA;
             case 'kanji-n5':
+            case 'kanji_basics':
                 return KANJI_N5;
             case 'vocab-n5':
+            case 'n5_vocab':
                 return VOCAB_N5;
             default:
                 return HIRAGANA_DATA;
@@ -36,8 +38,10 @@ export default function PracticePage() {
             case 'katakana':
                 return 'Prática de Katakana';
             case 'kanji-n5':
+            case 'kanji_basics':
                 return 'Prática de Kanji N5';
             case 'vocab-n5':
+            case 'n5_vocab':
                 return 'Prática de Vocabulário N5';
             default:
                 return 'Prática';
@@ -105,5 +109,13 @@ export default function PracticePage() {
                 />
             </main>
         </div>
+    );
+}
+
+export default function PracticePage() {
+    return (
+        <Suspense fallback={<div className="flex-center" style={{ height: '100vh' }}>Carregando...</div>}>
+            <PracticePageContent />
+        </Suspense>
     );
 }
