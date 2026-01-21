@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Trophy, ArrowRight, Lock, CheckCircle2, Star } from 'lucide-react';
+import { Trophy, ArrowRight, Lock, CheckCircle2, Star, Zap, Clock, Brain, Link2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -47,6 +47,13 @@ const LEVELS: Level[] = [
     { id: 'n1_final', titleKey: 'level_n1_final_title', descriptionKey: 'level_n1_final_desc', type: 'jlpt', requiredLevel: 'n1_vocab_test', xpReward: 10000 },
 ];
 
+const PRACTICE_MODES = [
+    { id: 'quiz', icon: Trophy, title: 'Quiz', desc: 'Escolha múltipla', color: '#3effa2' },
+    { id: 'timed', icon: Clock, title: 'Contra o Tempo', desc: '60 segundos', color: '#ff3e3e' },
+    { id: 'memory', icon: Brain, title: 'Memória', desc: 'Jogo de pares', color: '#00d4ff' },
+    { id: 'matching', icon: Link2, title: 'Combinação', desc: 'Conecte os pares', color: '#ffa500' },
+];
+
 export default function LessonsPage() {
     const router = useRouter();
     const { data: session } = useSession();
@@ -54,6 +61,8 @@ export default function LessonsPage() {
     const user = session?.user as any;
     const [completedLevels, setCompletedLevels] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+    const [showModeSelector, setShowModeSelector] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -76,14 +85,20 @@ export default function LessonsPage() {
 
     const startLevel = (levelId: string, isTest: boolean = false) => {
         if (isTest) {
-            // Modo teste vai para o game
             router.push(`/game?level=${levelId}&mode=test`);
         } else if (levelId.includes('final')) {
-            // Exame final vai para o game
             router.push(`/game?level=${levelId}&mode=final_exam`);
+        } else if (levelId === 'katakana' || levelId === 'hiragana') {
+            router.push(`/game?level=${levelId}`);
         } else {
-            // Modo estudo vai para prática interativa
-            router.push(`/practice?type=${levelId}`);
+            setSelectedLevel(levelId);
+            setShowModeSelector(true);
+        }
+    };
+
+    const selectMode = (mode: string) => {
+        if (selectedLevel) {
+            router.push(`/game?level=${selectedLevel}&mode=${mode}`);
         }
     };
 
@@ -152,16 +167,42 @@ export default function LessonsPage() {
                 })}
             </div>
 
-            <div className="final-challenge-container">
-                <div className="glass-card final-challenge-card">
-                    <Trophy size={48} color="var(--accent-secondary)" className="final-challenge-icon" />
-                    <h3>{t('final_challenge')}</h3>
-                    <p className="final-challenge-desc">
-                        {t('final_challenge_desc')}
-                    </p>
-                    <button className="btn-primary btn-locked">{t('locked')}</button>
+            {showModeSelector && (
+                <div className="modal-overlay" onClick={() => setShowModeSelector(false)}>
+                    <div className="glass-card mode-selector-modal" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="gradient-text">Escolha o Modo de Prática</h2>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+                            Selecione como você quer praticar
+                        </p>
+
+                        <div className="modes-grid">
+                            {PRACTICE_MODES.map((mode) => {
+                                const Icon = mode.icon;
+                                return (
+                                    <div
+                                        key={mode.id}
+                                        className="mode-card"
+                                        onClick={() => selectMode(mode.id)}
+                                        style={{ borderColor: mode.color }}
+                                    >
+                                        <Icon size={32} color={mode.color} />
+                                        <h3>{mode.title}</h3>
+                                        <p>{mode.desc}</p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            className="btn-primary"
+                            onClick={() => setShowModeSelector(false)}
+                            style={{ marginTop: '1rem', width: '100%' }}
+                        >
+                            Cancelar
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </div >
+            )}
+        </div>
     );
 }
