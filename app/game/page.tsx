@@ -11,6 +11,10 @@ import PCHandwritingView from '@/components/PCHandwritingView';
 import { useTranslation } from '@/components/TranslationContext';
 import FinalExam from '@/components/FinalExam';
 import VirtualKeyboard from '@/components/VirtualKeyboard';
+import QuizMode from '@/components/QuizMode';
+import TimedMode from '@/components/TimedMode';
+import MemoryMode from '@/components/MemoryMode';
+import MatchingMode from '@/components/MatchingMode';
 import './game.css';
 
 // Repetition Mode: For Hiragana/Katakana
@@ -585,6 +589,23 @@ function GamePageContent() {
         }
     };
 
+    const handlePracticeComplete = async (score: number, maxScore: number, timeSpent: number) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from('practice_results').insert({
+                user_id: user.id,
+                game_mode: mode,
+                level_id: levelId,
+                score: score,
+                max_score: maxScore,
+                time_spent: timeSpent
+            });
+        }
+        // Show completion screen or redirect
+        setScore(score);
+        setIsFinished(true);
+    };
+
     if (mode === 'final_exam') {
         // Extract level (N5, N4, etc.) from levelId (e.g., n5_final -> N5)
         const examLevel = levelId.split('_')[0].toUpperCase();
@@ -597,7 +618,92 @@ function GamePageContent() {
         );
     }
 
-    // Use repetition mode for hiragana and katakana
+    // New Modes Integration
+    if (mode === 'quiz') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return (
+            <div className="game-container">
+                <header className="game-header">
+                    <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Quiz</h1>
+                    <div style={{ width: 40 }}></div>
+                </header>
+                <main className="game-main">
+                    <QuizMode
+                        characters={levelData}
+                        onComplete={(score) => handlePracticeComplete(score, 100, 0)}
+                    />
+                </main>
+            </div>
+        );
+    }
+
+    if (mode === 'timed') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return (
+            <div className="game-container">
+                <header className="game-header">
+                    <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Contra o Tempo</h1>
+                    <div style={{ width: 40 }}></div>
+                </header>
+                <main className="game-main">
+                    <TimedMode
+                        characters={levelData}
+                        onComplete={(score) => handlePracticeComplete(score, 0, 60)}
+                    />
+                </main>
+            </div>
+        );
+    }
+
+    if (mode === 'memory') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return (
+            <div className="game-container">
+                <header className="game-header">
+                    <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Memória</h1>
+                    <div style={{ width: 40 }}></div>
+                </header>
+                <main className="game-main">
+                    <MemoryMode
+                        characters={levelData}
+                        onComplete={(score) => handlePracticeComplete(score, 100, 0)}
+                    />
+                </main>
+            </div>
+        );
+    }
+
+    if (mode === 'matching') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return (
+            <div className="game-container">
+                <header className="game-header">
+                    <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Combinação</h1>
+                    <div style={{ width: 40 }}></div>
+                </header>
+                <main className="game-main">
+                    <MatchingMode
+                        characters={levelData}
+                        onComplete={(score) => handlePracticeComplete(score, 100, 0)}
+                    />
+                </main>
+            </div>
+        );
+    }
+
+    // Use repetition mode for hiragana and katakana (default study mode)
     if (levelId === 'hiragana' || levelId === 'katakana') {
         return <RepetitionMode levelId={levelId} />;
     }
