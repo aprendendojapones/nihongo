@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { JapaneseItem } from '@/data/japanese';
 import { Check, X, Zap } from 'lucide-react';
 
@@ -33,17 +33,17 @@ export default function MatchingMode({ characters, onComplete }: MatchingModePro
             const left: MatchItem[] = selectedChars.map((char, i) => ({
                 id: `left-${i}`,
                 content: char.char,
-                type: 'char',
+                type: 'char' as const,
                 item: char,
-                state: 'idle'
+                state: 'idle' as const
             })).sort(() => Math.random() - 0.5);
 
             const right: MatchItem[] = selectedChars.map((char, i) => ({
                 id: `right-${i}`,
                 content: char.romaji,
-                type: 'romaji',
+                type: 'romaji' as const,
                 item: char,
-                state: 'idle'
+                state: 'idle' as const
             })).sort(() => Math.random() - 0.5);
 
             setLeftItems(left);
@@ -142,9 +142,9 @@ export default function MatchingMode({ characters, onComplete }: MatchingModePro
         setSelectedRight(null);
     };
 
-    const finishGame = (finalScore: number) => {
+    const finishGame = useCallback((finalScore: number) => {
         onComplete(finalScore);
-    };
+    }, [onComplete]);
 
     const getItemStyle = (item: MatchItem) => {
         const baseStyle: any = {
