@@ -112,17 +112,39 @@ function RepetitionMode({ levelId }: { levelId: string }) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentItem || !userInput.trim()) return;
+        if (!currentItem || !userInput.trim() || phase !== 'test') return;
 
-        const isCorrect = userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase() ||
-            userInput === currentItem.char;
+        const isCorrect = questionType === 'char-to-romaji'
+            ? userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase()
+            : userInput === currentItem.char;
 
         if (isCorrect) {
             setFeedback('correct');
             setScore(s => s + 10);
 
             setTimeout(() => {
-                handleNext();
+                if (testCorrectCount < 4) {
+                    // Continue test phase, alternate question type
+                    setTestCorrectCount(testCorrectCount + 1);
+                    setQuestionType(questionType === 'char-to-romaji' ? 'romaji-to-char' : 'char-to-romaji');
+                    setUserInput('');
+                    setFeedback(null);
+                    setDebouncedInput('');
+                } else {
+                    // Completed test phase (5 correct), move to next character
+                    if (currentCharIndex === shuffledData.length - 1) {
+                        finishGame();
+                    } else {
+                        setCurrentCharIndex(currentCharIndex + 1);
+                        setPhase('practice');
+                        setPracticeCount(0);
+                        setTestCorrectCount(0);
+                        setQuestionType('char-to-romaji');
+                        setUserInput('');
+                        setFeedback(null);
+                        setDebouncedInput('');
+                    }
+                }
             }, 1500);
         } else {
             setFeedback('wrong');
@@ -130,6 +152,43 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                 setFeedback(null);
                 setUserInput('');
             }, 2000);
+        }
+    };
+
+    const handleCanvasRecognize = (recognizedChar: string) => {
+        if (phase !== 'test' || questionType !== 'romaji-to-char') return;
+
+        const isCorrect = recognizedChar === currentItem.char;
+
+        if (isCorrect) {
+            setFeedback('correct');
+            setScore(s => s + 10);
+
+            setTimeout(() => {
+                if (testCorrectCount < 4) {
+                    setTestCorrectCount(testCorrectCount + 1);
+                    setQuestionType('char-to-romaji');
+                    setUserInput('');
+                    setFeedback(null);
+                    setDebouncedInput('');
+                } else {
+                    if (currentCharIndex === shuffledData.length - 1) {
+                        finishGame();
+                    } else {
+                        setCurrentCharIndex(currentCharIndex + 1);
+                        setPhase('practice');
+                        setPracticeCount(0);
+                        setTestCorrectCount(0);
+                        setQuestionType('char-to-romaji');
+                        setUserInput('');
+                        setFeedback(null);
+                        setDebouncedInput('');
+                    }
+                }
+            }, 1500);
+        } else {
+            setFeedback('wrong');
+            setTimeout(() => setFeedback(null), 2000);
         }
     };
 
