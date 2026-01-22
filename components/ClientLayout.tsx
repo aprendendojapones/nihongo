@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 
+import InAppBrowserWarning from "@/components/InAppBrowserWarning";
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { data: session } = useSession();
@@ -39,6 +41,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     return (
         <div className="flex">
+            <InAppBrowserWarning />
             <Sidebar />
             <main className={`main-content ${hasSidebar ? (isExpanded ? 'with-sidebar-expanded' : 'with-sidebar-minimized') : ''}`}>
                 {children}
