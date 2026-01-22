@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { Target, Clock, Brain, Link2, CheckSquare, FileText, ArrowDownAZ, ArrowLeft, Gamepad2, Trophy, BookOpen } from 'lucide-react';
+import { Target, Clock, Brain, Link2, CheckSquare, FileText, ArrowDownAZ, ArrowLeft, Gamepad2, Trophy, BookOpen, PenTool } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import './games.css';
 
@@ -130,6 +130,17 @@ export default function GamesPage() {
             difficulty: 'easy',
             estimatedTime: '5 min',
             color: '#00bcd4',
+            available: true
+        },
+        {
+            id: 'kanji_drawing',
+            name: 'Kanji Drawing',
+            description: 'Desenhe o Kanji correto',
+            icon: <PenTool size={32} />,
+            image: '/games/game_fillblank.png', // Fallback
+            difficulty: 'hard',
+            estimatedTime: '5-10 min',
+            color: '#e91e63',
             available: true
         },
         {

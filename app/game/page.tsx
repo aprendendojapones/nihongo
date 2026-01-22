@@ -21,6 +21,7 @@ import FillBlankMode from '@/components/FillBlankMode';
 import AlphabetOrderMode from '@/components/AlphabetOrderMode';
 import SentenceScrambleMode from '@/components/SentenceScrambleMode';
 import ListeningMode from '@/components/ListeningMode';
+import KanjiDrawingMode from '@/components/KanjiDrawingMode';
 import { FILL_BLANK_DATA } from '@/data/fill-blank-data';
 import './game.css';
 
@@ -351,6 +352,10 @@ function GamePageContent() {
 
     if (mode === 'listening') {
         return <ListeningMode onComplete={(score) => handlePracticeComplete(score, 100, 0)} />;
+    }
+
+    if (mode === 'kanji_drawing') {
+        return <KanjiDrawingMode onComplete={(score) => handlePracticeComplete(score, 150, 0)} />;
     }
 
     // Use repetition mode for hiragana and katakana (default study mode)
