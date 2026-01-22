@@ -88,8 +88,8 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
     if (!currentChar) return null;
 
     return (
-        <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between' }}>
+        <div className="glass-card qm-container">
+            <div className="qm-header">
                 <span>Pergunta {currentIndex + 1}/{characters.length}</span>
                 <span>Pontos: {score}</span>
             </div>
@@ -105,15 +105,15 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
             ) : (
                 <>
                     {/* Show romaji, ask to draw character */}
-                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                    <div className="qm-draw-container">
+                        <p className="qm-draw-instruction">
                             Desenhe o caractere para:
                         </p>
-                        <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--accent-secondary)' }}>
+                        <div className="qm-draw-target">
                             {currentChar.romaji}
                         </div>
                         {currentChar.meaning && (
-                            <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                            <p className="qm-draw-meaning">
                                 ({currentChar.meaning})
                             </p>
                         )}
@@ -126,17 +126,11 @@ export default function QuizMode({ characters, onComplete }: QuizModeProps) {
                     />
 
                     {feedback && (
-                        <div style={{
-                            marginTop: '1rem',
-                            textAlign: 'center',
-                            color: feedback === 'correct' ? '#4ade80' : '#ff3e3e',
-                            fontSize: '1.2rem',
-                            fontWeight: 'bold'
-                        }}>
+                        <div className={`qm-feedback ${feedback}`}>
                             {feedback === 'correct' ? (
-                                <><Check size={24} style={{ verticalAlign: 'middle' }} /> Correto!</>
+                                <><Check size={24} className="qm-feedback-icon" /> Correto!</>
                             ) : (
-                                <><X size={24} style={{ verticalAlign: 'middle' }} /> Incorreto. Era: {currentChar.char}</>
+                                <><X size={24} className="qm-feedback-icon" /> Incorreto. Era: {currentChar.char}</>
                             )}
                         </div>
                     )}

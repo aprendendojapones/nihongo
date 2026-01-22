@@ -17,6 +17,9 @@ import MemoryMode from '@/components/MemoryMode';
 import MatchingMode from '@/components/MatchingMode';
 import HandwritingCanvas from '@/components/HandwritingCanvas';
 import TrueFalseMode from '@/components/TrueFalseMode';
+import FillBlankMode from '@/components/FillBlankMode';
+import AlphabetOrderMode from '@/components/AlphabetOrderMode';
+import { FILL_BLANK_DATA } from '@/data/fill-blank-data';
 import './game.css';
 
 // Repetition Mode: For Hiragana/Katakana
@@ -36,17 +39,15 @@ function RepetitionMode({ levelId }: { levelId: string }) {
     const [phase, setPhase] = useState<'practice' | 'test'>('practice');
     const [questionType, setQuestionType] = useState<'char-to-romaji' | 'romaji-to-char'>('char-to-romaji');
     const [userInput, setUserInput] = useState('');
-    const [debouncedInput, setDebouncedInput] = useState('');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
-    const [isFinished, setIsFinished] = useState(false);
     const [score, setScore] = useState(0);
+    const [isFinished, setIsFinished] = useState(false);
 
     useEffect(() => {
         const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
-        setShuffledData([...levelData]);
+        const shuffled = [...levelData].sort(() => Math.random() - 0.5);
+        setShuffledData(shuffled);
     }, [levelId]);
-
-    const currentItem = shuffledData[currentCharIndex];
 
     useEffect(() => {
         if (!feedback && !isFinished && inputRef.current) {
@@ -54,143 +55,48 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         }
     }, [feedback, isFinished, currentCharIndex, phase]);
 
-    // Debounce input for automatic verification
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedInput(userInput);
-        }, 500); // Wait 500ms after last keystroke
+    const currentItem = shuffledData[currentCharIndex];
 
-        return () => clearTimeout(timer);
-    }, [userInput]);
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setUserInput(value);
 
-    // Auto-verify when debounced input changes (only in practice phase)
-    useEffect(() => {
-        if (!debouncedInput.trim() || !currentItem || feedback || phase !== 'practice') return;
+        const target = questionType === 'char-to-romaji' ? currentItem.romaji : currentItem.char;
+        if (value.toLowerCase().trim() === target.toLowerCase()) {
+            handleCorrect();
+        }
+    };
 
-        const isCorrect = debouncedInput.toLowerCase().trim() === currentItem.romaji.toLowerCase();
+    const handleCorrect = () => {
+        if (feedback) return;
+        setFeedback('correct');
+        setScore(s => s + 10);
 
-        if (isCorrect) {
-            setFeedback('correct');
-            setScore(s => s + 10);
+        setTimeout(() => {
+            setFeedback(null);
+            setUserInput('');
 
-            setTimeout(() => {
+            if (phase === 'practice') {
                 if (practiceCount < 9) {
-                    setPracticeCount(practiceCount + 1);
-                    setUserInput('');
-                    setFeedback(null);
-                    setDebouncedInput('');
+                    setPracticeCount(p => p + 1);
+                    // Cycle through characters
+                    setCurrentCharIndex((currentCharIndex + 1) % shuffledData.length);
                 } else {
-                    // Move to test phase after 10 practice rounds
                     setPhase('test');
                     setPracticeCount(0);
-                    setTestCorrectCount(0);
-                    setQuestionType('char-to-romaji');
-                    setUserInput('');
-                    setFeedback(null);
-                    setDebouncedInput('');
+                    setCurrentCharIndex(Math.floor(Math.random() * shuffledData.length));
+                    setQuestionType(Math.random() > 0.5 ? 'char-to-romaji' : 'romaji-to-char');
                 }
-            }, 1500);
-        }
-    }, [debouncedInput, currentItem, feedback, phase, practiceCount]);
-
-    const handleNext = () => {
-        if (currentCharIndex < shuffledData.length - 1) {
-            setCurrentCharIndex(currentCharIndex + 1);
-        } else {
-            finishGame();
-        }
-        setUserInput('');
-        setFeedback(null);
-    };
-
-    const handleBack = () => {
-        if (currentCharIndex > 0) {
-            setCurrentCharIndex(currentCharIndex - 1);
-            setUserInput('');
-            setFeedback(null);
-        }
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!currentItem || !userInput.trim() || phase !== 'test') return;
-
-        const isCorrect = questionType === 'char-to-romaji'
-            ? userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase()
-            : userInput === currentItem.char;
-
-        if (isCorrect) {
-            setFeedback('correct');
-            setScore(s => s + 10);
-
-            setTimeout(() => {
+            } else {
                 if (testCorrectCount < 4) {
-                    // Continue test phase, alternate question type
-                    setTestCorrectCount(testCorrectCount + 1);
-                    setQuestionType(questionType === 'char-to-romaji' ? 'romaji-to-char' : 'char-to-romaji');
-                    setUserInput('');
-                    setFeedback(null);
-                    setDebouncedInput('');
+                    setTestCorrectCount(t => t + 1);
+                    setCurrentCharIndex(Math.floor(Math.random() * shuffledData.length));
+                    setQuestionType(Math.random() > 0.5 ? 'char-to-romaji' : 'romaji-to-char');
                 } else {
-                    // Completed test phase (5 correct), move to next character
-                    if (currentCharIndex === shuffledData.length - 1) {
-                        finishGame();
-                    } else {
-                        setCurrentCharIndex(currentCharIndex + 1);
-                        setPhase('practice');
-                        setPracticeCount(0);
-                        setTestCorrectCount(0);
-                        setQuestionType('char-to-romaji');
-                        setUserInput('');
-                        setFeedback(null);
-                        setDebouncedInput('');
-                    }
+                    finishGame();
                 }
-            }, 1500);
-        } else {
-            setFeedback('wrong');
-            setTimeout(() => {
-                setFeedback(null);
-                setUserInput('');
-            }, 2000);
-        }
-    };
-
-    const handleCanvasRecognize = (recognizedChar: string) => {
-        if (phase !== 'test' || questionType !== 'romaji-to-char') return;
-
-        const isCorrect = recognizedChar === currentItem.char;
-
-        if (isCorrect) {
-            setFeedback('correct');
-            setScore(s => s + 10);
-
-            setTimeout(() => {
-                if (testCorrectCount < 4) {
-                    setTestCorrectCount(testCorrectCount + 1);
-                    setQuestionType('char-to-romaji');
-                    setUserInput('');
-                    setFeedback(null);
-                    setDebouncedInput('');
-                } else {
-                    if (currentCharIndex === shuffledData.length - 1) {
-                        finishGame();
-                    } else {
-                        setCurrentCharIndex(currentCharIndex + 1);
-                        setPhase('practice');
-                        setPracticeCount(0);
-                        setTestCorrectCount(0);
-                        setQuestionType('char-to-romaji');
-                        setUserInput('');
-                        setFeedback(null);
-                        setDebouncedInput('');
-                    }
-                }
-            }, 1500);
-        } else {
-            setFeedback('wrong');
-            setTimeout(() => setFeedback(null), 2000);
-        }
+            }
+        }, 800);
     };
 
     const finishGame = async () => {
@@ -198,13 +104,11 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         confetti({
             particleCount: 150,
             spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#3effa2', '#ff3e3e', '#ffffff']
+            origin: { y: 0.6 }
         });
 
         if (user) {
-            const xpGained = score + 100;
-            await supabase.rpc('increment_xp', { user_id: user.id, amount: xpGained });
+            await supabase.rpc('increment_xp', { user_id: user.id, amount: 100 });
             await supabase.from('user_progress').upsert({
                 user_id: user.id,
                 lesson_id: levelId,
@@ -214,9 +118,7 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         }
     };
 
-    if (!currentItem) {
-        return <div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>;
-    }
+    if (!currentItem) return <div className="loading-container">{t('loading')}...</div>;
 
     if (isFinished) {
         return (
@@ -225,24 +127,15 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                     <Trophy size={80} color="var(--accent-secondary)" className="completion-icon" />
                     <h1 className="gradient-text completion-title">{t('congratulations')}!</h1>
                     <p>{t('level_completed').replace('{level}', levelId)}</p>
-
                     <div className="completion-stats">
                         <div className="completion-stat-item">
                             <span className="completion-stat-label">Score</span>
                             <span className="completion-stat-value">{score}</span>
                         </div>
-                        <div className="completion-stat-item">
-                            <span className="completion-stat-label">XP</span>
-                            <span className="completion-stat-value">+{score + 100}</span>
-                        </div>
                     </div>
-
                     <div className="completion-actions">
                         <button className="btn-primary" onClick={() => router.push('/lessons')}>
                             {t('back_to_lessons')}
-                        </button>
-                        <button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent-primary)' }} onClick={() => window.location.reload()}>
-                            <RefreshCw size={18} /> {t('play_again')}
                         </button>
                     </div>
                 </div>
@@ -259,501 +152,88 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                 <div className="game-progress-container">
                     <div
                         className="game-progress-fill"
-                        style={{ width: `${(currentCharIndex / shuffledData.length) * 100}%` }}
+                        style={{ width: `${phase === 'practice' ? (practiceCount / 10) * 100 : (testCorrectCount / 5) * 100}%` }}
                     />
                 </div>
                 <div className="game-stats">
                     <Star size={20} color="var(--accent-secondary)" />
-                    <span style={{ fontWeight: 'bold' }}>{score}</span>
+                    <span className="score-value">{score}</span>
                 </div>
             </header>
 
-            <main className="game-main">
-                <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-                    <span style={{
-                        background: phase === 'practice' ? 'rgba(62, 255, 162, 0.2)' : 'rgba(255, 62, 62, 0.2)',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '20px',
-                        fontSize: '0.9rem',
-                        fontWeight: 'bold',
-                        color: phase === 'practice' ? '#3effa2' : '#ff3e3e'
-                    }}>
-                        {phase === 'practice' ? `Prática ${practiceCount + 1}/10` : `Teste ${testCorrectCount + 1}/5`}
+            <main className="glass-card game-card">
+                <div className="phase-indicator-container">
+                    <span className={`phase-indicator ${phase === 'practice' ? 'phase-practice' : 'phase-test'}`}>
+                        {phase === 'practice' ? `${t('practice')} ${practiceCount + 1}/10` : `${t('test')} ${testCorrectCount + 1}/5`}
                     </span>
                 </div>
 
                 <div className="game-question-display">
-                    {phase === 'practice' || questionType === 'char-to-romaji' ? (
-                        <>
-                            <span className="game-char">{currentItem.char}</span>
-                            {phase === 'practice' && (
-                                <span className="game-meaning" style={{ fontSize: '1.5rem', color: 'var(--accent-primary)', marginTop: '1rem' }}>
-                                    {currentItem.romaji}
-                                </span>
-                            )}
-                            {currentItem.meaning && (
-                                <span className="game-meaning" style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                    {currentItem.meaning}
-                                </span>
-                            )}
-                        </>
-                    ) : (
-                        <>
-                            <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                                Desenhe o caractere para:
-                            </p>
-                            <span style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--accent-secondary)' }}>
-                                {currentItem.romaji}
-                            </span>
-                            {currentItem.meaning && (
-                                <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontSize: '0.9rem' }}>
-                                    ({currentItem.meaning})
-                                </p>
-                            )}
-                        </>
+                    <h2 className="game-char">{questionType === 'char-to-romaji' ? currentItem.char : currentItem.romaji}</h2>
+                    {phase === 'practice' && questionType === 'char-to-romaji' && (
+                        <p className="game-romaji">{currentItem.romaji}</p>
                     )}
                 </div>
 
-                {phase === 'test' && questionType === 'romaji-to-char' ? (
-                    <>
-                        <HandwritingCanvas
-                            onRecognize={handleCanvasRecognize}
-                            expectedChar={currentItem.char}
-                            disabled={!!feedback}
-                        />
-                        {feedback && (
-                            <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
-                                {feedback === 'correct' ? (
-                                    <><CheckCircle2 size={24} /> Correto! ({currentItem.char})</>
-                                ) : (
-                                    <><XCircle size={24} /> Incorreto. Era: {currentItem.char}</>
-                                )}
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <form onSubmit={handleSubmit} className="game-input-container">
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                value={userInput}
-                                onChange={(e) => setUserInput(e.target.value)}
-                                placeholder="Digite o romaji..."
-                                className="game-input"
-                                disabled={!!feedback}
-                                autoComplete="off"
-                                autoFocus
-                            />
-                        </form>
+                <div className="game-input-container">
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={userInput}
+                        onChange={handleInputChange}
+                        placeholder={questionType === 'char-to-romaji' ? t('type_romaji') : t('type_character')}
+                        className="game-input"
+                        disabled={!!feedback}
+                    />
+                </div>
 
-                        {feedback && (
-                            <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
-                                {feedback === 'correct' ? (
-                                    <><CheckCircle2 size={24} /> Correto! ({currentItem.romaji})</>
-                                ) : (
-                                    <><XCircle size={24} /> Incorreto. Era: {currentItem.romaji}</>
-                                )}
-                            </div>
-                        )}
-                    </>
+                {feedback && (
+                    <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
+                        {feedback === 'correct' ? <><CheckCircle2 size={24} /> {t('correct')}!</> : <><XCircle size={24} /> {t('try_again')}</>}
+                    </div>
                 )}
             </main>
-
-            <footer className="game-footer">
-                <button
-                    className="hint-button"
-                    onClick={handleBack}
-                    disabled={currentCharIndex === 0}
-                    style={{ opacity: currentCharIndex === 0 ? 0.5 : 1 }}
-                >
-                    <ChevronLeft size={20} /> Voltar
-                </button>
-                <p style={{ color: 'var(--text-muted)' }}>
-                    {currentCharIndex + 1} / {shuffledData.length}
-                </p>
-                <div style={{ width: '80px' }}></div>
-            </footer>
         </div>
-    );
-}
-
-// Original game content (for other levels)
-function GameContent({ levelId, mode }: { levelId: string, mode: string }) {
-    // ... (keep existing GameContent implementation)
-    const router = useRouter();
-    const { data: session } = useSession();
-    const { t } = useTranslation();
-    const user = session?.user as any;
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    const isTest = mode === 'test';
-
-    // Game State
-    const [shuffledData, setShuffledData] = useState<any[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [userInput, setUserInput] = useState('');
-    const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
-    const [score, setScore] = useState(0);
-    const [isFinished, setIsFinished] = useState(false);
-    const [showHint, setShowHint] = useState(false);
-    const [showKeyboard, setShowKeyboard] = useState(false);
-
-    // New Features State
-    const [hintMultiplier, setHintMultiplier] = useState(1.0);
-    const [correctList, setCorrectList] = useState<any[]>([]);
-    const [wrongList, setWrongList] = useState<any[]>([]);
-    const [isLoaded, setIsLoaded] = useState(false);
-
-    // Initialize and Load Persistence
-    useEffect(() => {
-        const savedState = localStorage.getItem(`game_state_${levelId}`);
-        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
-
-        if (savedState && !isTest) { // Don't load persistence for test mode
-            const state = JSON.parse(savedState);
-            setShuffledData(state.shuffledData);
-            setCurrentIndex(state.currentIndex);
-            setScore(state.score);
-            setHintMultiplier(state.hintMultiplier);
-            setCorrectList(state.correctList);
-            setWrongList(state.wrongList);
-            setUserInput(state.userInput || '');
-        } else {
-            // Shuffle data for new game
-            const shuffled = [...levelData].sort(() => Math.random() - 0.5);
-            setShuffledData(shuffled);
-            setUserInput('');
-        }
-        setIsLoaded(true);
-    }, [levelId, isTest]);
-
-    // Save Persistence
-    useEffect(() => {
-        if (isLoaded && !isFinished && !isTest) {
-            const state = {
-                shuffledData,
-                currentIndex,
-                score,
-                hintMultiplier,
-                correctList,
-                wrongList,
-                userInput
-            };
-            localStorage.setItem(`game_state_${levelId}`, JSON.stringify(state));
-        }
-    }, [isLoaded, isFinished, shuffledData, currentIndex, score, hintMultiplier, correctList, wrongList, levelId, userInput, isTest]);
-
-    // Auto-focus input
-    useEffect(() => {
-        if (!feedback && !isFinished && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [feedback, isFinished, currentIndex]);
-
-    const currentItem = shuffledData[currentIndex];
-
-    const handleHint = () => {
-        if (!showHint && currentItem && !isTest) {
-            setShowHint(true);
-            // Pre-fill first letter ONLY when hint is requested
-            if (userInput.length === 0) {
-                setUserInput(currentItem.romaji.charAt(0));
-            }
-            // Penalty logic: first hint 50%, then -10% each
-            setHintMultiplier(prev => {
-                if (prev > 0.5) return 0.5;
-                return Math.max(0.1, prev - 0.1);
-            });
-        }
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setUserInput(value);
-
-        if (currentItem && (
-            value.toLowerCase().trim() === currentItem.romaji.toLowerCase() ||
-            value === currentItem.char
-        )) {
-            triggerCorrect();
-        }
-    };
-
-    const triggerCorrect = () => {
-        if (feedback) return;
-        setFeedback('correct');
-        const pointsGained = Math.round(10 * hintMultiplier);
-        setScore(s => s + pointsGained);
-        setCorrectList(prev => [...prev, currentItem]);
-
-        if (!showHint) {
-            setHintMultiplier(prev => Math.min(1.0, prev + 0.1));
-        }
-
-        if (currentIndex === shuffledData.length - 1) {
-            setTimeout(finishGame, 1000);
-        } else {
-            setTimeout(() => {
-                const nextIndex = currentIndex + 1;
-                setCurrentIndex(nextIndex);
-                setUserInput(''); // No auto-fill for next item
-                setFeedback(null);
-                setShowHint(false);
-            }, 1000);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (currentItem && (
-            userInput.toLowerCase().trim() === currentItem.romaji.toLowerCase() ||
-            userInput === currentItem.char
-        )) {
-            triggerCorrect();
-        } else if (!feedback) {
-            setFeedback('wrong');
-            if (!wrongList.find(item => item.char === currentItem.char)) {
-                setWrongList(prev => [...prev, currentItem]);
-            }
-            setTimeout(() => setFeedback(null), 1000);
-        }
-    };
-
-    const finishGame = async () => {
-        setIsFinished(true);
-        localStorage.removeItem(`game_state_${levelId}`);
-
-        confetti({
-            particleCount: 150,
-            spread: 70,
-            origin: { y: 0.6 },
-            colors: ['#3effa2', '#ff3e3e', '#ffffff']
-        });
-
-        if (user) {
-            const xpGained = score + (isTest ? 500 : 100);
-            await supabase.rpc('increment_xp', { user_id: user.id, amount: xpGained });
-
-            const lessonId = isTest ? `${levelId}_test` : levelId;
-            await supabase
-                .from('user_progress')
-                .upsert({
-                    user_id: user.id,
-                    lesson_id: lessonId,
-                    completed: true,
-                    score: score
-                });
-        }
-    };
-
-    const resetGame = () => {
-        if (confirm(t('confirm_reset_game') || 'Reset game progress?')) {
-            localStorage.removeItem(`game_state_${levelId}`);
-            window.location.reload();
-        }
-    };
-
-    if (!isLoaded || !currentItem) {
-        return <div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>;
-    }
-
-    if (isFinished) {
-        return (
-            <div className="game-container">
-                <div className="glass-card game-completion-card animate-fade-in">
-                    <Trophy size={80} color="var(--accent-secondary)" className="completion-icon" />
-                    <h1 className="gradient-text completion-title">{t('congratulations')}!</h1>
-                    <p>{t('level_completed').replace('{level}', levelId)}</p>
-
-                    <div className="completion-stats">
-                        <div className="completion-stat-item">
-                            <span className="completion-stat-label">Score</span>
-                            <span className="completion-stat-value">{score}</span>
-                        </div>
-                        <div className="completion-stat-item">
-                            <span className="completion-stat-label">XP</span>
-                            <span className="completion-stat-value">+{score + (isTest ? 500 : 100)}</span>
-                        </div>
-                    </div>
-
-                    <div className="completion-actions">
-                        <button className="btn-primary" onClick={() => router.push('/lessons')}>
-                            {t('back_to_lessons')}
-                        </button>
-                        <button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent-primary)' }} onClick={() => window.location.reload()}>
-                            <RefreshCw size={18} /> {t('play_again')}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="game-layout">
-            <aside className="game-side-list wrong-list">
-                <h3>{t('wrong') || 'Wrong'}</h3>
-                <div className="list-items">
-                    {wrongList.map((item, i) => (
-                        <div key={i} className="list-item wrong">{item.char}</div>
-                    ))}
-                </div>
-            </aside>
-
-            <div className="game-container">
-                <header className="game-header">
-                    <button className="icon-button" onClick={() => router.back()}>
-                        <ArrowLeft size={24} />
-                    </button>
-                    <div className="game-progress-container">
-                        <div
-                            className="game-progress-fill"
-                            style={{ width: `${(currentIndex / shuffledData.length) * 100}%` }}
-                        />
-                    </div>
-                    <div className="game-stats">
-                        <div className="multiplier-badge" title="Score Multiplier">
-                            {(hintMultiplier * 100).toFixed(0)}%
-                        </div>
-                        <Star size={20} color="var(--accent-secondary)" />
-                        <span style={{ fontWeight: 'bold' }}>{score}</span>
-                    </div>
-                </header>
-
-                <main className="game-main">
-                    <div className="game-question-display">
-                        <span className="game-char">{currentItem.char}</span>
-                        {currentItem.meaning && (
-                            <span className="game-meaning">{currentItem.meaning}</span>
-                        )}
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="game-input-container">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={userInput}
-                            onChange={handleInputChange}
-                            placeholder={t('type_romaji')}
-                            className="game-input"
-                            disabled={!!feedback}
-                        />
-                    </form>
-
-                    {feedback && (
-                        <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
-                            {feedback === 'correct' ? (
-                                <><CheckCircle2 size={24} /> {t('correct')}!</>
-                            ) : (
-                                <><XCircle size={24} /> {t('try_again')}</>
-                            )}
-                        </div>
-                    )}
-                </main>
-
-                <footer className="game-footer">
-                    {!isTest && (
-                        <button className="hint-button" onClick={handleHint}>
-                            <HelpCircle size={20} /> {t('hint')}
-                        </button>
-                    )}
-                    <p style={{ color: 'var(--text-muted)' }}>{currentIndex + 1} / {shuffledData.length}</p>
-                    <button className="hint-button" onClick={resetGame} title={t('reset_game')}>
-                        <RotateCcw size={20} />
-                    </button>
-                </footer>
-            </div >
-
-            <aside className="game-side-list correct-list">
-                <h3>{t('correct') || 'Correct'}</h3>
-                <div className="list-items">
-                    {correctList.map((item, i) => (
-                        <div key={i} className="list-item correct">{item.char}</div>
-                    ))}
-                </div>
-            </aside>
-        </div >
     );
 }
 
 function GamePageContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { data: session } = useSession();
     const { t } = useTranslation();
+    const user = session?.user as any;
+
     const levelId = searchParams.get('level') || 'katakana';
-    const mode = searchParams.get('mode') || 'study'; // study, game, test, final_exam
+    const mode = searchParams.get('mode') || 'study';
 
-    const [score, setScore] = useState(0);
-    const [isFinished, setIsFinished] = useState(false);
-
-    const handleExamComplete = async (passed: boolean, score: number) => {
-        if (passed) {
-            // Save progress
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                await supabase.from('user_progress').upsert({
-                    user_id: user.id,
-                    lesson_id: levelId,
-                    completed: true,
-                    score: score,
-                    updated_at: new Date().toISOString()
-                });
-            }
-            router.push('/lessons');
-        }
-    };
-
-    const handlePracticeComplete = async (score: number, maxScore: number, timeSpent: number) => {
-        const { data: { user } } = await supabase.auth.getUser();
+    const handlePracticeComplete = async (finalScore: number, xp: number, coins: number) => {
         if (user) {
-            await supabase.from('practice_results').insert({
+            await supabase.rpc('increment_xp', { user_id: user.id, amount: xp });
+            await supabase.from('user_progress').upsert({
                 user_id: user.id,
-                game_mode: mode,
-                level_id: levelId,
-                score: score,
-                max_score: maxScore,
-                time_spent: timeSpent
+                lesson_id: `${levelId}_${mode}`,
+                completed: true,
+                score: finalScore
             });
         }
-        setScore(score);
-        setIsFinished(true);
+        router.push('/lessons');
     };
 
-    if (isFinished) {
-        return (
-            <div className="game-container">
-                <div className="glass-card game-completion-card animate-fade-in">
-                    <Trophy size={80} color="var(--accent-secondary)" className="completion-icon" />
-                    <h1 className="gradient-text completion-title">{t('congratulations')}!</h1>
-                    <p>{t('level_completed').replace('{level}', levelId)}</p>
-
-                    <div className="completion-stats">
-                        <div className="completion-stat-item">
-                            <span className="completion-stat-label">Score</span>
-                            <span className="completion-stat-value">{score}</span>
-                        </div>
-                        <div className="completion-stat-item">
-                            <span className="completion-stat-label">XP</span>
-                            <span className="completion-stat-value">+{score}</span>
-                        </div>
-                    </div>
-
-                    <div className="completion-actions">
-                        <button className="btn-primary" onClick={() => router.push('/lessons')}>
-                            {t('back_to_lessons')}
-                        </button>
-                        <button className="btn-primary" style={{ background: 'transparent', border: '1px solid var(--accent-primary)' }} onClick={() => window.location.reload()}>
-                            <RefreshCw size={18} /> {t('play_again')}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    const handleExamComplete = async (results: any) => {
+        if (user) {
+            await supabase.rpc('increment_xp', { user_id: user.id, amount: 1000 });
+            await supabase.from('user_progress').upsert({
+                user_id: user.id,
+                lesson_id: `${levelId}_exam`,
+                completed: true,
+                score: results.score
+            });
+        }
+        router.push('/lessons');
+    };
 
     if (mode === 'final_exam') {
-        // Extract level (N5, N4, etc.) from levelId (e.g., n5_final -> N5)
         const examLevel = levelId.split('_')[0].toUpperCase();
         return (
             <FinalExam
@@ -774,7 +254,7 @@ function GamePageContent() {
                         <ArrowLeft size={24} />
                     </button>
                     <h1 className="gradient-text">Quiz</h1>
-                    <div style={{ width: 40 }}></div>
+                    <div className="header-spacer"></div>
                 </header>
                 <main className="game-main">
                     <QuizMode
@@ -795,7 +275,7 @@ function GamePageContent() {
                         <ArrowLeft size={24} />
                     </button>
                     <h1 className="gradient-text">Contra o Tempo</h1>
-                    <div style={{ width: 40 }}></div>
+                    <div className="header-spacer"></div>
                 </header>
                 <main className="game-main">
                     <TimedMode
@@ -813,12 +293,54 @@ function GamePageContent() {
             <div className="game-container">
                 <header className="game-header">
                     <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Memory Mode</h1>
+                    <div className="header-spacer"></div>
+                </header>
+                <main className="game-main">
+                    <MemoryMode
                         characters={levelData}
                         onComplete={(score) => handlePracticeComplete(score, 100, 0)}
                     />
-                    </main>
+                </main>
             </div>
         );
+    }
+
+    if (mode === 'matching') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return (
+            <div className="game-container">
+                <header className="game-header">
+                    <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Matching Mode</h1>
+                    <div className="header-spacer"></div>
+                </header>
+                <main className="game-main">
+                    <MatchingMode
+                        characters={levelData}
+                        onComplete={(score) => handlePracticeComplete(score, 100, 0)}
+                    />
+                </main>
+            </div>
+        );
+    }
+
+    if (mode === 'truefalse') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return <TrueFalseMode characters={levelData} onComplete={(score) => handlePracticeComplete(score, 100, 0)} />;
+    }
+
+    if (mode === 'fillblank') {
+        return <FillBlankMode questions={FILL_BLANK_DATA} onComplete={(score) => handlePracticeComplete(score, 100, 0)} />;
+    }
+
+    if (mode === 'alphabetorder') {
+        const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
+        return <AlphabetOrderMode characters={levelData} onComplete={(score) => handlePracticeComplete(score, 100, 0)} />;
     }
 
     // Use repetition mode for hiragana and katakana (default study mode)
@@ -826,13 +348,13 @@ function GamePageContent() {
         return <RepetitionMode levelId={levelId} />;
     }
 
-    return <GameContent levelId={levelId} mode={mode} />;
+    return <RepetitionMode levelId={levelId} />;
 }
 
 export default function GamePage() {
     const { t } = useTranslation();
     return (
-        <Suspense fallback={<div className="flex-center" style={{ height: '100vh' }}>{t('loading')}...</div>}>
+        <Suspense fallback={<div className="loading-container">{t('loading')}...</div>}>
             <GamePageContent />
         </Suspense>
     );

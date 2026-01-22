@@ -146,71 +146,46 @@ export default function MatchingMode({ characters, onComplete }: MatchingModePro
         }
     }, [selectedLeft, selectedRight, leftItems, rightItems, onComplete, score, leftItems.length, finishGame, updateItemState]);
 
-    const getItemStyle = (item: MatchItem) => {
-        const baseStyle: any = {
-            padding: '1.5rem',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            border: '2px solid var(--glass-border)',
-            background: 'var(--glass-bg)',
-            transition: 'all 0.3s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: item.type === 'char' ? '2rem' : '1.2rem',
-            fontWeight: 'bold',
-            color: 'var(--text-primary)',
-            height: '80px'
-        };
-
-        if (item.state === 'selected') {
-            baseStyle.border = '2px solid var(--accent-primary)';
-            baseStyle.background = 'rgba(62, 255, 162, 0.1)';
-        } else if (item.state === 'matched') {
-            baseStyle.border = '2px solid #4ade80';
-            baseStyle.background = 'rgba(76, 175, 80, 0.2)';
-            baseStyle.cursor = 'default';
-            baseStyle.opacity = 0.5;
-        } else if (item.state === 'wrong') {
-            baseStyle.border = '2px solid #ff3e3e';
-            baseStyle.background = 'rgba(255, 62, 62, 0.2)';
-        }
-
-        return baseStyle;
+    const getItemClass = (item: MatchItem) => {
+        let className = `mm-item ${item.type}`;
+        if (item.state === 'selected') className += ' selected';
+        else if (item.state === 'matched') className += ' matched';
+        else if (item.state === 'wrong') className += ' wrong';
+        return className;
     };
 
     return (
-        <div className="glass-card" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="glass-card mm-container">
+            <div className="mm-header">
                 <div>
-                    <h2 className="gradient-text" style={{ margin: 0 }}>Combinação</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Conecte os pares</p>
+                    <h2 className="gradient-text mm-title">Combinação</h2>
+                    <p className="mm-subtitle">Conecte os pares</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="mm-score">
                     <Zap size={24} color="var(--accent-secondary)" />
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{score}</span>
+                    <span className="mm-score-value">{score}</span>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '2rem', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+            <div className="mm-grid">
+                <div className="mm-column">
                     {leftItems.map(item => (
                         <div
                             key={item.id}
                             onClick={() => handleItemClick(item, 'left')}
-                            style={getItemStyle(item)}
+                            className={getItemClass(item)}
                         >
                             {item.content}
                         </div>
                     ))}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                <div className="mm-column">
                     {rightItems.map(item => (
                         <div
                             key={item.id}
                             onClick={() => handleItemClick(item, 'right')}
-                            style={getItemStyle(item)}
+                            className={getItemClass(item)}
                         >
                             {item.content}
                         </div>

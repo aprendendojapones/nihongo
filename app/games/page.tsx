@@ -56,9 +56,30 @@ export default function GamesPage() {
             name: 'Matching Mode',
             description: 'Conecte caracteres com seus romaji correspondentes',
             icon: <Link2 size={48} />,
+            difficulty: 'easy',
             estimatedTime: '5 min',
             color: '#4caf50',
-            available: false
+            available: true
+        },
+        {
+            id: 'truefalse',
+            name: 'True or False',
+            description: 'Julgue se o par caractere/romaji está correto',
+            icon: <CheckSquare size={48} />,
+            difficulty: 'easy',
+            estimatedTime: '3-5 min',
+            color: '#ff5722',
+            available: true
+        },
+        {
+            id: 'fillblank',
+            name: 'Fill in the Blank',
+            description: 'Complete a frase com a palavra correta',
+            icon: <FileText size={48} />,
+            difficulty: 'medium',
+            estimatedTime: '5-10 min',
+            color: '#9c27b0',
+            available: true
         },
         {
             id: 'alphabetorder',
@@ -68,7 +89,7 @@ export default function GamesPage() {
             difficulty: 'hard',
             estimatedTime: '5-7 min',
             color: '#f44336',
-            available: false
+            available: true
         }
     ];
 
@@ -92,11 +113,16 @@ export default function GamesPage() {
     return (
         <div className="games-page">
             <header className="games-header">
-                <button className="icon-button" onClick={() => router.push('/lessons')}>
+                <button
+                    className="icon-button"
+                    onClick={() => router.push('/lessons')}
+                    title={t('back') || 'Voltar'}
+                    aria-label={t('back') || 'Voltar'}
+                >
                     <ArrowLeft size={24} />
                 </button>
                 <h1 className="gradient-text">Jogos</h1>
-                <div style={{ width: '40px' }}></div>
+                <div className="header-spacer"></div>
             </header>
 
             <div className="games-container">
@@ -112,8 +138,9 @@ export default function GamesPage() {
                             key={game.id}
                             className={`game-card ${!game.available ? 'disabled' : ''}`}
                             onClick={() => handleGameClick(game.id, game.available)}
+                            style={{ '--game-color': game.color } as React.CSSProperties}
                         >
-                            <div className="game-icon" style={{ color: game.color }}>
+                            <div className="game-icon">
                                 {game.icon}
                             </div>
 

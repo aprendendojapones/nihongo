@@ -102,7 +102,7 @@ export default function LessonsPage() {
         }
     };
 
-    if (loading) return <div className="flex-center" style={{ height: '100vh' }}><div className="loader"></div></div>;
+    if (loading) return <div className="loading-container"><div className="loader"></div></div>;
 
     return (
         <div className="lessons-container">
@@ -181,7 +181,7 @@ export default function LessonsPage() {
                 <div className="modal-overlay" onClick={() => setShowModeSelector(false)}>
                     <div className="glass-card mode-selector-modal" onClick={(e) => e.stopPropagation()}>
                         <h2 className="gradient-text">Escolha o Modo de Prática</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
+                        <p className="modal-description">
                             Selecione como você quer praticar
                         </p>
 
@@ -193,7 +193,7 @@ export default function LessonsPage() {
                                         key={mode.id}
                                         className="mode-card"
                                         onClick={() => selectMode(mode.id)}
-                                        style={{ borderColor: mode.color }}
+                                        style={{ '--mode-color': mode.color } as React.CSSProperties}
                                     >
                                         <Icon size={32} color={mode.color} />
                                         <h3>{mode.title}</h3>
@@ -204,9 +204,8 @@ export default function LessonsPage() {
                         </div>
 
                         <button
-                            className="btn-primary"
+                            className="btn-primary btn-cancel"
                             onClick={() => setShowModeSelector(false)}
-                            style={{ marginTop: '1rem', width: '100%' }}
                         >
                             Cancelar
                         </button>

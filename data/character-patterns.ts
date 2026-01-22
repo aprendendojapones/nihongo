@@ -16,15 +16,16 @@ export interface CharacterPattern {
     strokeCount: number;
     // Simplified representation: just stroke count and general shape
     complexity: 'simple' | 'medium' | 'complex';
+    expectedDirections?: Stroke['direction'][];
 }
 
 // Hiragana patterns (basic 46 characters)
 export const HIRAGANA_PATTERNS: CharacterPattern[] = [
-    { char: 'あ', strokeCount: 3, complexity: 'medium' },
-    { char: 'い', strokeCount: 2, complexity: 'simple' },
-    { char: 'う', strokeCount: 2, complexity: 'simple' },
-    { char: 'え', strokeCount: 2, complexity: 'simple' },
-    { char: 'お', strokeCount: 3, complexity: 'medium' },
+    { char: 'あ', strokeCount: 3, complexity: 'medium', expectedDirections: ['horizontal', 'vertical', 'curve'] },
+    { char: 'い', strokeCount: 2, complexity: 'simple', expectedDirections: ['vertical', 'vertical'] },
+    { char: 'う', strokeCount: 2, complexity: 'simple', expectedDirections: ['diagonal-right', 'curve'] },
+    { char: 'え', strokeCount: 2, complexity: 'simple', expectedDirections: ['diagonal-right', 'curve'] },
+    { char: 'お', strokeCount: 3, complexity: 'medium', expectedDirections: ['horizontal', 'curve', 'diagonal-right'] },
 
     { char: 'か', strokeCount: 3, complexity: 'medium' },
     { char: 'き', strokeCount: 4, complexity: 'medium' },

@@ -10,20 +10,6 @@
     padding: 1.5rem 2rem;
     background: var(--glass-bg);
     border-bottom: 1px solid var(--glass-border);
-    backdrop-filter: blur(10px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.games-header h1 {
-    font-size: 1.8rem;
-    margin: 0;
-}
-
-.games-container {
-    max-width: 1200px;
-    margin: 0 auto;
     padding: 2rem;
 }
 

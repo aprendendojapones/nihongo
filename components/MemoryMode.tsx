@@ -124,78 +124,38 @@ export default function MemoryMode({ characters, onComplete }: MemoryModeProps) 
     };
 
     return (
-        <div className="glass-card" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="glass-card mem-container">
+            <div className="mem-header">
                 <div>
-                    <h2 className="gradient-text" style={{ margin: 0 }}>Memória</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Encontre os pares</p>
+                    <h2 className="gradient-text mem-title">Memória</h2>
+                    <p className="mem-subtitle">Encontre os pares</p>
                 </div>
-                <div style={{ display: 'flex', gap: '2rem' }}>
-                    <div style={{ textAlign: 'center' }}>
-                        <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Jogadas</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{moves}</span>
+                <div className="mem-stats">
+                    <div className="mem-stat-item">
+                        <span className="mem-stat-label">Jogadas</span>
+                        <span className="mem-stat-value">{moves}</span>
                     </div>
-                    <div style={{ textAlign: 'center' }}>
-                        <span style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Pares</span>
-                        <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{matchedCount}/{cards.length / 2}</span>
+                    <div className="mem-stat-item">
+                        <span className="mem-stat-label">Pares</span>
+                        <span className="mem-stat-value">{matchedCount}/{cards.length / 2}</span>
                     </div>
                 </div>
             </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '1rem',
-                perspective: '1000px'
-            }}>
+            <div className="mem-grid">
                 {cards.map(card => (
                     <div
                         key={card.id}
                         onClick={() => handleCardClick(card)}
-                        style={{
-                            aspectRatio: '1',
-                            cursor: card.isFlipped || card.isMatched ? 'default' : 'pointer',
-                            position: 'relative',
-                            transformStyle: 'preserve-3d',
-                            transition: 'transform 0.6s',
-                            transform: card.isFlipped || card.isMatched ? 'rotateY(180deg)' : 'rotateY(0deg)'
-                        }}
+                        className={`mem-card ${card.isFlipped || card.isMatched ? 'flipped' : ''}`}
                     >
                         {/* Front (Hidden) */}
-                        <div style={{
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                            backfaceVisibility: 'hidden',
-                            background: 'var(--glass-bg)',
-                            border: '2px solid var(--glass-border)',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '2rem',
-                            color: 'var(--text-muted)'
-                        }}>
+                        <div className="mem-card-face mem-card-front">
                             ?
                         </div>
 
                         {/* Back (Revealed) */}
-                        <div style={{
-                            position: 'absolute',
-                            width: '100%',
-                            height: '100%',
-                            backfaceVisibility: 'hidden',
-                            background: card.isMatched ? 'rgba(76, 175, 80, 0.2)' : 'var(--glass-bg)',
-                            border: `2px solid ${card.isMatched ? '#4ade80' : 'var(--accent-primary)'}`,
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transform: 'rotateY(180deg)',
-                            fontSize: card.type === 'char' ? '2.5rem' : '1.5rem',
-                            fontWeight: 'bold',
-                            color: 'var(--text-primary)'
-                        }}>
+                        <div className={`mem-card-face mem-card-back ${card.type} ${card.isMatched ? 'matched' : ''}`}>
                             {card.content}
                         </div>
                     </div>
