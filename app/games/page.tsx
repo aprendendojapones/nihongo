@@ -10,6 +10,7 @@ interface GameMode {
     name: string;
     description: string;
     icon: React.ReactNode;
+    image: string;
     difficulty: 'easy' | 'medium' | 'hard';
     estimatedTime: string;
     color: string;
@@ -24,8 +25,9 @@ export default function GamesPage() {
         {
             id: 'study',
             name: 'Practice Mode',
-            description: 'Pratique com repetição espaçada e aprenda novos caracteres',
-            icon: <BookOpen size={48} />,
+            description: 'Pratique com repetição espaçada',
+            icon: <BookOpen size={32} />,
+            image: '/games/game_practice.png',
             difficulty: 'easy',
             estimatedTime: '10-15 min',
             color: '#2196f3',
@@ -34,8 +36,9 @@ export default function GamesPage() {
         {
             id: 'quiz',
             name: 'Quiz Mode',
-            description: 'Perguntas de múltipla escolha alternando entre texto e desenho',
-            icon: <Target size={48} />,
+            description: 'Perguntas de múltipla escolha',
+            icon: <Target size={32} />,
+            image: '/games/game_quiz.png',
             difficulty: 'easy',
             estimatedTime: '5-10 min',
             color: '#3effa2',
@@ -44,8 +47,9 @@ export default function GamesPage() {
         {
             id: 'timed',
             name: 'Timed Mode',
-            description: 'Responda o máximo de perguntas em 60 segundos',
-            icon: <Clock size={48} />,
+            description: 'Responda rápido!',
+            icon: <Clock size={32} />,
+            image: '/games/game_timed.png',
             difficulty: 'medium',
             estimatedTime: '1 min',
             color: '#ffc107',
@@ -54,8 +58,9 @@ export default function GamesPage() {
         {
             id: 'memory',
             name: 'Memory Mode',
-            description: 'Jogo da memória com caracteres japoneses',
-            icon: <Brain size={48} />,
+            description: 'Jogo da memória',
+            icon: <Brain size={32} />,
+            image: '/games/game_memory.png',
             difficulty: 'easy',
             estimatedTime: '3-5 min',
             color: '#00bcd4',
@@ -64,8 +69,9 @@ export default function GamesPage() {
         {
             id: 'matching',
             name: 'Matching Mode',
-            description: 'Conecte caracteres com seus romaji correspondentes',
-            icon: <Link2 size={48} />,
+            description: 'Conecte os pares',
+            icon: <Link2 size={32} />,
+            image: '/games/game_matching.png',
             difficulty: 'easy',
             estimatedTime: '5 min',
             color: '#4caf50',
@@ -74,8 +80,9 @@ export default function GamesPage() {
         {
             id: 'truefalse',
             name: 'True or False',
-            description: 'Julgue se o par caractere/romaji está correto',
-            icon: <CheckSquare size={48} />,
+            description: 'Verdadeiro ou Falso?',
+            icon: <CheckSquare size={32} />,
+            image: '/games/game_truefalse.png',
             difficulty: 'easy',
             estimatedTime: '3-5 min',
             color: '#ff5722',
@@ -84,8 +91,9 @@ export default function GamesPage() {
         {
             id: 'fillblank',
             name: 'Fill in the Blank',
-            description: 'Complete a frase com a palavra correta',
-            icon: <FileText size={48} />,
+            description: 'Complete a frase',
+            icon: <FileText size={32} />,
+            image: '/games/game_fillblank.png',
             difficulty: 'medium',
             estimatedTime: '5-10 min',
             color: '#9c27b0',
@@ -94,18 +102,42 @@ export default function GamesPage() {
         {
             id: 'alphabetorder',
             name: 'Alphabet Order',
-            description: 'Organize caracteres em ordem alfabética',
-            icon: <ArrowDownAZ size={48} />,
+            description: 'Ordem alfabética',
+            icon: <ArrowDownAZ size={32} />,
+            image: '/games/game_fillblank.png', // Reuse for now
             difficulty: 'hard',
             estimatedTime: '5-7 min',
             color: '#f44336',
             available: true
         },
         {
+            id: 'sentence_scramble',
+            name: 'Sentence Scramble',
+            description: 'Ordene as frases',
+            icon: <Link2 size={32} />, // Reuse icon
+            image: '/games/game_matching.png', // Reuse matching image for now
+            difficulty: 'medium',
+            estimatedTime: '5-10 min',
+            color: '#ff9800',
+            available: true
+        },
+        {
+            id: 'listening',
+            name: 'Listening',
+            description: 'Prática de audição',
+            icon: <Target size={32} />, // Reuse icon
+            image: '/games/game_quiz.png', // Reuse quiz image for now
+            difficulty: 'easy',
+            estimatedTime: '5 min',
+            color: '#00bcd4',
+            available: true
+        },
+        {
             id: 'final_exam',
             name: 'Final Exam',
-            description: 'Teste final para provar seus conhecimentos',
-            icon: <Trophy size={48} />,
+            description: 'Teste final',
+            icon: <Trophy size={32} />,
+            image: '/games/game_timed.png', // Reuse timed image for now
             difficulty: 'hard',
             estimatedTime: '15-20 min',
             color: '#ff9800',
@@ -158,31 +190,33 @@ export default function GamesPage() {
                             key={game.id}
                             className={`game-card ${!game.available ? 'disabled' : ''}`}
                             onClick={() => handleGameClick(game.id, game.available)}
-                            style={{ '--game-color': game.color } as React.CSSProperties}
+                            style={{
+                                '--game-color': game.color,
+                                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.9)), url(${game.image})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center'
+                            } as React.CSSProperties}
                         >
-                            <div className="game-icon">
-                                {game.icon}
+                            <div className="game-card-content">
+                                <div className="game-icon-wrapper">
+                                    {game.icon}
+                                </div>
+
+                                <div className="game-info">
+                                    <h3 className="game-name">{game.name}</h3>
+                                    <p className="game-description">{game.description}</p>
+                                </div>
+
+                                <div className="game-meta">
+                                    <span className={`difficulty ${game.difficulty}`}>
+                                        {getDifficultyLabel(game.difficulty)}
+                                    </span>
+                                    <span className="time">
+                                        <Clock size={14} />
+                                        {game.estimatedTime}
+                                    </span>
+                                </div>
                             </div>
-
-                            <h3 className="game-name">{game.name}</h3>
-                            <p className="game-description">{game.description}</p>
-
-                            <div className="game-meta">
-                                <span className={`difficulty ${game.difficulty}`}>
-                                    {getDifficultyLabel(game.difficulty)}
-                                </span>
-                                <span className="time">
-                                    <Clock size={14} />
-                                    {game.estimatedTime}
-                                </span>
-                            </div>
-
-                            <button
-                                className={`btn-play ${!game.available ? 'disabled' : ''}`}
-                                disabled={!game.available}
-                            >
-                                {game.available ? 'Jogar' : 'Em breve'}
-                            </button>
 
                             {!game.available && (
                                 <div className="coming-soon-badge">Em breve</div>

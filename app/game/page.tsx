@@ -19,6 +19,8 @@ import HandwritingCanvas from '@/components/HandwritingCanvas';
 import TrueFalseMode from '@/components/TrueFalseMode';
 import FillBlankMode from '@/components/FillBlankMode';
 import AlphabetOrderMode from '@/components/AlphabetOrderMode';
+import SentenceScrambleMode from '@/components/SentenceScrambleMode';
+import ListeningMode from '@/components/ListeningMode';
 import { FILL_BLANK_DATA } from '@/data/fill-blank-data';
 import './game.css';
 
@@ -341,6 +343,14 @@ function GamePageContent() {
     if (mode === 'alphabetorder') {
         const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
         return <AlphabetOrderMode characters={levelData} onComplete={(score) => handlePracticeComplete(score, 100, 0)} />;
+    }
+
+    if (mode === 'sentence_scramble') {
+        return <SentenceScrambleMode onComplete={(score) => handlePracticeComplete(score, 150, 0)} />;
+    }
+
+    if (mode === 'listening') {
+        return <ListeningMode onComplete={(score) => handlePracticeComplete(score, 100, 0)} />;
     }
 
     // Use repetition mode for hiragana and katakana (default study mode)
