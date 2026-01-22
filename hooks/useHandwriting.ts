@@ -27,7 +27,7 @@ export function useHandwriting() {
     useEffect(() => {
         if (!sessionId) return;
 
-        const channel = supabase.channel(`session:${sessionId}`)
+        const channel = supabase.channel(`handwriting:${sessionId}`)
             .on('broadcast', { event: 'stroke' }, (payload) => {
                 setCurrentStroke(payload.payload);
             })

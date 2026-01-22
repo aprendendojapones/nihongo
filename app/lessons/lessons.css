@@ -3,38 +3,47 @@
     justify-content: space-between;
     align-items: center;
     padding: 2rem;
+    gap: 2rem;
+    flex-wrap: wrap;
 }
 
 .level-card.locked {
     opacity: 0.6;
+    filter: grayscale(0.8);
 }
 
 .level-info {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
+    flex: 1;
+    min-width: 280px;
 }
 
 .level-icon-container {
     padding: 1rem;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.05);
+    flex-shrink: 0;
 }
 
 .level-text h2 {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
+    color: var(--text-main);
 }
 
 .level-text p {
     color: var(--text-muted);
     font-size: 0.9rem;
+    line-height: 1.5;
 }
 
 .level-actions {
     display: flex;
     gap: 1rem;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .btn-test {
@@ -45,12 +54,18 @@
     background: transparent;
     border: 1px solid var(--accent-secondary);
     color: var(--accent-secondary);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .locked-info {
     color: var(--text-muted);
     font-size: 0.8rem;
     text-align: right;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
 }
 
 /* Mode Selector Modal */
@@ -60,26 +75,28 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     animation: fadeIn 0.2s ease;
+    padding: 1rem;
 }
 
 .mode-selector-modal {
     max-width: 600px;
-    width: 90%;
+    width: 100%;
     padding: 2rem;
     animation: slideUp 0.3s ease;
 }
 
 .modes-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
 }
 
 .mode-card {
@@ -90,21 +107,27 @@
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .mode-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-color: var(--mode-color);
 }
 
 .mode-card h3 {
-    margin: 0.5rem 0;
+    margin: 0.5rem 0 0 0;
     font-size: 1.1rem;
+    color: var(--text-main);
 }
 
 .mode-card p {
     color: var(--text-muted);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin: 0;
 }
 
@@ -160,4 +183,88 @@
 .btn-cancel {
     margin-top: 1rem;
     width: 100%;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+}
+
+.lessons-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    width: 100%;
+}
+
+.lessons-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.btn-games {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-games:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.levels-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.btn-test:hover {
+    background: rgba(255, 215, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .lessons-container {
+        padding: 1rem;
+    }
+
+    .level-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .level-info {
+        width: 100%;
+    }
+
+    .level-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .level-actions button {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .locked-info {
+        width: 100%;
+        text-align: center;
+    }
 }
