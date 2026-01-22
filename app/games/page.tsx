@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { Target, Clock, Brain, Link2, CheckSquare, FileText, ArrowDownAZ, ArrowLeft, Gamepad2 } from 'lucide-react';
+import { Target, Clock, Brain, Link2, CheckSquare, FileText, ArrowDownAZ, ArrowLeft, Gamepad2, Trophy, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import './games.css';
 
@@ -21,6 +21,16 @@ export default function GamesPage() {
     const { t } = useTranslation();
 
     const GAME_MODES: GameMode[] = [
+        {
+            id: 'study',
+            name: 'Practice Mode',
+            description: 'Pratique com repetição espaçada e aprenda novos caracteres',
+            icon: <BookOpen size={48} />,
+            difficulty: 'easy',
+            estimatedTime: '10-15 min',
+            color: '#2196f3',
+            available: true
+        },
         {
             id: 'quiz',
             name: 'Quiz Mode',
@@ -89,6 +99,16 @@ export default function GamesPage() {
             difficulty: 'hard',
             estimatedTime: '5-7 min',
             color: '#f44336',
+            available: true
+        },
+        {
+            id: 'final_exam',
+            name: 'Final Exam',
+            description: 'Teste final para provar seus conhecimentos',
+            icon: <Trophy size={48} />,
+            difficulty: 'hard',
+            estimatedTime: '15-20 min',
+            color: '#ff9800',
             available: true
         }
     ];
