@@ -27,7 +27,7 @@ export default function GamesPage() {
             name: 'Practice Mode',
             description: 'Pratique com repetição espaçada',
             icon: <BookOpen size={32} />,
-            image: '/games/game_practice.png',
+            image: '/games/game_fillblank.png', // Fallback: using fillblank as it looks like study
             difficulty: 'easy',
             estimatedTime: '10-15 min',
             color: '#2196f3',
@@ -104,7 +104,7 @@ export default function GamesPage() {
             name: 'Alphabet Order',
             description: 'Ordem alfabética',
             icon: <ArrowDownAZ size={32} />,
-            image: '/games/game_fillblank.png', // Reuse for now
+            image: '/games/game_fillblank.png', // Fallback
             difficulty: 'hard',
             estimatedTime: '5-7 min',
             color: '#f44336',
@@ -114,8 +114,8 @@ export default function GamesPage() {
             id: 'sentence_scramble',
             name: 'Sentence Scramble',
             description: 'Ordene as frases',
-            icon: <Link2 size={32} />, // Reuse icon
-            image: '/games/game_matching.png', // Reuse matching image for now
+            icon: <Link2 size={32} />,
+            image: '/games/game_matching.png', // Fallback
             difficulty: 'medium',
             estimatedTime: '5-10 min',
             color: '#ff9800',
@@ -125,8 +125,8 @@ export default function GamesPage() {
             id: 'listening',
             name: 'Listening',
             description: 'Prática de audição',
-            icon: <Target size={32} />, // Reuse icon
-            image: '/games/game_quiz.png', // Reuse quiz image for now
+            icon: <Target size={32} />,
+            image: '/games/game_quiz.png', // Fallback
             difficulty: 'easy',
             estimatedTime: '5 min',
             color: '#00bcd4',
@@ -137,7 +137,7 @@ export default function GamesPage() {
             name: 'Final Exam',
             description: 'Teste final',
             icon: <Trophy size={32} />,
-            image: '/games/game_timed.png', // Reuse timed image for now
+            image: '/games/game_timed.png', // Fallback
             difficulty: 'hard',
             estimatedTime: '15-20 min',
             color: '#ff9800',
