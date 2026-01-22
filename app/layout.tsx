@@ -17,6 +17,14 @@ const notoTabsJP = Noto_Sans_JP({
 export const metadata: Metadata = {
     title: "Nihongo Master | Learn Japanese",
     description: "Master Japanese with gamified learning and real-time handwriting practice.",
+    manifest: "/manifest.json",
+    themeColor: "#ff3e3e",
+    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
+    appleWebApp: {
+        capable: true,
+        statusBarStyle: "black-translucent",
+        title: "Nihongo Master",
+    },
 };
 
 import ClientLayout from "@/components/ClientLayout";
