@@ -47,34 +47,6 @@ export default function SchoolDashboard() {
         setOnboardingQr(qr);
     };
 
-    const [selectedStudent, setSelectedStudent] = useState<any>(null);
-    const [studentProgress, setStudentProgress] = useState<any[]>([]);
-    const [loadingProgress, setLoadingProgress] = useState(false);
-
-    const handleViewProgress = async (student: any) => {
-        setSelectedStudent(student);
-        setLoadingProgress(true);
-        try {
-            const { data, error } = await supabase
-                .from('user_progress')
-                .select('*')
-                .eq('user_id', student.id)
-                .order('completed_at', { ascending: false });
-
-            if (error) throw error;
-            setStudentProgress(data || []);
-        } catch (error) {
-            console.error('Error fetching progress:', error);
-        } finally {
-            setLoadingProgress(false);
-        }
-    };
-
-    const closeStudentModal = () => {
-        setSelectedStudent(null);
-        setStudentProgress([]);
-    };
-
     if (!user || !['director', 'teacher', 'admin'].includes(user.role)) return null;
 
     return (
@@ -120,7 +92,7 @@ export default function SchoolDashboard() {
                                 </div>
                                 <button
                                     className="btn-view-progress"
-                                    onClick={() => handleViewProgress(student)}
+                                    onClick={() => router.push(`/school/student/${student.id}`)}
                                 >
                                     {t('view_progress')}
                                 </button>
@@ -152,8 +124,8 @@ export default function SchoolDashboard() {
             </div>
 
             {showQr && (
-                <div className="qr-modal-overlay" onClick={() => setShowQr(false)}>
-                    <div className="glass-card qr-modal-content" onClick={e => e.stopPropagation()}>
+                <div className="qr-modal-overlay">
+                    <div className="glass-card qr-modal-content">
                         <h2 className="gradient-text qr-modal-title">{t('student_onboarding')}</h2>
                         <p className="qr-modal-desc">{t('onboarding_desc')}</p>
                         <div className="qr-image-container">
@@ -161,60 +133,6 @@ export default function SchoolDashboard() {
                         </div>
                         <br />
                         <button className="btn-primary" onClick={() => setShowQr(false)}>{t('close')}</button>
-                    </div>
-                </div>
-            )}
-
-            {selectedStudent && (
-                <div className="qr-modal-overlay" onClick={closeStudentModal}>
-                    <div className="glass-card student-modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <div className="student-header-info">
-                                <img src={selectedStudent.avatar_url || '/default-avatar.png'} alt="Avatar" className="student-avatar-large" />
-                                <div>
-                                    <h2 className="gradient-text">{selectedStudent.full_name}</h2>
-                                    <p className="text-muted">@{selectedStudent.username} • {selectedStudent.level}</p>
-                                </div>
-                            </div>
-                            <div className="xp-badge">
-                                {selectedStudent.xp} XP
-                            </div>
-                        </div>
-
-                        <div className="progress-section">
-                            <h3>Histórico de Atividades</h3>
-                            {loadingProgress ? (
-                                <div className="loading-spinner">Carregando...</div>
-                            ) : studentProgress.length > 0 ? (
-                                <div className="progress-list">
-                                    {studentProgress.map((item, index) => (
-                                        <div key={index} className="progress-item">
-                                            <div className="progress-icon">
-                                                {item.lesson_id.includes('exam') ? '🏆' :
-                                                    item.lesson_id.includes('game') ? '🎮' : '📚'}
-                                            </div>
-                                            <div className="progress-details">
-                                                <span className="activity-name">
-                                                    {item.lesson_id.replace('_', ' ').toUpperCase()}
-                                                </span>
-                                                <span className="activity-date">
-                                                    {new Date(item.completed_at).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <div className="progress-score">
-                                                {item.score} pts
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="no-activity">Nenhuma atividade registrada ainda.</p>
-                            )}
-                        </div>
-
-                        <button className="btn-secondary close-modal-btn" onClick={closeStudentModal}>
-                            Fechar
-                        </button>
                     </div>
                 </div>
             )}
