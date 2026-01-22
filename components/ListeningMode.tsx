@@ -42,7 +42,7 @@ export default function ListeningMode({ onComplete }: ListeningModeProps) {
 
     const currentProblem = LISTENING_DATA[currentProblemIndex];
 
-    const playAudio = () => {
+    const playAudio = React.useCallback(() => {
         if (isPlaying) return;
         setIsPlaying(true);
 
@@ -53,14 +53,14 @@ export default function ListeningMode({ onComplete }: ListeningModeProps) {
 
         utterance.onend = () => setIsPlaying(false);
         window.speechSynthesis.speak(utterance);
-    };
+    }, [currentProblem, isPlaying]);
 
     useEffect(() => {
         // Auto-play when problem changes
         if (!isFinished) {
             setTimeout(playAudio, 500);
         }
-    }, [currentProblemIndex]);
+    }, [currentProblemIndex, isFinished, playAudio]);
 
     const handleOptionClick = (option: string) => {
         if (feedback) return;
@@ -121,8 +121,8 @@ export default function ListeningMode({ onComplete }: ListeningModeProps) {
                     <button
                         onClick={playAudio}
                         className={`w-48 h-48 rounded-full flex items-center justify-center transition-all transform hover:scale-105 ${isPlaying
-                                ? 'bg-accent-primary shadow-[0_0_30px_rgba(59,130,246,0.5)] scale-110'
-                                : 'bg-white/10 hover:bg-white/20 border-4 border-white/20'
+                            ? 'bg-accent-primary shadow-[0_0_30px_rgba(59,130,246,0.5)] scale-110'
+                            : 'bg-white/10 hover:bg-white/20 border-4 border-white/20'
                             }`}
                     >
                         <Volume2 size={80} className={isPlaying ? 'text-white animate-pulse' : 'text-gray-300'} />

@@ -40,7 +40,7 @@ export default function InAppBrowserWarning() {
                     <p>Por favor, abra este site no seu navegador padrão:</p>
                     <div className="steps">
                         <span>1. Toque nos <strong>3 pontinhos</strong> (ou ícone de compartilhar) no canto da tela.</span>
-                        <span>2. Escolha <strong>"Abrir no Navegador"</strong> ou "Open in Chrome/Safari".</span>
+                        <span>2. Escolha <strong>&quot;Abrir no Navegador&quot;</strong> ou &quot;Open in Chrome/Safari&quot;.</span>
                     </div>
                 </div>
                 <button

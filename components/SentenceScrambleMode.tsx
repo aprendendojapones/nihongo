@@ -71,7 +71,7 @@ export default function SentenceScrambleMode({ onComplete }: SentenceScrambleMod
             setSelectedWords([]);
             setFeedback(null);
         }
-    }, [currentProblemIndex]);
+    }, [currentProblem]);
 
     const handleWordClick = (word: string, index: number, isSelected: boolean) => {
         if (feedback) return;
@@ -181,8 +181,8 @@ export default function SentenceScrambleMode({ onComplete }: SentenceScrambleMod
                     onClick={checkAnswer}
                     disabled={selectedWords.length === 0 || !!feedback}
                     className={`mt-8 px-12 py-4 rounded-full font-bold text-xl transition-all transform hover:scale-105 ${selectedWords.length > 0
-                            ? 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white shadow-lg shadow-accent-primary/20'
-                            : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-accent-primary to-accent-secondary text-white shadow-lg shadow-accent-primary/20'
+                        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                         }`}
                 >
                     Verificar
