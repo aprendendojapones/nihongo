@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, User, Trophy, BookOpen, Gamepad2, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
-import '../school.css'; // Reuse school styles
+import '../../school.css'; // Reuse school styles
 
 interface StudentProfile {
     id: string;
