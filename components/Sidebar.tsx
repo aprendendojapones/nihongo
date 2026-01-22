@@ -12,7 +12,8 @@ import {
     Settings,
     Home,
     Languages,
-    User
+    User,
+    Trophy
 } from 'lucide-react';
 import { useTranslation } from './TranslationContext';
 import './sidebar.css';
@@ -73,6 +74,7 @@ const Sidebar = () => {
         { id: 'profile', icon: User, label: t('profile') || 'Perfil', href: '/profile' },
         { id: 'lessons', icon: BookOpen, label: t('learning_path'), href: '/lessons' },
         { id: 'game', icon: Gamepad2, label: t('game_mode'), href: '/games' },
+        { id: 'rankings', icon: Trophy, label: 'Ranking', href: '/rankings' },
     ];
 
     const roleItems = [];
