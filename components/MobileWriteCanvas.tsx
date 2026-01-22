@@ -124,10 +124,19 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
                 <canvas
                     ref={canvasRef}
                     className="handwriting-canvas"
-                    style={{ width: '100%', height: '100%' }}
-                    onTouchStart={startDrawing}
-                    onTouchEnd={stopDrawing}
-                    onTouchMove={draw}
+                    style={{ width: '100%', height: '100%', touchAction: 'none' }}
+                    onTouchStart={(e) => {
+                        e.preventDefault(); // Prevent scrolling
+                        startDrawing(e);
+                    }}
+                    onTouchEnd={(e) => {
+                        e.preventDefault();
+                        stopDrawing();
+                    }}
+                    onTouchMove={(e) => {
+                        e.preventDefault(); // Prevent scrolling
+                        draw(e);
+                    }}
                     onMouseDown={startDrawing}
                     onMouseUp={stopDrawing}
                     onMouseMove={draw}
