@@ -27,7 +27,7 @@ export default function GamesPage() {
             name: 'Practice Mode',
             description: 'Pratique com repetição espaçada',
             icon: <BookOpen size={32} />,
-            image: '/games/game_fillblank.png', // Fallback: using fillblank as it looks like study
+            image: '/games/game_practice.png',
             difficulty: 'easy',
             estimatedTime: '10-15 min',
             color: '#2196f3',
@@ -104,7 +104,7 @@ export default function GamesPage() {
             name: 'Alphabet Order',
             description: 'Ordem alfabética',
             icon: <ArrowDownAZ size={32} />,
-            image: '/games/game_fillblank.png', // Fallback
+            image: '/games/game_alphabet.png',
             difficulty: 'hard',
             estimatedTime: '5-7 min',
             color: '#f44336',
@@ -115,7 +115,7 @@ export default function GamesPage() {
             name: 'Sentence Scramble',
             description: 'Ordene as frases',
             icon: <Link2 size={32} />,
-            image: '/games/game_matching.png', // Fallback
+            image: '/games/game_sentence.png',
             difficulty: 'medium',
             estimatedTime: '5-10 min',
             color: '#ff9800',
@@ -126,7 +126,7 @@ export default function GamesPage() {
             name: 'Listening',
             description: 'Prática de audição',
             icon: <Target size={32} />,
-            image: '/games/game_quiz.png', // Fallback
+            image: '/games/game_listening.png',
             difficulty: 'easy',
             estimatedTime: '5 min',
             color: '#00bcd4',
@@ -148,7 +148,7 @@ export default function GamesPage() {
             name: 'Final Exam',
             description: 'Teste final',
             icon: <Trophy size={32} />,
-            image: '/games/game_timed.png', // Fallback
+            image: '/games/game_exam.png',
             difficulty: 'hard',
             estimatedTime: '15-20 min',
             color: '#ff9800',
