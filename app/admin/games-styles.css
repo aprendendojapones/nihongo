@@ -1,0 +1,83 @@
+/* Games Management Styles */
+.subject-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.subject-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.subject-tab.active {
+    background: var(--accent-primary);
+    color: #000;
+    font-weight: bold;
+}
+
+.category-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.visibility-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.visibility-toggle:hover {
+    color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.games-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.game-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s;
+}
+
+.game-item:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-content {
+    margin-top: 2rem;
+}
+
+.header-spacer {
+    width: 40px;
+}

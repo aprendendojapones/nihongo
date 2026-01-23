@@ -405,6 +405,9 @@ export default function AdminPage() {
                         <Trophy size={24} /> Acesso Rápido
                     </h2>
                     <div className="admin-actions-grid">
+                        <button className="btn-primary" onClick={() => router.push('/admin/games')}>
+                            Gerenciar Jogos
+                        </button>
                         <button className="btn-primary" onClick={() => router.push('/rankings')}>
                             Ver Ranking Global
                         </button>
