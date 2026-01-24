@@ -86,6 +86,7 @@ const Sidebar = () => {
         { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard'), href: '/dashboard' },
         { id: 'profile', icon: User, label: t('profile') || 'Perfil', href: '/profile' },
         { id: 'lessons', icon: BookOpen, label: t('learning_path'), href: '/lessons' },
+        { id: 'math', icon: Calculator, label: 'Matemática', href: '/math' },
         { id: 'game', icon: Gamepad2, label: t('game_mode'), href: '/games' },
         { id: 'rankings', icon: Trophy, label: 'Ranking', href: '/rankings' },
     ];
