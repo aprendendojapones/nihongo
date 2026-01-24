@@ -13,7 +13,8 @@ import {
     Home,
     Languages,
     User,
-    Trophy
+    Trophy,
+    GraduationCap
 } from 'lucide-react';
 import { useTranslation } from './TranslationContext';
 import './sidebar.css';
@@ -25,6 +26,7 @@ const Sidebar = () => {
     const user = session?.user as any;
     const [dbRole, setDbRole] = React.useState<string | null>(null);
     const [isExpanded, setIsExpanded] = React.useState<boolean>(true);
+    const [hasOtherSubjects, setHasOtherSubjects] = React.useState<boolean>(false);
 
     // Load sidebar state from localStorage
     React.useEffect(() => {
@@ -42,7 +44,7 @@ const Sidebar = () => {
         window.dispatchEvent(new Event('sidebarToggle'));
     };
 
-    // Fetch role from database
+    // Fetch role from database and check for other subjects
     React.useEffect(() => {
         const fetchRole = async () => {
             if (session?.user?.email) {
@@ -56,6 +58,16 @@ const Sidebar = () => {
                     setDbRole(data.role);
                     console.log('Sidebar - Fetched role from DB:', data.role);
                 }
+
+                // Check if there are visible subjects (other than Japanese)
+                const { data: subjects } = await supabase
+                    .from('subjects')
+                    .select('id')
+                    .eq('visible', true)
+                    .neq('slug', 'japanese')
+                    .limit(1);
+
+                setHasOtherSubjects((subjects?.length || 0) > 0);
             }
         };
         fetchRole();
@@ -83,6 +95,13 @@ const Sidebar = () => {
     }
     if (effectiveRole === 'admin') {
         roleItems.push({ id: 'admin', icon: Settings, label: t('admin_panel'), href: '/admin' });
+        roleItems.push({ id: 'subjects', icon: GraduationCap, label: 'Matérias', href: '/admin/games' });
+    }
+
+    // Add "Other Subjects" for students if there are visible subjects
+    const studentItems = [];
+    if (hasOtherSubjects && effectiveRole === 'student') {
+        studentItems.push({ id: 'other-subjects', icon: GraduationCap, label: 'Outras Matérias', href: '/subjects' });
     }
 
     const languages: ('pt' | 'jp' | 'en' | 'fil' | 'zh' | 'hi')[] = ['pt', 'jp', 'en', 'fil', 'zh', 'hi'];
@@ -118,6 +137,21 @@ const Sidebar = () => {
                 {roleItems.length > 0 && (
                     <div style={{ margin: '1rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
                         {roleItems.map((item) => (
+                            <Link
+                                key={item.id}
+                                href={item.href}
+                                className={`nav-item ${pathname === item.href ? 'active' : ''}`}
+                            >
+                                <item.icon size={24} />
+                                <span className="nav-label">{item.label}</span>
+                            </Link>
+                        ))}
+                    </div>
+                )}
+
+                {studentItems.length > 0 && (
+                    <div style={{ margin: '1rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                        {studentItems.map((item) => (
                             <Link
                                 key={item.id}
                                 href={item.href}
