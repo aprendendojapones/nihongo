@@ -21,7 +21,7 @@ export default function MathDash({ onBack }: MathDashProps) {
 
     const generateNewProblem = useCallback(() => {
         // No Dash, a dificuldade aumenta com o score
-        const level = Math.min(9, Math.floor(score / 10) + 1) as any;
+        const level = Math.min(12, Math.floor(score / 10) + 1) as any;
         setProblem(getMathProblem(level));
         setFeedback(null);
     }, [score]);

@@ -20,6 +20,9 @@ const LEVELS = [
     { id: 7, name: '7º Ano', description: 'Divisão avançada' },
     { id: 8, name: '8º Ano', description: 'Expressões numéricas' },
     { id: 9, name: '9º Ano', description: 'Desafios matemáticos' },
+    { id: 10, name: '10º Ano', description: 'Álgebra básica' },
+    { id: 11, name: '11º Ano', description: 'Geometria e Funções' },
+    { id: 12, name: '12º Ano', description: 'Preparação Acadêmica' },
 ];
 
 export default function MathProgression({ onBack }: MathProgressionProps) {
@@ -32,9 +35,13 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [showTestOption, setShowTestOption] = useState(false);
 
-    // XP & Player Level State
-    const [xp, setXp] = useState(0);
+    // XP & Player Level State (Geral)
+    const [totalXp, setTotalXp] = useState(0);
     const [playerLevel, setPlayerLevel] = useState(1);
+
+    // XP & Level State (Por Ano)
+    const [yearXp, setYearXp] = useState(0);
+    const [yearLevel, setYearLevel] = useState(1);
     const [correctCount, setCorrectCount] = useState(0); // Acertos no nível atual (prática)
 
     // Test State
@@ -48,18 +55,31 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
         const savedLevels = localStorage.getItem('math_unlocked_levels');
         if (savedLevels) setUnlockedLevels(JSON.parse(savedLevels));
 
-        const savedXP = localStorage.getItem('math_xp');
-        if (savedXP) setXp(parseInt(savedXP));
-
-        const savedPlayerLevel = localStorage.getItem('math_player_level');
-        if (savedPlayerLevel) setPlayerLevel(parseInt(savedPlayerLevel));
+        const savedTotalXP = localStorage.getItem('math_total_xp');
+        if (savedTotalXP) {
+            const xpVal = parseInt(savedTotalXP);
+            setTotalXp(xpVal);
+            setPlayerLevel(Math.floor(xpVal / 1000) + 1);
+        }
     }, []);
 
     useEffect(() => {
+        const savedYearXP = localStorage.getItem(`math_year_xp_${currentLevel}`);
+        if (savedYearXP) {
+            const yXpVal = parseInt(savedYearXP);
+            setYearXp(yXpVal);
+            setYearLevel(Math.floor(yXpVal / 200) + 1);
+        } else {
+            setYearXp(0);
+            setYearLevel(1);
+        }
+    }, [currentLevel]);
+
+    useEffect(() => {
         localStorage.setItem('math_unlocked_levels', JSON.stringify(unlockedLevels));
-        localStorage.setItem('math_xp', xp.toString());
-        localStorage.setItem('math_player_level', playerLevel.toString());
-    }, [unlockedLevels, xp, playerLevel]);
+        localStorage.setItem('math_total_xp', totalXp.toString());
+        localStorage.setItem(`math_year_xp_${currentLevel}`, yearXp.toString());
+    }, [unlockedLevels, totalXp, yearXp, currentLevel]);
 
     const generateNewProblem = useCallback(() => {
         setProblem(getMathProblem(currentLevel as MathLevel));
@@ -87,10 +107,19 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
             });
 
             if (mode === 'practice') {
-                setXp(prev => prev + 20);
+                const newTotalXp = totalXp + 20;
+                const newYearXp = yearXp + 20;
+
+                setTotalXp(newTotalXp);
+                setPlayerLevel(Math.floor(newTotalXp / 1000) + 1);
+
+                setYearXp(newYearXp);
+                const newYearLevel = Math.floor(newYearXp / 200) + 1;
+                setYearLevel(newYearLevel);
+
                 setCorrectCount(prev => {
                     const next = prev + 1;
-                    if (next >= threshold) setShowTestOption(true);
+                    if (next >= threshold || newYearLevel >= 5) setShowTestOption(true);
                     return next;
                 });
             } else {
@@ -112,7 +141,8 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
         } else if (val.length >= problem.answer.toString().length) {
             setFeedback('wrong');
             if (mode === 'practice') {
-                setXp(prev => Math.max(0, prev - 5));
+                setTotalXp(prev => Math.max(0, prev - 5));
+                setYearXp(prev => Math.max(0, prev - 5));
             }
             setTimeout(() => {
                 if (mode === 'test') {
@@ -145,7 +175,8 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
 
         if (pass && !unlockedLevels.includes(currentLevel + 1)) {
             setUnlockedLevels(prev => [...prev, currentLevel + 1]);
-            setXp(prev => prev + 200);
+            setTotalXp(prev => prev + 200);
+            setPlayerLevel(Math.floor((totalXp + 200) / 1000) + 1);
         }
     };
 
@@ -200,9 +231,11 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
                 <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
                     <div className="glass-card" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Star size={20} color="#fbbf24" fill="#fbbf24" />
-                        <span style={{ fontWeight: 'bold' }}>Nível {playerLevel}</span>
-                        <div style={{ width: '100px', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: `${(xp % 100)}%`, height: '100%', background: '#fbbf24' }} />
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <span style={{ fontWeight: 'bold', fontSize: '0.8rem' }}>Nível Geral {playerLevel}</span>
+                            <div style={{ width: '100px', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                                <div style={{ width: `${(totalXp % 1000) / 10}%`, height: '100%', background: '#fbbf24' }} />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -261,9 +294,21 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
                         )}
                     </div>
 
-                    <h2 style={{ marginBottom: '2rem', color: 'var(--accent-primary)' }}>
-                        {mode === 'practice' ? 'Praticando' : 'Modo Prova'} - Nível {currentLevel}
+                    <h2 style={{ marginBottom: '1rem', color: 'var(--accent-primary)' }}>
+                        {mode === 'practice' ? 'Praticando' : 'Modo Prova'} - {LEVELS.find(l => l.id === currentLevel)?.name}
                     </h2>
+
+                    {mode === 'practice' && (
+                        <div style={{ marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '200px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                <span>Progresso do Ano</span>
+                                <span>Nível {yearLevel}</span>
+                            </div>
+                            <div style={{ width: '200px', height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
+                                <div style={{ width: `${(yearXp % 200) / 2}%`, height: '100%', background: 'var(--accent-primary)' }} />
+                            </div>
+                        </div>
+                    )}
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', marginBottom: '3rem' }}>
                         <div style={{ fontSize: '4rem', fontWeight: 'bold' }}>
