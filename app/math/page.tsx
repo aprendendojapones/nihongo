@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Calculator, Trophy, Zap, ArrowLeft, GraduationCap } from 'lucide-react';
 import '../dashboard/dashboard.css';
 import MathQuiz from '@/components/math/MathQuiz';
@@ -10,13 +10,21 @@ import MathDash from '@/components/math/MathDash';
 
 import { supabase } from '@/lib/supabase';
 
-export default function MathPage() {
+function MathPageContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [gameMode, setGameMode] = useState<'menu' | 'quiz' | 'progression' | 'dash'>('menu');
     const [loading, setLoading] = useState(true);
     const [isVisible, setIsVisible] = useState(true);
 
-    useState(() => {
+    useEffect(() => {
+        const mode = searchParams.get('mode');
+        if (mode === 'quiz' || mode === 'progression' || mode === 'dash') {
+            setGameMode(mode);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
         const checkVisibility = async () => {
             try {
                 const { data: { session } } = await supabase.auth.getSession();
@@ -155,5 +163,13 @@ export default function MathPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function MathPage() {
+    return (
+        <Suspense fallback={<div className="loading-container">Carregando...</div>}>
+            <MathPageContent />
+        </Suspense>
     );
 }

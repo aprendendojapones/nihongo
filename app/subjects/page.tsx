@@ -97,7 +97,12 @@ export default function OtherSubjectsPage() {
     };
 
     const handlePlayGame = (gameId: string) => {
-        router.push(`/game?mode=${gameId}`);
+        if (gameId.startsWith('math_')) {
+            const mode = gameId.replace('math_', '');
+            router.push(`/math?mode=${mode}`);
+        } else {
+            router.push(`/game?mode=${gameId}`);
+        }
     };
 
     if (loading) return <div className="loading-container">Carregando...</div>;
