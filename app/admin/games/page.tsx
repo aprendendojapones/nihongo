@@ -111,27 +111,45 @@ export default function AdminGamesPage() {
     }, [session, user, fetchData, router]);
 
     const toggleSubjectVisibility = async (subjectId: string, currentVisible: boolean) => {
-        await supabase
+        const { error } = await supabase
             .from('subjects')
             .update({ visible: !currentVisible })
             .eq('id', subjectId);
-        fetchData();
+
+        if (error) {
+            alert('Erro ao atualizar matéria: ' + error.message);
+            console.error(error);
+        } else {
+            fetchData();
+        }
     };
 
     const toggleCategoryVisibility = async (categoryId: string, currentVisible: boolean) => {
-        await supabase
+        const { error } = await supabase
             .from('game_categories')
             .update({ visible: !currentVisible })
             .eq('id', categoryId);
-        fetchData();
+
+        if (error) {
+            alert('Erro ao atualizar categoria: ' + error.message);
+            console.error(error);
+        } else {
+            fetchData();
+        }
     };
 
     const toggleGameVisibility = async (gameId: string, currentVisible: boolean) => {
-        await supabase
+        const { error } = await supabase
             .from('games_config')
             .update({ visible: !currentVisible })
             .eq('id', gameId);
-        fetchData();
+
+        if (error) {
+            alert('Erro ao atualizar jogo: ' + error.message);
+            console.error(error);
+        } else {
+            fetchData();
+        }
     };
 
     const addSubject = async () => {
@@ -139,13 +157,19 @@ export default function AdminGamesPage() {
         if (!name) return;
 
         const slug = name.toLowerCase().replace(/\s+/g, '-');
-        await supabase.from('subjects').insert({
+        const { error } = await supabase.from('subjects').insert({
             name,
             slug,
             visible: true,
             order_index: subjects.length + 1
         });
-        fetchData();
+
+        if (error) {
+            alert('Erro ao adicionar matéria: ' + error.message);
+            console.error(error);
+        } else {
+            fetchData();
+        }
     };
 
     const addCategory = async () => {
@@ -154,13 +178,19 @@ export default function AdminGamesPage() {
         const name = prompt('Nome da categoria:');
         if (!name) return;
 
-        await supabase.from('game_categories').insert({
+        const { error } = await supabase.from('game_categories').insert({
             subject_id: selectedSubject,
             name,
             visible: true,
             order_index: categories.filter(c => c.subject_id === selectedSubject).length + 1
         });
-        fetchData();
+
+        if (error) {
+            alert('Erro ao adicionar categoria: ' + error.message);
+            console.error(error);
+        } else {
+            fetchData();
+        }
     };
 
     if (loading || isCheckingRole) return <div className="loading-container">Carregando...</div>;
