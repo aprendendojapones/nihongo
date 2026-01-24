@@ -79,6 +79,7 @@ const Sidebar = () => {
 
     // Use role from session or database
     const effectiveRole = user?.role || dbRole;
+    console.log('Sidebar rendering. Effective Role:', effectiveRole, 'Path:', pathname);
 
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
@@ -95,7 +96,7 @@ const Sidebar = () => {
     }
     if (effectiveRole === 'admin') {
         roleItems.push({ id: 'admin', icon: Settings, label: t('admin_panel'), href: '/admin' });
-        roleItems.push({ id: 'subjects', icon: GraduationCap, label: 'Matérias', href: '/admin/games' });
+        roleItems.push({ id: 'subjects', icon: GraduationCap, label: 'Matérias *', href: '/admin/games' });
     }
 
     // Add "Other Subjects" for students if there are visible subjects
