@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine } from 'lucide-react';
+import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import './profile.css';
 
@@ -25,8 +25,12 @@ export default function ProfilePage() {
         phone_public: false,
         address_public: false,
         language_pref: 'pt',
-        schoolName: ''
+        schoolName: '',
+        xp: 0,
+        level: 'N5'
     });
+
+    const [progress, setProgress] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -46,10 +50,23 @@ export default function ProfilePage() {
                         phone_public: data.phone_public || false,
                         address_public: data.address_public || false,
                         language_pref: data.language_pref || 'pt',
-                        schoolName: data.schools?.name || ''
+                        schoolName: data.schools?.name || '',
+                        xp: data.xp || 0,
+                        level: data.level || 'N5'
                     });
                     if (data.language_pref) {
                         setLang(data.language_pref);
+                    }
+
+                    // Fetch user progress
+                    const { data: progressData } = await supabase
+                        .from('user_progress')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .order('completed_at', { ascending: false });
+
+                    if (progressData) {
+                        setProgress(progressData);
                     }
                 }
             }
@@ -303,6 +320,58 @@ export default function ProfilePage() {
                         {saving ? 'Salvando...' : <><Save size={18} /> Salvar Alterações</>}
                     </button>
                 </form>
+
+                <div className="profile-progress-section">
+                    <div className="form-section">
+                        <h3><Trophy size={18} /> Meu Progresso</h3>
+
+                        <div className="stats-grid">
+                            <div className="stat-card">
+                                <div className="stat-icon"><Star size={24} fill="var(--accent-primary)" /></div>
+                                <div className="stat-value">{formData.xp}</div>
+                                <div className="stat-label">XP Total</div>
+                                <div className="xp-bar-container">
+                                    <div className="xp-bar-fill" style={{ width: `${(formData.xp % 1000) / 10}%` }}></div>
+                                </div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-icon"><Zap size={24} /></div>
+                                <div className="stat-value">{formData.level}</div>
+                                <div className="stat-label">Nível Atual</div>
+                            </div>
+                            <div className="stat-card">
+                                <div className="stat-icon"><BookOpen size={24} /></div>
+                                <div className="stat-value">{progress.filter(p => p.completed).length}</div>
+                                <div className="stat-label">Atividades</div>
+                            </div>
+                        </div>
+
+                        <div className="recent-activities">
+                            <h4 className="recent-activities-title">Atividades Recentes</h4>
+                            <div className="progress-list">
+                                {progress.length > 0 ? (
+                                    progress.slice(0, 5).map((item) => (
+                                        <div key={item.id} className="progress-item">
+                                            <div className="progress-item-info">
+                                                <Trophy size={16} color="var(--accent-secondary)" />
+                                                <span className="progress-item-name">
+                                                    {item.lesson_id.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                                </span>
+                                            </div>
+                                            <span className="progress-item-score">
+                                                {item.score !== null ? `${item.score} pts` : 'Concluído'}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>
+                                        Nenhuma atividade registrada ainda.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </main>
 
             {showScanner && (

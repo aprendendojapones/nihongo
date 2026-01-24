@@ -4,12 +4,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getMathProblem, MathProblem } from '@/lib/mathUtils';
 import { Check, X, ArrowLeft, Zap, Trophy, Timer } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
 
 interface MathDashProps {
     onBack: () => void;
 }
 
 export default function MathDash({ onBack }: MathDashProps) {
+    const { data: session } = useSession();
+    const user = session?.user as any;
     const [problem, setProblem] = useState<MathProblem | null>(null);
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(60);
@@ -27,9 +31,19 @@ export default function MathDash({ onBack }: MathDashProps) {
     }, [score]);
 
     useEffect(() => {
-        const saved = localStorage.getItem('math_dash_highscore');
-        if (saved) setHighScore(parseInt(saved));
-    }, []);
+        const fetchHighScore = async () => {
+            if (!user) return;
+            const { data } = await supabase
+                .from('user_progress')
+                .select('score')
+                .eq('user_id', user.id)
+                .eq('lesson_id', 'math_dash_highscore')
+                .single();
+
+            if (data) setHighScore(data.score);
+        };
+        fetchHighScore();
+    }, [user]);
 
     useEffect(() => {
         if (gameState === 'playing' && timeLeft > 0) {
@@ -54,12 +68,24 @@ export default function MathDash({ onBack }: MathDashProps) {
         if (gameState === 'finished') {
             if (score > highScore) {
                 setHighScore(score);
-                localStorage.setItem('math_dash_highscore', score.toString());
+                if (user) {
+                    supabase.from('user_progress').upsert({
+                        user_id: user.id,
+                        lesson_id: 'math_dash_highscore',
+                        completed: true,
+                        score: score
+                    });
+                }
                 confetti({
                     particleCount: 200,
                     spread: 90,
                     origin: { y: 0.6 }
                 });
+            }
+
+            // Ganhar XP proporcional ao score (ex: 10% do score)
+            if (user && score > 0) {
+                supabase.rpc('increment_xp', { user_id: user.id, amount: Math.floor(score / 10) });
             }
         }
     }, [gameState, score, highScore]);

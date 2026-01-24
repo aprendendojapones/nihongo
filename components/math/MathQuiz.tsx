@@ -4,12 +4,16 @@ import { useState, useEffect } from 'react';
 import { getMathProblem, MathProblem } from '@/lib/mathUtils';
 import { Check, X, ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
 
 interface MathQuizProps {
     onBack: () => void;
 }
 
 export default function MathQuiz({ onBack }: MathQuizProps) {
+    const { data: session } = useSession();
+    const user = session?.user as any;
     const [problem, setProblem] = useState<MathProblem | null>(null);
     const [score, setScore] = useState(0);
     const [total, setTotal] = useState(0);
@@ -39,6 +43,19 @@ export default function MathQuiz({ onBack }: MathQuizProps) {
                 spread: 70,
                 origin: { y: 0.6 }
             });
+
+            // Salvar progresso no Supabase
+            if (user) {
+                supabase.rpc('increment_xp', { user_id: user.id, amount: 10 }).then(() => {
+                    supabase.from('user_progress').upsert({
+                        user_id: user.id,
+                        lesson_id: 'math_quiz',
+                        completed: true,
+                        score: score + 1
+                    });
+                });
+            }
+
             setTimeout(generateNewProblem, 1000);
         } else {
             setTimeout(() => setFeedback(null), 1000);

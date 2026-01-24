@@ -5,6 +5,8 @@ import { getMathProblem, MathProblem, MathLevel } from '@/lib/mathUtils';
 import { Check, X, ArrowLeft, Lock, Trophy, BookOpen, Star, TrendingUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+import { useSession } from 'next-auth/react';
 
 interface MathProgressionProps {
     onBack: () => void;
@@ -26,6 +28,9 @@ const LEVELS = [
 ];
 
 export default function MathProgression({ onBack }: MathProgressionProps) {
+    const { data: session } = useSession();
+    const user = session?.user as any;
+
     // Game State
     const [unlockedLevels, setUnlockedLevels] = useState<number[]>([1]);
     const [currentLevel, setCurrentLevel] = useState<number>(1);
@@ -52,34 +57,72 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
     const threshold = currentLevel * 10;
 
     useEffect(() => {
-        const savedLevels = localStorage.getItem('math_unlocked_levels');
-        if (savedLevels) setUnlockedLevels(JSON.parse(savedLevels));
+        const fetchProgress = async () => {
+            if (!user) return;
 
-        const savedTotalXP = localStorage.getItem('math_total_xp');
-        if (savedTotalXP) {
-            const xpVal = parseInt(savedTotalXP);
-            setTotalXp(xpVal);
-            setPlayerLevel(Math.floor(xpVal / 1000) + 1);
-        }
-    }, []);
+            // Buscar níveis desbloqueados
+            const { data: progressData } = await supabase
+                .from('user_progress')
+                .select('lesson_id')
+                .eq('user_id', user.id)
+                .like('lesson_id', 'math_level_%');
+
+            if (progressData && progressData.length > 0) {
+                const levels = progressData.map(p => parseInt(p.lesson_id.replace('math_level_', '')));
+                setUnlockedLevels(prev => Array.from(new Set([...prev, ...levels])));
+            }
+
+            // Buscar XP e Nível do Perfil
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('xp')
+                .eq('id', user.id)
+                .single();
+
+            if (profileData) {
+                setTotalXp(profileData.xp);
+                setPlayerLevel(Math.floor(profileData.xp / 1000) + 1);
+            }
+        };
+
+        fetchProgress();
+    }, [user]);
 
     useEffect(() => {
-        const savedYearXP = localStorage.getItem(`math_year_xp_${currentLevel}`);
-        if (savedYearXP) {
-            const yXpVal = parseInt(savedYearXP);
-            setYearXp(yXpVal);
-            setYearLevel(Math.floor(yXpVal / 200) + 1);
-        } else {
-            setYearXp(0);
-            setYearLevel(1);
-        }
-    }, [currentLevel]);
+        const fetchYearProgress = async () => {
+            if (!user) return;
+            const { data } = await supabase
+                .from('user_progress')
+                .select('score')
+                .eq('user_id', user.id)
+                .eq('lesson_id', `math_year_xp_${currentLevel}`)
+                .single();
 
-    useEffect(() => {
-        localStorage.setItem('math_unlocked_levels', JSON.stringify(unlockedLevels));
-        localStorage.setItem('math_total_xp', totalXp.toString());
-        localStorage.setItem(`math_year_xp_${currentLevel}`, yearXp.toString());
-    }, [unlockedLevels, totalXp, yearXp, currentLevel]);
+            if (data) {
+                setYearXp(data.score);
+                setYearLevel(Math.floor(data.score / 200) + 1);
+            } else {
+                setYearXp(0);
+                setYearLevel(1);
+            }
+        };
+        fetchYearProgress();
+    }, [currentLevel, user]);
+
+    const saveProgress = async (newTotalXp: number, newYearXp: number) => {
+        if (!user) return;
+
+        // Atualizar XP no perfil
+        await supabase.rpc('increment_xp', { user_id: user.id, amount: 20 });
+
+        // Salvar XP do ano na tabela user_progress (usando score para armazenar XP acumulado do ano)
+        await supabase.from('user_progress').upsert({
+            user_id: user.id,
+            lesson_id: `math_year_xp_${currentLevel}`,
+            completed: false,
+            score: newYearXp
+        });
+    };
 
     const generateNewProblem = useCallback(() => {
         setProblem(getMathProblem(currentLevel as MathLevel));
@@ -116,6 +159,8 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
                 setYearXp(newYearXp);
                 const newYearLevel = Math.floor(newYearXp / 200) + 1;
                 setYearLevel(newYearLevel);
+
+                saveProgress(newTotalXp, newYearXp);
 
                 setCorrectCount(prev => {
                     const next = prev + 1;
@@ -174,9 +219,21 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
         setTestResults({ score: finalCorrect, total: 20 });
 
         if (pass && !unlockedLevels.includes(currentLevel + 1)) {
-            setUnlockedLevels(prev => [...prev, currentLevel + 1]);
+            const nextLvl = currentLevel + 1;
+            setUnlockedLevels(prev => [...prev, nextLvl]);
             setTotalXp(prev => prev + 200);
             setPlayerLevel(Math.floor((totalXp + 200) / 1000) + 1);
+
+            if (user) {
+                supabase.rpc('increment_xp', { user_id: user.id, amount: 200 }).then(() => {
+                    supabase.from('user_progress').upsert({
+                        user_id: user.id,
+                        lesson_id: `math_level_${nextLvl}`,
+                        completed: true,
+                        score: finalCorrect
+                    });
+                });
+            }
         }
     };
 
