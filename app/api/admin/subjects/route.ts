@@ -27,11 +27,17 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { name, slug, visible, order_index } = body;
+        const { name, slug, visible, order_index, visibility_level } = body;
 
         const { data, error } = await supabaseAdmin
             .from('subjects')
-            .insert({ name, slug, visible, order_index })
+            .insert({
+                name,
+                slug,
+                visible,
+                order_index,
+                visibility_level: visibility_level || 'everyone'
+            })
             .select()
             .single();
 
@@ -62,11 +68,15 @@ export async function PUT(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { id, visible } = body;
+        const { id, visible, visibility_level } = body;
+
+        const updateData: any = {};
+        if (visible !== undefined) updateData.visible = visible;
+        if (visibility_level !== undefined) updateData.visibility_level = visibility_level;
 
         const { data, error } = await supabaseAdmin
             .from('subjects')
-            .update({ visible })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();

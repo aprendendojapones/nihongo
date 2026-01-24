@@ -8,9 +8,58 @@ import MathQuiz from '@/components/math/MathQuiz';
 import MathProgression from '@/components/math/MathProgression';
 import MathDash from '@/components/math/MathDash';
 
+import { supabase } from '@/lib/supabase';
+
 export default function MathPage() {
     const router = useRouter();
     const [gameMode, setGameMode] = useState<'menu' | 'quiz' | 'progression' | 'dash'>('menu');
+    const [loading, setLoading] = useState(true);
+    const [isVisible, setIsVisible] = useState(true);
+
+    useState(() => {
+        const checkVisibility = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                const userEmail = session?.user?.email;
+                let userRole = 'student';
+
+                if (userEmail) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('email', userEmail)
+                        .single();
+                    if (profile) userRole = profile.role;
+                }
+
+                const { data: subject } = await supabase
+                    .from('subjects')
+                    .select('visible, visibility_level')
+                    .eq('slug', 'math')
+                    .single();
+
+                if (subject) {
+                    if (!subject.visible) {
+                        setIsVisible(false);
+                    } else {
+                        const canSee = (visibilityLevel: string) => {
+                            if (userRole === 'admin') return true;
+                            if (userRole === 'teacher' || userRole === 'director') {
+                                return visibilityLevel === 'everyone' || visibilityLevel === 'staff';
+                            }
+                            return visibilityLevel === 'everyone';
+                        };
+                        setIsVisible(canSee(subject.visibility_level || 'everyone'));
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking math visibility:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        checkVisibility();
+    });
 
     const renderGame = () => {
         switch (gameMode) {
@@ -24,6 +73,28 @@ export default function MathPage() {
                 return null;
         }
     };
+
+    if (loading) return <div className="loading-container">Carregando...</div>;
+
+    if (!isVisible) {
+        return (
+            <div className="dashboard-container">
+                <header className="dashboard-header" style={{ marginBottom: '2rem' }}>
+                    <button
+                        className="btn-primary"
+                        onClick={() => router.push('/dashboard')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <ArrowLeft size={20} /> Voltar ao Dashboard
+                    </button>
+                    <h1 className="gradient-text">Acesso Restrito</h1>
+                </header>
+                <div className="glass-card" style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p>Você não tem permissão para acessar esta página ou ela está oculta.</p>
+                </div>
+            </div>
+        );
+    }
 
     if (gameMode !== 'menu') {
         return (

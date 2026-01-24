@@ -12,12 +12,14 @@ interface Subject {
     id: string;
     name: string;
     slug: string;
+    visibility_level: 'admin' | 'staff' | 'everyone';
 }
 
 interface Category {
     id: string;
     name: string;
     subject_id: string;
+    visibility_level: 'admin' | 'staff' | 'everyone';
 }
 
 interface Game {
@@ -26,6 +28,7 @@ interface Game {
     category_id: string;
     name: string;
     description: string;
+    visibility_level: 'admin' | 'staff' | 'everyone';
 }
 
 export default function OtherSubjectsPage() {
@@ -37,7 +40,21 @@ export default function OtherSubjectsPage() {
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
 
+    const [userRole, setUserRole] = useState<string>('student');
+
     useEffect(() => {
+        const fetchUserRole = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.email) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('email', session.user.email)
+                    .single();
+                if (profile) setUserRole(profile.role);
+            }
+        };
+        fetchUserRole();
         fetchData();
     }, []);
 
@@ -85,7 +102,19 @@ export default function OtherSubjectsPage() {
 
     if (loading) return <div className="loading-container">Carregando...</div>;
 
-    if (subjects.length === 0) {
+    const canSee = (visibilityLevel: string) => {
+        if (userRole === 'admin') return true;
+        if (userRole === 'teacher' || userRole === 'director') {
+            return visibilityLevel === 'everyone' || visibilityLevel === 'staff';
+        }
+        return visibilityLevel === 'everyone';
+    };
+
+    const filteredSubjects = subjects.filter(s => canSee(s.visibility_level));
+    const filteredCategories = categories.filter(c => canSee(c.visibility_level));
+    const filteredGames = games.filter(g => canSee(g.visibility_level));
+
+    if (filteredSubjects.length === 0) {
         return (
             <div className="games-container">
                 <header className="games-header">
@@ -102,7 +131,7 @@ export default function OtherSubjectsPage() {
         );
     }
 
-    const currentCategories = categories.filter(c => c.subject_id === selectedSubject);
+    const currentCategories = filteredCategories.filter(c => c.subject_id === selectedSubject);
 
     return (
         <div className="games-container">
@@ -116,7 +145,7 @@ export default function OtherSubjectsPage() {
 
             {/* Subject Tabs */}
             <div className="subject-tabs">
-                {subjects.map(subject => (
+                {filteredSubjects.map(subject => (
                     <button
                         key={subject.id}
                         className={`subject-tab-btn ${selectedSubject === subject.id ? 'active' : ''}`}
@@ -130,7 +159,7 @@ export default function OtherSubjectsPage() {
             {/* Categories and Games */}
             <div className="games-content">
                 {currentCategories.map(category => {
-                    const categoryGames = games.filter(g => g.category_id === category.id);
+                    const categoryGames = filteredGames.filter(g => g.category_id === category.id);
 
                     if (categoryGames.length === 0) return null;
 

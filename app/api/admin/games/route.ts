@@ -26,11 +26,15 @@ export async function PUT(req: NextRequest) {
         }
 
         const body = await req.json();
-        const { id, visible } = body;
+        const { id, visible, visibility_level } = body;
+
+        const updateData: any = {};
+        if (visible !== undefined) updateData.visible = visible;
+        if (visibility_level !== undefined) updateData.visibility_level = visibility_level;
 
         const { data, error } = await supabaseAdmin
             .from('games_config')
-            .update({ visible })
+            .update(updateData)
             .eq('id', id)
             .select()
             .single();

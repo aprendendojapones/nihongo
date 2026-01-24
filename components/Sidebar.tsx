@@ -63,12 +63,21 @@ const Sidebar = () => {
                 // Check if there are visible subjects (other than Japanese)
                 const { data: subjects } = await supabase
                     .from('subjects')
-                    .select('id')
+                    .select('id, visibility_level')
                     .eq('visible', true)
-                    .neq('slug', 'japanese')
-                    .limit(1);
+                    .neq('slug', 'japanese');
 
-                setHasOtherSubjects((subjects?.length || 0) > 0);
+                const canSee = (visibilityLevel: string) => {
+                    const role = data?.role || 'student';
+                    if (role === 'admin') return true;
+                    if (role === 'teacher' || role === 'director') {
+                        return visibilityLevel === 'everyone' || visibilityLevel === 'staff';
+                    }
+                    return visibilityLevel === 'everyone';
+                };
+
+                const visibleSubjects = subjects?.filter(s => canSee(s.visibility_level || 'everyone')) || [];
+                setHasOtherSubjects(visibleSubjects.length > 0);
             }
         };
         fetchRole();
