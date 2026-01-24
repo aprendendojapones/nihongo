@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getMathProblem, MathProblem, MathLevel } from '@/lib/mathUtils';
-import { Check, X, ArrowLeft, Lock, Trophy, BookOpen } from 'lucide-react';
+import { Check, X, ArrowLeft, Lock, Trophy, BookOpen, Star, TrendingUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MathProgressionProps {
     onBack: () => void;
@@ -22,31 +23,127 @@ const LEVELS = [
 ];
 
 export default function MathProgression({ onBack }: MathProgressionProps) {
+    // Game State
     const [unlockedLevels, setUnlockedLevels] = useState<number[]>([1]);
     const [currentLevel, setCurrentLevel] = useState<number>(1);
     const [problem, setProblem] = useState<MathProblem | null>(null);
     const [mode, setMode] = useState<'practice' | 'test'>('practice');
+    const [userInput, setUserInput] = useState('');
+    const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+
+    // XP & Player Level State
+    const [xp, setXp] = useState(0);
+    const [playerLevel, setPlayerLevel] = useState(1);
+    const xpToNextLevel = playerLevel * 100;
+
+    // Test State
     const [testProgress, setTestProgress] = useState(0);
     const [testScore, setTestScore] = useState(0);
-    const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
     const [showTestOption, setShowTestOption] = useState(false);
+
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const generateNewProblem = useCallback(() => {
         setProblem(getMathProblem(currentLevel as MathLevel));
         setFeedback(null);
+        setUserInput('');
+        setTimeout(() => inputRef.current?.focus(), 100);
     }, [currentLevel]);
 
+    // Load Data
     useEffect(() => {
-        const saved = localStorage.getItem('math_unlocked_levels');
-        if (saved) {
-            setUnlockedLevels(JSON.parse(saved));
-        }
+        const savedLevels = localStorage.getItem('math_unlocked_levels');
+        if (savedLevels) setUnlockedLevels(JSON.parse(savedLevels));
+
+        const savedXp = localStorage.getItem('math_xp');
+        if (savedXp) setXp(parseInt(savedXp));
+
+        const savedPlayerLevel = localStorage.getItem('math_player_level');
+        if (savedPlayerLevel) setPlayerLevel(parseInt(savedPlayerLevel));
     }, []);
+
+    // Save Data
+    useEffect(() => {
+        localStorage.setItem('math_xp', xp.toString());
+        localStorage.setItem('math_player_level', playerLevel.toString());
+    }, [xp, playerLevel]);
 
     useEffect(() => {
         generateNewProblem();
     }, [currentLevel, mode, generateNewProblem]);
+
+    const handleLevelUp = useCallback(() => {
+        if (xp >= xpToNextLevel) {
+            setXp(prev => prev - xpToNextLevel);
+            setPlayerLevel(prev => prev + 1);
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FFD700', '#FFA500']
+            });
+        }
+    }, [xp, xpToNextLevel]);
+
+    useEffect(() => {
+        handleLevelUp();
+    }, [xp, handleLevelUp]);
+
+    const handleAnswer = (value: string) => {
+        if (!problem || feedback) return;
+
+        setUserInput(value);
+        const numValue = parseInt(value);
+
+        if (numValue === problem.answer) {
+            setFeedback('correct');
+
+            if (mode === 'practice') {
+                // XP Logic: +20 XP (100%)
+                setXp(prev => prev + 20);
+
+                const newConsecutive = consecutiveCorrect + 1;
+                setConsecutiveCorrect(newConsecutive);
+                if (newConsecutive >= 5 && !unlockedLevels.includes(currentLevel + 1)) {
+                    setShowTestOption(true);
+                }
+                setTimeout(generateNewProblem, 800);
+            } else {
+                // Modo Prova
+                setTestScore(prev => prev + 1);
+                setTimeout(() => {
+                    if (testProgress < 9) {
+                        setTestProgress(prev => prev + 1);
+                        generateNewProblem();
+                    } else {
+                        finishTest(testScore + 1);
+                    }
+                }, 800);
+            }
+        } else if (value.length >= problem.answer.toString().length && numValue !== problem.answer) {
+            // Se o usuário digitou o número de dígitos esperado e está errado
+            setFeedback('wrong');
+            if (mode === 'practice') {
+                // XP Logic: -5 XP (25% of 20)
+                setXp(prev => Math.max(0, prev - 5));
+                setConsecutiveCorrect(0);
+                setTimeout(() => {
+                    setFeedback(null);
+                    setUserInput('');
+                }, 1000);
+            } else {
+                setTimeout(() => {
+                    if (testProgress < 9) {
+                        setTestProgress(prev => prev + 1);
+                        generateNewProblem();
+                    } else {
+                        finishTest(testScore);
+                    }
+                }, 1000);
+            }
+        }
+    };
 
     const startTest = () => {
         setMode('test');
@@ -67,46 +164,10 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
                     spread: 100,
                     origin: { y: 0.6 }
                 });
-                alert(`Parabéns! Você passou na prova e desbloqueou o ${nextLevel}º Ano!`);
             }
-        } else {
-            alert(`Você acertou ${finalScore}/10. Precisa de pelo menos 8 para passar.`);
         }
         setMode('practice');
         setConsecutiveCorrect(0);
-    };
-
-    const handleAnswer = (selected: number) => {
-        if (!problem || feedback) return;
-
-        const isCorrect = selected === problem.answer;
-        setFeedback(isCorrect ? 'correct' : 'wrong');
-
-        if (mode === 'practice') {
-            if (isCorrect) {
-                const newConsecutive = consecutiveCorrect + 1;
-                setConsecutiveCorrect(newConsecutive);
-                if (newConsecutive >= 5 && !unlockedLevels.includes(currentLevel + 1)) {
-                    setShowTestOption(true);
-                }
-                setTimeout(generateNewProblem, 1000);
-            } else {
-                setConsecutiveCorrect(0);
-                setTimeout(() => setFeedback(null), 1000);
-            }
-        } else {
-            // Modo Prova
-            if (isCorrect) setTestScore(prev => prev + 1);
-
-            setTimeout(() => {
-                if (testProgress < 9) {
-                    setTestProgress(prev => prev + 1);
-                    generateNewProblem();
-                } else {
-                    finishTest(testScore + (isCorrect ? 1 : 0));
-                }
-            }, 1000);
-        }
     };
 
     return (
@@ -149,19 +210,57 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
 
             {/* Área Principal do Jogo */}
             <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', flex: 1, position: 'relative' }}>
-                    <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                {/* XP Bar Header */}
+                <div className="glass-card" style={{ padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{
+                            background: 'var(--accent-primary)',
+                            color: 'white',
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '1.2rem',
+                            boxShadow: '0 0 15px var(--accent-primary)'
+                        }}>
+                            {playerLevel}
+                        </div>
+                        <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>Nível</span>
+                    </div>
+
+                    <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(xp / xpToNextLevel) * 100}%` }}
+                            style={{
+                                height: '100%',
+                                background: 'linear-gradient(90deg, var(--accent-primary), #60a5fa)',
+                                borderRadius: '6px'
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ minWidth: '80px', textAlign: 'right', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
+                        {xp} / {xpToNextLevel} XP
+                    </div>
+                </div>
+
+                <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <header style={{ position: 'absolute', top: '2rem', left: '2rem', right: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <button className="btn-primary" onClick={onBack} style={{ padding: '0.5rem 1rem' }}>
                             <ArrowLeft size={20} />
                         </button>
-                        <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)' }}>
-                            {mode === 'practice' ? `Praticando: ${LEVELS[currentLevel - 1].name}` : `PROVA: ${LEVELS[currentLevel - 1].name}`}
+                        <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: '1.2rem' }}>
+                            {mode === 'practice' ? LEVELS[currentLevel - 1].name : `PROVA: ${LEVELS[currentLevel - 1].name}`}
                         </div>
                         <div style={{ width: '40px' }} />
                     </header>
 
                     {mode === 'test' && (
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div style={{ position: 'absolute', top: '6rem', left: '2rem', right: '2rem' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                 <span>Questão {testProgress + 1} de 10</span>
                                 <span>Acertos: {testScore}</span>
@@ -172,57 +271,85 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
                         </div>
                     )}
 
-                    <div style={{ fontSize: '5rem', fontWeight: 'bold', margin: '2rem 0' }}>
+                    <div style={{ fontSize: '6rem', fontWeight: 'bold', marginBottom: '2rem', color: 'var(--text-primary)' }}>
                         {problem?.question} = ?
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', maxWidth: '500px', margin: '0 auto' }}>
-                        {problem?.options.map((opt, i) => (
-                            <button
-                                key={i}
-                                className="btn-primary"
-                                onClick={() => handleAnswer(opt)}
-                                style={{ fontSize: '1.5rem', padding: '1.5rem', background: 'var(--glass-bg)', color: 'var(--text-primary)' }}
-                            >
-                                {opt}
-                            </button>
-                        ))}
+                    <div style={{ maxWidth: '300px', margin: '0 auto' }}>
+                        <input
+                            ref={inputRef}
+                            type="number"
+                            value={userInput}
+                            onChange={(e) => handleAnswer(e.target.value)}
+                            placeholder="?"
+                            autoFocus
+                            style={{
+                                width: '100%',
+                                fontSize: '4rem',
+                                textAlign: 'center',
+                                background: 'transparent',
+                                border: 'none',
+                                borderBottom: '4px solid var(--accent-primary)',
+                                color: 'var(--text-primary)',
+                                outline: 'none',
+                                fontWeight: 'bold'
+                            }}
+                        />
                     </div>
 
-                    {mode === 'practice' && showTestOption && (
-                        <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', border: '1px dashed #10b981' }}>
-                            <h4 style={{ color: '#10b981', marginBottom: '1rem' }}>Você está indo muito bem!</h4>
-                            <button className="btn-primary" onClick={startTest} style={{ background: '#10b981' }}>
-                                Fazer Prova para o Próximo Nível
-                            </button>
-                            <button
-                                onClick={() => setShowTestOption(false)}
-                                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', marginLeft: '1rem', cursor: 'pointer' }}
+                    <AnimatePresence>
+                        {mode === 'practice' && showTestOption && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                style={{ marginTop: '3rem', padding: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', border: '1px dashed #10b981' }}
                             >
-                                Continuar Praticando
-                            </button>
-                        </div>
-                    )}
+                                <h4 style={{ color: '#10b981', marginBottom: '1rem' }}>Você está indo muito bem!</h4>
+                                <button className="btn-primary" onClick={startTest} style={{ background: '#10b981' }}>
+                                    Fazer Prova para o Próximo Nível
+                                </button>
+                                <button
+                                    onClick={() => setShowTestOption(false)}
+                                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', marginLeft: '1rem', cursor: 'pointer' }}
+                                >
+                                    Continuar Praticando
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {feedback && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            background: feedback === 'correct' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(239, 68, 68, 0.9)',
-                            color: 'white',
-                            padding: '1.5rem 3rem',
-                            borderRadius: '1rem',
-                            fontSize: '1.5rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '1rem',
-                            zIndex: 10
-                        }}>
-                            {feedback === 'correct' ? <Check size={30} /> : <X size={30} />}
-                            {feedback === 'correct' ? 'Correto!' : 'Ops!'}
-                        </div>
+                        <motion.div
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.5, opacity: 0 }}
+                            style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                background: feedback === 'correct' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)',
+                                color: 'white',
+                                padding: '2rem 4rem',
+                                borderRadius: '1rem',
+                                fontSize: '3rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '1rem',
+                                zIndex: 10,
+                                boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+                            }}
+                        >
+                            {feedback === 'correct' ? <Check size={50} /> : <X size={50} />}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <span>{feedback === 'correct' ? 'Correto!' : 'Ops!'}</span>
+                                {mode === 'practice' && (
+                                    <span style={{ fontSize: '1rem', opacity: 0.8 }}>
+                                        {feedback === 'correct' ? '+20 XP' : '-5 XP'}
+                                    </span>
+                                )}
+                            </div>
+                        </motion.div>
                     )}
                 </div>
             </main>
