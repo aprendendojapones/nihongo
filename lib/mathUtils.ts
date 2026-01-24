@@ -4,79 +4,67 @@ export interface MathProblem {
     question: string;
     answer: number;
     options: number[];
+    visualType: 'number' | 'fruit' | 'object';
+    visualIcon?: string;
+    numA: number;
+    numB: number;
+    operator: string;
 }
+
+const ICONS = {
+    fruit: ['🍎', '🍏', '🍌', '🍇', '🍓', '🍒', '🍍', '🥝'],
+    object: ['⭐', '💎', '🎨', '🚀', '⚽', '🚗', '🧸', '🎁']
+};
 
 export const getMathProblem = (level: MathLevel): MathProblem => {
     let a, b, op, answer, question;
     const options: number[] = [];
 
-    switch (level) {
-        case 1: // Soma simples (0-10)
-            a = Math.floor(Math.random() * 11);
-            b = Math.floor(Math.random() * (11 - a));
+    // Todos os operadores disponíveis em todos os níveis
+    const availableOps = ['+', '-', '*', '/'];
+    op = availableOps[Math.floor(Math.random() * availableOps.length)];
+
+    // Escala de números baseada no nível (range = level * 10)
+    const range = level * 10;
+
+    switch (op) {
+        case '+':
+            a = Math.floor(Math.random() * range) + 1;
+            b = Math.floor(Math.random() * range) + 1;
             answer = a + b;
             question = `${a} + ${b}`;
             break;
-        case 2: // Subtração simples (0-10)
-            a = Math.floor(Math.random() * 11);
-            b = Math.floor(Math.random() * (a + 1));
+        case '-':
+            a = Math.floor(Math.random() * range) + (range / 2);
+            b = Math.floor(Math.random() * a) + 1;
             answer = a - b;
             question = `${a} - ${b}`;
             break;
-        case 3: // Soma e Subtração (0-20)
-            op = Math.random() > 0.5 ? '+' : '-';
-            if (op === '+') {
-                a = Math.floor(Math.random() * 21);
-                b = Math.floor(Math.random() * (21 - a));
-                answer = a + b;
-            } else {
-                a = Math.floor(Math.random() * 21);
-                b = Math.floor(Math.random() * (a + 1));
-                answer = a - b;
-            }
-            question = `${a} ${op} ${b}`;
-            break;
-        case 4: // Multiplicação básica (1-5)
-            a = Math.floor(Math.random() * 5) + 1;
+        case '*':
+            // Multiplicação: um número até o nível+2, outro até 10 para não ficar impossível
+            a = Math.floor(Math.random() * (level + 2)) + 1;
             b = Math.floor(Math.random() * 10) + 1;
             answer = a * b;
             question = `${a} × ${b}`;
             break;
-        case 5: // Divisão básica (1-5)
-            b = Math.floor(Math.random() * 5) + 1;
+        case '/':
+            // Divisão: garante resultado inteiro
             answer = Math.floor(Math.random() * 10) + 1;
+            b = Math.floor(Math.random() * (level + 2)) + 1;
             a = b * answer;
             question = `${a} ÷ ${b}`;
-            break;
-        case 6: // Multiplicação (1-10)
-            a = Math.floor(Math.random() * 10) + 1;
-            b = Math.floor(Math.random() * 10) + 1;
-            answer = a * b;
-            question = `${a} × ${b}`;
-            break;
-        case 7: // Divisão (1-10)
-            b = Math.floor(Math.random() * 10) + 1;
-            answer = Math.floor(Math.random() * 10) + 1;
-            a = b * answer;
-            question = `${a} ÷ ${b}`;
-            break;
-        case 8: // Expressões simples
-            a = Math.floor(Math.random() * 10) + 1;
-            b = Math.floor(Math.random() * 5) + 1;
-            const c = Math.floor(Math.random() * 10) + 1;
-            answer = a * b + c;
-            question = `(${a} × ${b}) + ${c}`;
-            break;
-        case 9: // Desafio
-            a = Math.floor(Math.random() * 20) + 10;
-            b = Math.floor(Math.random() * 20) + 10;
-            answer = a + b;
-            question = `${a} + ${b}`;
-            // Simplesmente maior escala por enquanto
             break;
         default:
-            a = 1; b = 1; answer = 2; question = "1 + 1";
+            a = 1; b = 1; answer = 2; question = "1 + 1"; op = "+";
     }
+
+    // Determinar se será visual (30% de chance para níveis baixos, 10% para altos)
+    const visualChance = level <= 3 ? 0.3 : 0.1;
+    const isVisual = Math.random() < visualChance && a <= 10 && b <= 10;
+    const visualType = isVisual ? (Math.random() > 0.5 ? 'fruit' : 'object') : 'number';
+    const visualIcon = (visualType === 'fruit' || visualType === 'object')
+        ? ICONS[visualType][Math.floor(Math.random() * ICONS[visualType].length)]
+        : undefined;
 
     options.push(answer);
     while (options.length < 4) {
@@ -90,7 +78,12 @@ export const getMathProblem = (level: MathLevel): MathProblem => {
     return {
         question,
         answer,
-        options: options.sort(() => Math.random() - 0.5)
+        options: options.sort(() => Math.random() - 0.5),
+        visualType,
+        visualIcon,
+        numA: a,
+        numB: b,
+        operator: op
     };
 };
 

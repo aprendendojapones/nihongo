@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getMathProblem, MathProblem, MathLevel } from '@/lib/mathUtils';
 import { Check, X, ArrowLeft, Lock, Trophy, BookOpen, Star, TrendingUp } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -30,271 +30,280 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
     const [mode, setMode] = useState<'practice' | 'test'>('practice');
     const [userInput, setUserInput] = useState('');
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [showTestOption, setShowTestOption] = useState(false);
 
     // XP & Player Level State
     const [xp, setXp] = useState(0);
     const [playerLevel, setPlayerLevel] = useState(1);
-    const xpToNextLevel = playerLevel * 100;
+    const [correctCount, setCorrectCount] = useState(0); // Acertos no nível atual (prática)
 
     // Test State
-    const [testProgress, setTestProgress] = useState(0);
-    const [testScore, setTestScore] = useState(0);
-    const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
-    const [showTestOption, setShowTestOption] = useState(false);
+    const [testQuestions, setTestQuestions] = useState(0);
+    const [testCorrect, setTestCorrect] = useState(0);
+    const [testResults, setTestResults] = useState<{ score: number, total: number } | null>(null);
 
-    const inputRef = useRef<HTMLInputElement>(null);
+    const threshold = currentLevel * 10;
 
-    const generateNewProblem = useCallback(() => {
-        setProblem(getMathProblem(currentLevel as MathLevel));
-        setFeedback(null);
-        setUserInput('');
-        setTimeout(() => inputRef.current?.focus(), 100);
-    }, [currentLevel]);
-
-    // Load Data
     useEffect(() => {
         const savedLevels = localStorage.getItem('math_unlocked_levels');
         if (savedLevels) setUnlockedLevels(JSON.parse(savedLevels));
 
-        const savedXp = localStorage.getItem('math_xp');
-        if (savedXp) setXp(parseInt(savedXp));
+        const savedXP = localStorage.getItem('math_xp');
+        if (savedXP) setXp(parseInt(savedXP));
 
         const savedPlayerLevel = localStorage.getItem('math_player_level');
         if (savedPlayerLevel) setPlayerLevel(parseInt(savedPlayerLevel));
     }, []);
 
-    // Save Data
     useEffect(() => {
+        localStorage.setItem('math_unlocked_levels', JSON.stringify(unlockedLevels));
         localStorage.setItem('math_xp', xp.toString());
         localStorage.setItem('math_player_level', playerLevel.toString());
-    }, [xp, playerLevel]);
+    }, [unlockedLevels, xp, playerLevel]);
+
+    const generateNewProblem = useCallback(() => {
+        setProblem(getMathProblem(currentLevel as MathLevel));
+        setUserInput('');
+        setFeedback(null);
+    }, [currentLevel]);
 
     useEffect(() => {
         generateNewProblem();
-    }, [currentLevel, mode, generateNewProblem]);
+    }, [generateNewProblem]);
 
-    const handleLevelUp = useCallback(() => {
-        if (xp >= xpToNextLevel) {
-            setXp(prev => prev - xpToNextLevel);
-            setPlayerLevel(prev => prev + 1);
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#FFD700', '#FFA500']
-            });
-        }
-    }, [xp, xpToNextLevel]);
+    const handleAnswer = (val: string) => {
+        if (feedback || !problem) return;
+        setUserInput(val);
 
-    useEffect(() => {
-        handleLevelUp();
-    }, [xp, handleLevelUp]);
+        const numVal = parseInt(val);
+        if (isNaN(numVal)) return;
 
-    const handleAnswer = (value: string) => {
-        if (!problem || feedback) return;
-
-        setUserInput(value);
-        const numValue = parseInt(value);
-
-        if (numValue === problem.answer) {
+        if (numVal === problem.answer) {
             setFeedback('correct');
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
 
             if (mode === 'practice') {
-                // XP Logic: +20 XP (100%)
                 setXp(prev => prev + 20);
-
-                const newConsecutive = consecutiveCorrect + 1;
-                setConsecutiveCorrect(newConsecutive);
-                if (newConsecutive >= 5 && !unlockedLevels.includes(currentLevel + 1)) {
-                    setShowTestOption(true);
-                }
-                setTimeout(generateNewProblem, 800);
+                setCorrectCount(prev => {
+                    const next = prev + 1;
+                    if (next >= threshold) setShowTestOption(true);
+                    return next;
+                });
             } else {
-                // Modo Prova
-                setTestScore(prev => prev + 1);
-                setTimeout(() => {
-                    if (testProgress < 9) {
-                        setTestProgress(prev => prev + 1);
-                        generateNewProblem();
-                    } else {
-                        finishTest(testScore + 1);
-                    }
-                }, 800);
+                setTestCorrect(prev => prev + 1);
             }
-        } else if (value.length >= problem.answer.toString().length && numValue !== problem.answer) {
-            // Se o usuário digitou o número de dígitos esperado e está errado
+
+            setTimeout(() => {
+                if (mode === 'test') {
+                    if (testQuestions + 1 >= 20) {
+                        finishTest(testCorrect + 1);
+                    } else {
+                        setTestQuestions(prev => prev + 1);
+                        generateNewProblem();
+                    }
+                } else {
+                    generateNewProblem();
+                }
+            }, 1000);
+        } else if (val.length >= problem.answer.toString().length) {
             setFeedback('wrong');
             if (mode === 'practice') {
-                // XP Logic: -5 XP (25% of 20)
                 setXp(prev => Math.max(0, prev - 5));
-                setConsecutiveCorrect(0);
-                setTimeout(() => {
-                    setFeedback(null);
-                    setUserInput('');
-                }, 1000);
-            } else {
-                setTimeout(() => {
-                    if (testProgress < 9) {
-                        setTestProgress(prev => prev + 1);
-                        generateNewProblem();
-                    } else {
-                        finishTest(testScore);
-                    }
-                }, 1000);
             }
+            setTimeout(() => {
+                if (mode === 'test') {
+                    if (testQuestions + 1 >= 20) {
+                        finishTest(testCorrect);
+                    } else {
+                        setTestQuestions(prev => prev + 1);
+                        generateNewProblem();
+                    }
+                } else {
+                    setUserInput('');
+                    setFeedback(null);
+                }
+            }, 1000);
         }
     };
 
     const startTest = () => {
         setMode('test');
-        setTestProgress(0);
-        setTestScore(0);
+        setTestQuestions(0);
+        setTestCorrect(0);
+        setTestResults(null);
+        setShowTestOption(false);
+        generateNewProblem();
+    };
+
+    const finishTest = (finalCorrect: number) => {
+        const pass = finalCorrect >= 16; // 80% de 20
+        setTestResults({ score: finalCorrect, total: 20 });
+
+        if (pass && !unlockedLevels.includes(currentLevel + 1)) {
+            setUnlockedLevels(prev => [...prev, currentLevel + 1]);
+            setXp(prev => prev + 200);
+        }
+    };
+
+    const nextLevel = () => {
+        setCurrentLevel(prev => prev + 1);
+        setMode('practice');
+        setCorrectCount(0);
+        setTestResults(null);
         setShowTestOption(false);
     };
 
-    const finishTest = (finalScore: number) => {
-        if (finalScore >= 8) {
-            const nextLevel = currentLevel + 1;
-            if (nextLevel <= 9 && !unlockedLevels.includes(nextLevel)) {
-                const newUnlocked = [...unlockedLevels, nextLevel];
-                setUnlockedLevels(newUnlocked);
-                localStorage.setItem('math_unlocked_levels', JSON.stringify(newUnlocked));
-                confetti({
-                    particleCount: 150,
-                    spread: 100,
-                    origin: { y: 0.6 }
-                });
-            }
-        }
-        setMode('practice');
-        setConsecutiveCorrect(0);
+    const renderVisual = (num: number, icon: string) => {
+        return (
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '5px', maxWidth: '300px', margin: '0 auto' }}>
+                {Array.from({ length: num }).map((_, i) => (
+                    <span key={i} style={{ fontSize: '2rem' }}>{icon}</span>
+                ))}
+            </div>
+        );
     };
 
+    if (testResults) {
+        const pass = testResults.score >= 16;
+        return (
+            <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
+                <Trophy size={80} color={pass ? '#fbbf24' : '#94a3b8'} style={{ marginBottom: '2rem' }} />
+                <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                    {pass ? 'Parabéns!' : 'Quase lá!'}
+                </h2>
+                <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
+                    Você acertou {testResults.score} de {testResults.total} questões ({Math.round((testResults.score / testResults.total) * 100)}%).
+                </p>
+                {pass ? (
+                    <button className="btn-primary" onClick={nextLevel}>
+                        Ir para o Nível {currentLevel + 1}
+                    </button>
+                ) : (
+                    <button className="btn-primary" onClick={() => { setMode('practice'); setTestResults(null); }}>
+                        Praticar Mais
+                    </button>
+                )}
+            </div>
+        );
+    }
+
     return (
-        <div style={{ display: 'flex', gap: '2rem', height: 'calc(100vh - 150px)' }}>
-            {/* Sidebar de Níveis */}
-            <aside className="glass-card" style={{ width: '250px', padding: '1rem', overflowY: 'auto' }}>
-                <h3 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Níveis</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {LEVELS.map(lvl => {
-                        const isUnlocked = unlockedLevels.includes(lvl.id);
-                        return (
-                            <button
-                                key={lvl.id}
-                                onClick={() => isUnlocked && setCurrentLevel(lvl.id)}
-                                disabled={!isUnlocked}
+        <div style={{ padding: '1rem', maxWidth: '1000px', margin: '0 auto' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <button className="btn-primary" onClick={onBack} style={{ padding: '0.5rem 1rem' }}>
+                    <ArrowLeft size={20} />
+                </button>
+                <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                    <div className="glass-card" style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Star size={20} color="#fbbf24" fill="#fbbf24" />
+                        <span style={{ fontWeight: 'bold' }}>Nível {playerLevel}</span>
+                        <div style={{ width: '100px', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${(xp % 100)}%`, height: '100%', background: '#fbbf24' }} />
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
+                <aside className="glass-card" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <TrendingUp size={20} /> Progresso
+                    </h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {LEVELS.map((lvl) => {
+                            const isUnlocked = unlockedLevels.includes(lvl.id);
+                            const isCurrent = currentLevel === lvl.id;
+                            return (
+                                <button
+                                    key={lvl.id}
+                                    onClick={() => isUnlocked && setCurrentLevel(lvl.id)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '1rem',
+                                        padding: '1rem',
+                                        borderRadius: '12px',
+                                        background: isCurrent ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                                        border: '1px solid',
+                                        borderColor: isCurrent ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
+                                        color: isCurrent ? 'white' : 'var(--text-primary)',
+                                        cursor: isUnlocked ? 'pointer' : 'not-allowed',
+                                        width: '100%',
+                                        textAlign: 'left',
+                                        opacity: isUnlocked ? 1 : 0.5
+                                    }}
+                                >
+                                    {isUnlocked ? <BookOpen size={18} /> : <Lock size={18} />}
+                                    <div>
+                                        <div style={{ fontWeight: 'bold' }}>{lvl.name}</div>
+                                        <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{lvl.description}</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </aside>
+
+                <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: '1rem', right: '1rem' }}>
+                        {mode === 'practice' ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)' }}>
+                                <Check size={16} /> {correctCount} / {threshold} para a prova
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981', fontWeight: 'bold' }}>
+                                Prova: Questão {testQuestions + 1} / 20
+                            </div>
+                        )}
+                    </div>
+
+                    <h2 style={{ marginBottom: '2rem', color: 'var(--accent-primary)' }}>
+                        {mode === 'practice' ? 'Praticando' : 'Modo Prova'} - Nível {currentLevel}
+                    </h2>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2rem', marginBottom: '3rem' }}>
+                        <div style={{ fontSize: '4rem', fontWeight: 'bold' }}>
+                            {problem?.visualType !== 'number' && problem?.visualIcon ? (
+                                renderVisual(problem.numA, problem.visualIcon)
+                            ) : (
+                                problem?.numA
+                            )}
+                        </div>
+                        <div style={{ fontSize: '3rem', color: 'var(--text-muted)' }}>
+                            {problem?.operator === '*' ? '×' : problem?.operator === '/' ? '÷' : problem?.operator}
+                        </div>
+                        <div style={{ fontSize: '4rem', fontWeight: 'bold' }}>
+                            {problem?.visualType !== 'number' && problem?.visualIcon ? (
+                                renderVisual(problem.numB, problem.visualIcon)
+                            ) : (
+                                problem?.numB
+                            )}
+                        </div>
+                        <div style={{ fontSize: '3rem', color: 'var(--text-muted)' }}>=</div>
+                        <div style={{ width: '150px' }}>
+                            <input
+                                type="text"
+                                value={userInput}
+                                onChange={(e) => handleAnswer(e.target.value)}
+                                placeholder="?"
+                                autoFocus
                                 style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.75rem',
-                                    padding: '0.75rem',
-                                    borderRadius: '8px',
+                                    width: '100%',
+                                    fontSize: '4rem',
+                                    textAlign: 'center',
+                                    background: 'transparent',
                                     border: 'none',
-                                    background: currentLevel === lvl.id ? 'var(--accent-primary)' : 'transparent',
-                                    color: currentLevel === lvl.id ? 'white' : isUnlocked ? 'var(--text-primary)' : 'var(--text-muted)',
-                                    cursor: isUnlocked ? 'pointer' : 'not-allowed',
-                                    textAlign: 'left',
-                                    transition: 'all 0.2s'
+                                    borderBottom: '4px solid var(--accent-primary)',
+                                    color: 'var(--text-primary)',
+                                    outline: 'none',
+                                    fontWeight: 'bold'
                                 }}
-                            >
-                                {isUnlocked ? <BookOpen size={18} /> : <Lock size={18} />}
-                                <div>
-                                    <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{lvl.name}</div>
-                                    <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>{lvl.description}</div>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            </aside>
-
-            {/* Área Principal do Jogo */}
-            <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                {/* XP Bar Header */}
-                <div className="glass-card" style={{ padding: '1rem 2rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{
-                            background: 'var(--accent-primary)',
-                            color: 'white',
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 'bold',
-                            fontSize: '1.2rem',
-                            boxShadow: '0 0 15px var(--accent-primary)'
-                        }}>
-                            {playerLevel}
+                            />
                         </div>
-                        <span style={{ fontWeight: 'bold', color: 'var(--text-muted)' }}>Nível</span>
-                    </div>
-
-                    <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(xp / xpToNextLevel) * 100}%` }}
-                            style={{
-                                height: '100%',
-                                background: 'linear-gradient(90deg, var(--accent-primary), #60a5fa)',
-                                borderRadius: '6px'
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ minWidth: '80px', textAlign: 'right', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
-                        {xp} / {xpToNextLevel} XP
-                    </div>
-                </div>
-
-                <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <header style={{ position: 'absolute', top: '2rem', left: '2rem', right: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <button className="btn-primary" onClick={onBack} style={{ padding: '0.5rem 1rem' }}>
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div style={{ fontWeight: 'bold', color: 'var(--accent-primary)', fontSize: '1.2rem' }}>
-                            {mode === 'practice' ? LEVELS[currentLevel - 1].name : `PROVA: ${LEVELS[currentLevel - 1].name}`}
-                        </div>
-                        <div style={{ width: '40px' }} />
-                    </header>
-
-                    {mode === 'test' && (
-                        <div style={{ position: 'absolute', top: '6rem', left: '2rem', right: '2rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                <span>Questão {testProgress + 1} de 10</span>
-                                <span>Acertos: {testScore}</span>
-                            </div>
-                            <div style={{ width: '100%', height: '8px', background: 'var(--glass-border)', borderRadius: '4px' }}>
-                                <div style={{ width: `${(testProgress / 10) * 100}%`, height: '100%', background: 'var(--accent-primary)', borderRadius: '4px', transition: 'width 0.3s' }} />
-                            </div>
-                        </div>
-                    )}
-
-                    <div style={{ fontSize: '6rem', fontWeight: 'bold', marginBottom: '2rem', color: 'var(--text-primary)' }}>
-                        {problem?.question} = ?
-                    </div>
-
-                    <div style={{ maxWidth: '300px', margin: '0 auto' }}>
-                        <input
-                            ref={inputRef}
-                            type="number"
-                            value={userInput}
-                            onChange={(e) => handleAnswer(e.target.value)}
-                            placeholder="?"
-                            autoFocus
-                            style={{
-                                width: '100%',
-                                fontSize: '4rem',
-                                textAlign: 'center',
-                                background: 'transparent',
-                                border: 'none',
-                                borderBottom: '4px solid var(--accent-primary)',
-                                color: 'var(--text-primary)',
-                                outline: 'none',
-                                fontWeight: 'bold'
-                            }}
-                        />
                     </div>
 
                     <AnimatePresence>
@@ -318,39 +327,41 @@ export default function MathProgression({ onBack }: MathProgressionProps) {
                         )}
                     </AnimatePresence>
 
-                    {feedback && (
-                        <motion.div
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.5, opacity: 0 }}
-                            style={{
-                                position: 'absolute',
-                                top: '50%',
-                                left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                background: feedback === 'correct' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)',
-                                color: 'white',
-                                padding: '2rem 4rem',
-                                borderRadius: '1rem',
-                                fontSize: '3rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                zIndex: 10,
-                                boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
-                            }}
-                        >
-                            {feedback === 'correct' ? <Check size={50} /> : <X size={50} />}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <span>{feedback === 'correct' ? 'Correto!' : 'Ops!'}</span>
-                                {mode === 'practice' && (
-                                    <span style={{ fontSize: '1rem', opacity: 0.8 }}>
-                                        {feedback === 'correct' ? '+20 XP' : '-5 XP'}
-                                    </span>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
+                    <AnimatePresence>
+                        {feedback && (
+                            <motion.div
+                                initial={{ scale: 0.5, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.5, opacity: 0 }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    background: feedback === 'correct' ? 'rgba(16, 185, 129, 0.95)' : 'rgba(239, 68, 68, 0.95)',
+                                    color: 'white',
+                                    padding: '2rem 4rem',
+                                    borderRadius: '1rem',
+                                    fontSize: '3rem',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '1rem',
+                                    zIndex: 10,
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+                                }}
+                            >
+                                {feedback === 'correct' ? <Check size={50} /> : <X size={50} />}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <span>{feedback === 'correct' ? 'Correto!' : 'Ops!'}</span>
+                                    {mode === 'practice' && (
+                                        <span style={{ fontSize: '1rem', opacity: 0.8 }}>
+                                            {feedback === 'correct' ? '+20 XP' : '-5 XP'}
+                                        </span>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </main>
         </div>
