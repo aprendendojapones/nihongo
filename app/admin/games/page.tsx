@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import '../admin.css';
 import '../games-styles.css';
@@ -145,6 +145,43 @@ export default function AdminGamesPage() {
         }
     };
 
+    const deleteSubject = async (subjectId: string) => {
+        if (!confirm('Tem certeza que deseja excluir esta matéria? Todas as categorias e jogos vinculados serão removidos.')) return;
+        try {
+            const res = await fetch(`/api/admin/subjects?id=${subjectId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            if (selectedSubject === subjectId) setSelectedSubject(null);
+            fetchData();
+        } catch (error: any) {
+            alert('Erro ao excluir matéria: ' + error.message);
+        }
+    };
+
+    const deleteCategory = async (categoryId: string) => {
+        if (!confirm('Tem certeza que deseja excluir esta categoria? Todos os jogos vinculados serão removidos.')) return;
+        try {
+            const res = await fetch(`/api/admin/categories?id=${categoryId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchData();
+        } catch (error: any) {
+            alert('Erro ao excluir categoria: ' + error.message);
+        }
+    };
+
+    const deleteGame = async (gameId: string) => {
+        if (!confirm('Tem certeza que deseja excluir este jogo?')) return;
+        try {
+            const res = await fetch(`/api/admin/games?id=${gameId}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.error) throw new Error(data.error);
+            fetchData();
+        } catch (error: any) {
+            alert('Erro ao excluir jogo: ' + error.message);
+        }
+    };
+
     const addSubject = async () => {
         const name = prompt('Nome da matéria:');
         if (!name) return;
@@ -266,6 +303,16 @@ export default function AdminGamesPage() {
                                     >
                                         {subject.visible ? <Eye size={14} /> : <EyeOff size={14} />}
                                     </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteSubject(subject.id);
+                                        }}
+                                        className="icon-btn-sm text-red-500"
+                                        title="Excluir"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -293,13 +340,22 @@ export default function AdminGamesPage() {
                                                 onChange={(val) => updateCategory(category.id, { visibility_level: val })}
                                             />
                                         </div>
-                                        <button
-                                            onClick={() => updateCategory(category.id, { visible: !category.visible })}
-                                            className="visibility-toggle"
-                                            title={category.visible ? "Ocultar" : "Mostrar"}
-                                        >
-                                            {category.visible ? <Eye size={20} /> : <EyeOff size={20} />}
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => updateCategory(category.id, { visible: !category.visible })}
+                                                className="visibility-toggle"
+                                                title={category.visible ? "Ocultar" : "Mostrar"}
+                                            >
+                                                {category.visible ? <Eye size={20} /> : <EyeOff size={20} />}
+                                            </button>
+                                            <button
+                                                onClick={() => deleteCategory(category.id)}
+                                                className="visibility-toggle text-red-500"
+                                                title="Excluir"
+                                            >
+                                                <Trash2 size={20} />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div className="games-list">
@@ -318,13 +374,22 @@ export default function AdminGamesPage() {
                                                             onChange={(val) => updateGame(game.id, { visibility_level: val })}
                                                         />
                                                     </div>
-                                                    <button
-                                                        onClick={() => updateGame(game.id, { visible: !game.visible })}
-                                                        className="visibility-toggle"
-                                                        title={game.visible ? "Ocultar" : "Mostrar"}
-                                                    >
-                                                        {game.visible ? <Eye size={18} /> : <EyeOff size={18} />}
-                                                    </button>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            onClick={() => updateGame(game.id, { visible: !game.visible })}
+                                                            className="visibility-toggle"
+                                                            title={game.visible ? "Ocultar" : "Mostrar"}
+                                                        >
+                                                            {game.visible ? <Eye size={18} /> : <EyeOff size={18} />}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => deleteGame(game.id)}
+                                                            className="visibility-toggle text-red-500"
+                                                            title="Excluir"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                     </div>
