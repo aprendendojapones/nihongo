@@ -40,153 +40,229 @@ export default function AdminGamesPage() {
     const user = session?.user as any;
 
     const [subjects, setSubjects] = useState<Subject[]>([]);
-};
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [games, setGames] = useState<Game[]>([]);
+    const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isCheckingRole, setIsCheckingRole] = useState(true);
 
-const toggleCategoryVisibility = async (categoryId: string, currentVisible: boolean) => {
-    await supabase
-        .from('game_categories')
-        .update({ visible: !currentVisible })
-        .eq('id', categoryId);
-    fetchData();
-};
+    const fetchData = useCallback(async () => {
+        try {
+            const { data: subjectsData } = await supabase
+                .from('subjects')
+                .select('*')
+                .order('order_index');
 
-const toggleGameVisibility = async (gameId: string, currentVisible: boolean) => {
-    await supabase
-        .from('games_config')
-        .update({ visible: !currentVisible })
-        .eq('id', gameId);
-    fetchData();
-};
+            const { data: categoriesData } = await supabase
+                .from('game_categories')
+                .select('*')
+                .order('order_index');
 
-const addSubject = async () => {
-    const name = prompt('Nome da matéria:');
-    if (!name) return;
+            const { data: gamesData } = await supabase
+                .from('games_config')
+                .select('*')
+                .order('order_index');
 
-    const slug = name.toLowerCase().replace(/\s+/g, '-');
-    await supabase.from('subjects').insert({
-        name,
-        slug,
-        visible: true,
-        order_index: subjects.length + 1
-    });
-    fetchData();
-};
+            setSubjects(subjectsData || []);
+            setCategories(categoriesData || []);
+            setGames(gamesData || []);
 
-const addCategory = async () => {
-    if (!selectedSubject) return;
+            if (subjectsData && subjectsData.length > 0 && !selectedSubject) {
+                setSelectedSubject(subjectsData[0].id);
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [selectedSubject]);
 
-    const name = prompt('Nome da categoria:');
-    if (!name) return;
+    useEffect(() => {
+        const checkRole = async () => {
+            // 1. Check session role first
+            if (user?.role === 'admin') {
+                setIsCheckingRole(false);
+                fetchData();
+                return;
+            }
 
-    await supabase.from('game_categories').insert({
-        subject_id: selectedSubject,
-        name,
-        visible: true,
-        order_index: categories.filter(c => c.subject_id === selectedSubject).length + 1
-    });
-    fetchData();
-};
+            // 2. Fallback to DB check
+            if (session?.user?.email) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('email', session.user.email)
+                    .single();
 
-if (loading || isCheckingRole) return <div className="loading-container">Carregando...</div>;
+                if (data?.role === 'admin') {
+                    setIsCheckingRole(false);
+                    fetchData();
+                    return;
+                }
+            }
 
-const currentCategories = categories.filter(c => c.subject_id === selectedSubject);
+            // 3. Not admin, redirect
+            router.push('/dashboard');
+        };
 
-return (
-    <div className="admin-container">
-        <header className="admin-header">
-            <button className="icon-button" onClick={() => router.push('/admin')}>
-                <ArrowLeft size={24} />
-            </button>
-            <h1 className="gradient-text">Gerenciar Jogos</h1>
-            <div className="header-spacer"></div>
-        </header>
+        if (session !== undefined) {
+            checkRole();
+        }
+    }, [session, user, fetchData, router]);
 
-        <div className="admin-content">
-            {/* Subjects Section */}
-            <section className="glass-card mb-4">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold">Matérias</h2>
-                    <button onClick={addSubject} className="btn-primary flex items-center gap-2">
-                        <Plus size={20} /> Adicionar Matéria
-                    </button>
-                </div>
+    const toggleSubjectVisibility = async (subjectId: string, currentVisible: boolean) => {
+        await supabase
+            .from('subjects')
+            .update({ visible: !currentVisible })
+            .eq('id', subjectId);
+        fetchData();
+    };
 
-                <div className="flex gap-2 flex-wrap">
-                    {subjects.map(subject => (
-                        <div
-                            key={subject.id}
-                            className={`subject-tab ${selectedSubject === subject.id ? 'active' : ''}`}
-                            onClick={() => setSelectedSubject(subject.id)}
-                        >
-                            <span>{subject.name}</span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleSubjectVisibility(subject.id, subject.visible);
-                                }}
-                                className="ml-2"
-                            >
-                                {subject.visible ? <Eye size={16} /> : <EyeOff size={16} />}
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </section>
+    const toggleCategoryVisibility = async (categoryId: string, currentVisible: boolean) => {
+        await supabase
+            .from('game_categories')
+            .update({ visible: !currentVisible })
+            .eq('id', categoryId);
+        fetchData();
+    };
 
-            {/* Categories Section */}
-            {selectedSubject && (
-                <section className="glass-card">
+    const toggleGameVisibility = async (gameId: string, currentVisible: boolean) => {
+        await supabase
+            .from('games_config')
+            .update({ visible: !currentVisible })
+            .eq('id', gameId);
+        fetchData();
+    };
+
+    const addSubject = async () => {
+        const name = prompt('Nome da matéria:');
+        if (!name) return;
+
+        const slug = name.toLowerCase().replace(/\s+/g, '-');
+        await supabase.from('subjects').insert({
+            name,
+            slug,
+            visible: true,
+            order_index: subjects.length + 1
+        });
+        fetchData();
+    };
+
+    const addCategory = async () => {
+        if (!selectedSubject) return;
+
+        const name = prompt('Nome da categoria:');
+        if (!name) return;
+
+        await supabase.from('game_categories').insert({
+            subject_id: selectedSubject,
+            name,
+            visible: true,
+            order_index: categories.filter(c => c.subject_id === selectedSubject).length + 1
+        });
+        fetchData();
+    };
+
+    if (loading || isCheckingRole) return <div className="loading-container">Carregando...</div>;
+
+    const currentCategories = categories.filter(c => c.subject_id === selectedSubject);
+
+    return (
+        <div className="admin-container">
+            <header className="admin-header">
+                <button className="icon-button" onClick={() => router.push('/admin')}>
+                    <ArrowLeft size={24} />
+                </button>
+                <h1 className="gradient-text">Gerenciar Jogos</h1>
+                <div className="header-spacer"></div>
+            </header>
+
+            <div className="admin-content">
+                {/* Subjects Section */}
+                <section className="glass-card mb-4">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-bold">Categorias</h2>
-                        <button onClick={addCategory} className="btn-primary flex items-center gap-2">
-                            <Plus size={20} /> Adicionar Categoria
+                        <h2 className="text-xl font-bold">Matérias</h2>
+                        <button onClick={addSubject} className="btn-primary flex items-center gap-2">
+                            <Plus size={20} /> Adicionar Matéria
                         </button>
                     </div>
 
-                    <div className="space-y-4">
-                        {currentCategories.map(category => (
-                            <div key={category.id} className="category-section">
-                                <div className="category-header">
-                                    <div className="flex items-center gap-2">
-                                        <GripVertical size={20} className="text-gray-500" />
-                                        <h3 className="text-lg font-semibold">{category.name}</h3>
-                                    </div>
-                                    <button
-                                        onClick={() => toggleCategoryVisibility(category.id, category.visible)}
-                                        className="visibility-toggle"
-                                    >
-                                        {category.visible ? <Eye size={20} /> : <EyeOff size={20} />}
-                                    </button>
-                                </div>
-
-                                {/* Games in this category */}
-                                <div className="games-list">
-                                    {games
-                                        .filter(g => g.category_id === category.id)
-                                        .map(game => (
-                                            <div key={game.id} className="game-item">
-                                                <div className="flex items-center gap-2">
-                                                    <GripVertical size={16} className="text-gray-500" />
-                                                    <div>
-                                                        <div className="font-medium">{game.name}</div>
-                                                        <div className="text-sm text-gray-400">{game.description}</div>
-                                                    </div>
-                                                </div>
-                                                <button
-                                                    onClick={() => toggleGameVisibility(game.id, game.visible)}
-                                                    className="visibility-toggle"
-                                                >
-                                                    {game.visible ? <Eye size={18} /> : <EyeOff size={18} />}
-                                                </button>
-                                            </div>
-                                        ))}
-                                </div>
+                    <div className="flex gap-2 flex-wrap">
+                        {subjects.map(subject => (
+                            <div
+                                key={subject.id}
+                                className={`subject-tab ${selectedSubject === subject.id ? 'active' : ''}`}
+                                onClick={() => setSelectedSubject(subject.id)}
+                            >
+                                <span>{subject.name}</span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleSubjectVisibility(subject.id, subject.visible);
+                                    }}
+                                    className="ml-2"
+                                >
+                                    {subject.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                                </button>
                             </div>
                         ))}
                     </div>
                 </section>
-            )}
+
+                {/* Categories Section */}
+                {selectedSubject && (
+                    <section className="glass-card">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">Categorias</h2>
+                            <button onClick={addCategory} className="btn-primary flex items-center gap-2">
+                                <Plus size={20} /> Adicionar Categoria
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {currentCategories.map(category => (
+                                <div key={category.id} className="category-section">
+                                    <div className="category-header">
+                                        <div className="flex items-center gap-2">
+                                            <GripVertical size={20} className="text-gray-500" />
+                                            <h3 className="text-lg font-semibold">{category.name}</h3>
+                                        </div>
+                                        <button
+                                            onClick={() => toggleCategoryVisibility(category.id, category.visible)}
+                                            className="visibility-toggle"
+                                        >
+                                            {category.visible ? <Eye size={20} /> : <EyeOff size={20} />}
+                                        </button>
+                                    </div>
+
+                                    {/* Games in this category */}
+                                    <div className="games-list">
+                                        {games
+                                            .filter(g => g.category_id === category.id)
+                                            .map(game => (
+                                                <div key={game.id} className="game-item">
+                                                    <div className="flex items-center gap-2">
+                                                        <GripVertical size={16} className="text-gray-500" />
+                                                        <div>
+                                                            <div className="font-medium">{game.name}</div>
+                                                            <div className="text-sm text-gray-400">{game.description}</div>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => toggleGameVisibility(game.id, game.visible)}
+                                                        className="visibility-toggle"
+                                                    >
+                                                        {game.visible ? <Eye size={18} /> : <EyeOff size={18} />}
+                                                    </button>
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
 }
