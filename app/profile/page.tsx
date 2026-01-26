@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
+import { Country, State, City } from 'country-state-city';
 import './profile.css';
 
 export default function ProfilePage() {
@@ -21,7 +22,10 @@ export default function ProfilePage() {
         username: '',
         full_name: '',
         phone: '',
-        address: '',
+        address: '', // Street address
+        country: '',
+        state: '',
+        city: '',
         phone_public: false,
         address_public: false,
         language_pref: 'pt',
@@ -31,6 +35,7 @@ export default function ProfilePage() {
     });
 
     const [progress, setProgress] = useState<any[]>([]);
+    const [subscription, setSubscription] = useState<any>(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -47,6 +52,9 @@ export default function ProfilePage() {
                         full_name: data.full_name || '',
                         phone: data.phone || '',
                         address: data.address || '',
+                        country: data.country || '',
+                        state: data.state || '',
+                        city: data.city || '',
                         phone_public: data.phone_public || false,
                         address_public: data.address_public || false,
                         language_pref: data.language_pref || 'pt',
@@ -67,6 +75,18 @@ export default function ProfilePage() {
 
                     if (progressData) {
                         setProgress(progressData);
+                    }
+
+                    // Fetch subscription
+                    const { data: subData } = await supabase
+                        .from('subscriptions')
+                        .select('*, plans(name)')
+                        .eq('user_id', user.id)
+                        .eq('status', 'active')
+                        .single();
+
+                    if (subData) {
+                        setSubscription(subData);
                     }
                 }
             }
@@ -102,6 +122,9 @@ export default function ProfilePage() {
                     full_name: formData.full_name,
                     phone: formData.phone,
                     address: formData.address,
+                    country: formData.country,
+                    state: formData.state,
+                    city: formData.city,
                     phone_public: formData.phone_public,
                     address_public: formData.address_public,
                     language_pref: formData.language_pref
@@ -271,15 +294,52 @@ export default function ProfilePage() {
 
                         <div className="form-group privacy-group">
                             <div className="input-with-privacy">
-                                <label>Endereço (Opcional)</label>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                    placeholder="Seu endereço"
-                                    className="input-field"
-                                />
+                                <label>Localização</label>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <select
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value, state: '', city: '' }))}
+                                        className="input-field"
+                                    >
+                                        <option value="">Selecione o País</option>
+                                        {Country.getAllCountries().map((country) => (
+                                            <option key={country.isoCode} value={country.isoCode}>
+                                                {country.name}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <select
+                                        name="state"
+                                        value={formData.state}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value, city: '' }))}
+                                        className="input-field"
+                                        disabled={!formData.country}
+                                    >
+                                        <option value="">Selecione o Estado</option>
+                                        {formData.country && State.getStatesOfCountry(formData.country).map((state) => (
+                                            <option key={state.isoCode} value={state.isoCode}>
+                                                {state.name}
+                                            </option>
+                                        ))}
+                                    </select>
+
+                                    <select
+                                        name="city"
+                                        value={formData.city}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                                        className="input-field"
+                                        disabled={!formData.state}
+                                    >
+                                        <option value="">Selecione a Cidade</option>
+                                        {formData.country && formData.state && City.getCitiesOfState(formData.country, formData.state).map((city) => (
+                                            <option key={city.name} value={city.name}>
+                                                {city.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                             <label className="toggle-label">
                                 <input
@@ -320,6 +380,37 @@ export default function ProfilePage() {
                         {saving ? 'Salvando...' : <><Save size={18} /> Salvar Alterações</>}
                     </button>
                 </form>
+
+                <div className="profile-subscription-section" style={{ marginTop: '2rem' }}>
+                    <div className="form-section">
+                        <h3><Star size={18} /> Assinatura</h3>
+                        {subscription ? (
+                            <div className="subscription-card active">
+                                <div className="sub-header">
+                                    <span className="plan-name">{subscription.plans?.name}</span>
+                                    <span className="status-badge active">Ativo</span>
+                                </div>
+                                <p>Renova em: {new Date(subscription.current_period_end).toLocaleDateString()}</p>
+                                {subscription.plan_id === 'family' && (
+                                    <button className="btn-secondary" style={{ marginTop: '1rem' }}>
+                                        Gerenciar Família
+                                    </button>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="subscription-card inactive">
+                                <p>Você está no plano gratuito.</p>
+                                <button
+                                    className="btn-primary"
+                                    onClick={() => router.push('/pricing')}
+                                    style={{ marginTop: '1rem' }}
+                                >
+                                    Ver Planos Premium
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 <div className="profile-progress-section">
                     <div className="form-section">

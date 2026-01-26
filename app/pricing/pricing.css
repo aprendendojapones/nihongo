@@ -1,0 +1,121 @@
+.pricing-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: 100vh;
+    color: var(--text-primary);
+}
+
+.pricing-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    position: relative;
+}
+
+.pricing-header h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.pricing-header p {
+    color: var(--text-muted);
+    font-size: 1.2rem;
+}
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    align-items: start;
+}
+
+.plan-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.plan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: var(--accent-primary);
+}
+
+.plan-card.family {
+    border-color: #f472b6;
+    background: linear-gradient(180deg, rgba(244, 114, 182, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.plan-card.school {
+    border-color: #34d399;
+    background: linear-gradient(180deg, rgba(52, 211, 153, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.plan-icon {
+    margin-bottom: 1.5rem;
+    color: var(--accent-primary);
+}
+
+.plan-card.family .plan-icon {
+    color: #f472b6;
+}
+
+.plan-card.school .plan-icon {
+    color: #34d399;
+}
+
+.plan-price {
+    font-size: 3rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.2rem;
+}
+
+.currency {
+    font-size: 1.5rem;
+}
+
+.period {
+    font-size: 1rem;
+    color: var(--text-muted);
+    font-weight: normal;
+}
+
+.plan-description {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    color: var(--text-primary);
+}
+
+.subscribe-button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
