@@ -39,11 +39,11 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            if (user?.id) {
+            if (user?.email) {
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('*, schools(name)')
-                    .eq('id', user.id)
+                    .eq('email', user.email)
                     .single();
 
                 if (data) {
@@ -94,7 +94,7 @@ export default function ProfilePage() {
         };
 
         fetchProfile();
-    }, [user?.id, setLang]);
+    }, [user?.email, setLang]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
