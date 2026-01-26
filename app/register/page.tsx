@@ -44,9 +44,18 @@ function RegisterContent() {
 
         setLoading(true);
         try {
+            // Get the correct UUID from profiles using email
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', session?.user?.email)
+                .single();
+
+            if (profileError || !profileData) throw new Error('Perfil não encontrado.');
+
             const { data, error } = await supabase.rpc('consume_invitation', {
                 p_token: token,
-                p_user_id: (session?.user as any).id
+                p_user_id: profileData.id // Use the UUID from database
             });
 
             if (error) throw error;
