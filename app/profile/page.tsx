@@ -70,7 +70,7 @@ export default function ProfilePage() {
                     const { data: progressData } = await supabase
                         .from('user_progress')
                         .select('*')
-                        .eq('user_id', user.id)
+                        .eq('user_id', data.id) // Use UUID from profile data
                         .order('completed_at', { ascending: false });
 
                     if (progressData) {
@@ -81,7 +81,7 @@ export default function ProfilePage() {
                     const { data: subData } = await supabase
                         .from('subscriptions')
                         .select('*, plans(name)')
-                        .eq('user_id', user.id)
+                        .eq('user_id', data.id) // Use UUID from profile data
                         .eq('status', 'active')
                         .single();
 
@@ -162,7 +162,7 @@ export default function ProfilePage() {
                 const { error: updateError } = await supabase
                     .from('profiles')
                     .update({ school_id: schoolId })
-                    .eq('id', user.id);
+                    .eq('email', user.email);
 
                 if (!updateError) {
                     setFormData(prev => ({ ...prev, schoolName: schoolData.name }));

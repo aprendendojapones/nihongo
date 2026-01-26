@@ -342,11 +342,11 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     // Load language preference
     useEffect(() => {
         const loadLang = async () => {
-            if (user?.id) {
+            if (user?.email) {
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('language_pref')
-                    .eq('id', user.id)
+                    .eq('email', user.email)
                     .single();
 
                 if (data?.language_pref && translations[data.language_pref as Language]) {
@@ -374,11 +374,11 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         setLang(newLang);
         localStorage.setItem('preferred_language', newLang);
 
-        if (user?.id) {
+        if (user?.email) {
             await supabase
                 .from('profiles')
                 .update({ language_pref: newLang })
-                .eq('id', user.id);
+                .eq('email', user.email);
         }
     };
 
