@@ -368,7 +368,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
         };
 
         loadLang();
-    }, [user?.id]);
+    }, [user?.email]);
 
     const handleSetLang = async (newLang: Language) => {
         setLang(newLang);
