@@ -40,22 +40,18 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            console.log('fetchProfile started. User email:', user?.email);
             if (user?.email) {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('*, schools!school_id(name)') // Fixed ambiguous join
+                    .select('*, schools!school_id(name)')
                     .eq('email', user.email)
                     .single();
-
-                console.log('fetchProfile result:', { data, error });
 
                 if (error) {
                     console.error('Error fetching profile:', error);
                 }
 
                 if (data) {
-                    console.log('Profile data found. ID:', data.id);
                     setProfileId(data.id);
                     setFormData({
                         username: data.username || '',
@@ -93,16 +89,12 @@ export default function ProfilePage() {
                         .select('*, plans(name)')
                         .eq('user_id', data.id)
                         .eq('status', 'active')
-                        .maybeSingle(); // Changed to maybeSingle to avoid 406
+                        .maybeSingle();
 
                     if (subData) {
                         setSubscription(subData);
                     }
-                } else {
-                    console.warn('No profile data found for email:', user.email);
                 }
-            } else {
-                console.log('No user email available yet.');
             }
             setLoading(false);
         };
@@ -127,8 +119,6 @@ export default function ProfilePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
-        console.log('handleSubmit started. ProfileID:', profileId);
-        console.log('FormData to save:', formData);
 
         if (user?.email) {
             try {
@@ -163,7 +153,6 @@ export default function ProfilePage() {
                 alert(`Erro ao atualizar perfil: ${error.message}`);
             }
         } else {
-            console.error('Cannot save: user email is missing');
             alert('Erro: Perfil não carregado corretamente. Recarregue a página.');
         }
         setSaving(false);
