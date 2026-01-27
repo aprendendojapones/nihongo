@@ -44,7 +44,7 @@ export default function ProfilePage() {
             if (user?.email) {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('*, schools(name)')
+                    .select('*') // Removed schools(name) to debug RLS issue
                     .eq('email', user.email)
                     .single();
 
