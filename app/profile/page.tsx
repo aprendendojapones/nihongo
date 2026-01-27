@@ -44,7 +44,7 @@ export default function ProfilePage() {
             if (user?.email) {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('*, schools(name)') // Restored schools join
+                    .select('*, schools!school_id(name)') // Fixed ambiguous join
                     .eq('email', user.email)
                     .single();
 
