@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import { Country, State, City } from 'country-state-city';
+import { useDebounce } from '@/hooks/useDebounce';
 import './profile.css';
 
 export default function ProfilePage() {
@@ -18,6 +19,7 @@ export default function ProfilePage() {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | 'idle'>('idle');
     const [formData, setFormData] = useState({
         username: '',
         full_name: '',
@@ -34,6 +36,7 @@ export default function ProfilePage() {
         level: 'N5'
     });
 
+    const debouncedFormData = useDebounce(formData, 1500);
     const [profileId, setProfileId] = useState<string | null>(null);
     const [progress, setProgress] = useState<any[]>([]);
     const [subscription, setSubscription] = useState<any>(null);
@@ -101,6 +104,55 @@ export default function ProfilePage() {
 
         fetchProfile();
     }, [user?.email, setLang]);
+
+    // Auto-save effect
+    useEffect(() => {
+        const autoSave = async () => {
+            if (!profileId || !user?.email) return;
+
+            setSaveStatus('saving');
+
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: debouncedFormData.username,
+                        full_name: debouncedFormData.full_name,
+                        phone: debouncedFormData.phone,
+                        address: debouncedFormData.address,
+                        country: debouncedFormData.country,
+                        state: debouncedFormData.state,
+                        city: debouncedFormData.city,
+                        phone_public: debouncedFormData.phone_public,
+                        address_public: debouncedFormData.address_public,
+                        language_pref: debouncedFormData.language_pref
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Erro ao atualizar perfil');
+                }
+
+                setSaveStatus('saved');
+                setTimeout(() => setSaveStatus('idle'), 3000);
+
+            } catch (error: any) {
+                console.error('Error auto-saving profile:', error);
+                setSaveStatus('error');
+            }
+        };
+
+        // Only save if we have a profileId (loaded)
+        if (profileId) {
+            autoSave();
+        }
+
+    }, [debouncedFormData, profileId, user?.email]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -212,6 +264,9 @@ export default function ProfilePage() {
                     <ArrowLeft size={24} />
                 </button>
                 <h1>{t('profile') || 'Meu Perfil'}</h1>
+                {saveStatus === 'saving' && <span style={{ marginLeft: '1rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Salvando...</span>}
+                {saveStatus === 'saved' && <span style={{ marginLeft: '1rem', fontSize: '0.9rem', color: 'var(--success)' }}>Salvo ✓</span>}
+                {saveStatus === 'error' && <span style={{ marginLeft: '1rem', fontSize: '0.9rem', color: 'var(--error)' }}>Erro ao salvar</span>}
             </header>
 
             <main className="glass-card profile-card">
@@ -393,9 +448,10 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    <button type="submit" className="btn-primary save-button" disabled={saving}>
+                    {/* Manual save button hidden in favor of auto-save */}
+                    {/* <button type="submit" className="btn-primary save-button" disabled={saving}>
                         {saving ? 'Salvando...' : <><Save size={18} /> Salvar Alterações</>}
-                    </button>
+                    </button> */}
                 </form>
 
                 <div className="profile-subscription-section" style={{ marginTop: '2rem' }}>
