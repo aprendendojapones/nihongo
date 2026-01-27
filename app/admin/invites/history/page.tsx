@@ -41,13 +41,22 @@ export default function InvitationHistoryPage() {
 
     const fetchInvitations = async () => {
         try {
+            console.log('[History Page] Fetching invitations...');
             const response = await fetch('/api/admin/invites/history');
-            if (!response.ok) throw new Error('Failed to fetch invitations');
+            console.log('[History Page] Response status:', response.status);
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('[History Page] Error response:', errorData);
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
+
             const data = await response.json();
+            console.log('[History Page] Received invitations:', data.length);
             setInvitations(data);
-        } catch (error) {
-            console.error('Error fetching invitations:', error);
-            alert('Erro ao carregar histórico de convites');
+        } catch (error: any) {
+            console.error('[History Page] Error fetching invitations:', error);
+            alert(`Erro ao carregar histórico de convites: ${error.message}`);
         } finally {
             setLoading(false);
         }
