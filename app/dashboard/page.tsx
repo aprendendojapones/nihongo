@@ -84,7 +84,7 @@ export default function DashboardPage() {
                         <h3 className="ranking-title">
                             <Users size={20} color="var(--accent-primary)" /> {t('school_chat')}
                         </h3>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Conecte-se com sua escola.</p>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>{t('connect_with_school')}</p>
                         <button className="btn-primary" style={{ width: '100%' }} onClick={() => router.push('/chat')}>
                             {t('open_chat')}
                         </button>

@@ -412,10 +412,10 @@ export default function AdminPage() {
                             Ver Ranking Global
                         </button>
                         <button className="btn-primary" onClick={() => router.push('/admin/invites')}>
-                            Gerador de Convites Avançado
+                            {t('advanced_invite_generator')}
                         </button>
                         <button className="btn-primary" onClick={() => router.push('/admin/invites/history')}>
-                            Histórico de Convites
+                            {t('invite_history')}
                         </button>
                     </div>
                 </section>

@@ -151,7 +151,7 @@ export default function Home() {
                         className="btn-primary btn-landing"
                         onClick={() => router.push('/dashboard')}
                     >
-                        Ver Painel Completo
+                        {t('view_full_dashboard')}
                     </button>
                 </div>
             </main>
