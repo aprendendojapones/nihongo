@@ -411,6 +411,9 @@ export default function AdminPage() {
                         <button className="btn-primary" onClick={() => router.push('/rankings')}>
                             Ver Ranking Global
                         </button>
+                        <button className="btn-primary" onClick={() => router.push('/admin/invites')}>
+                            Gerador de Convites Avançado
+                        </button>
                     </div>
                 </section>
             </div>
