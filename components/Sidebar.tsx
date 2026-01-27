@@ -94,11 +94,11 @@ const Sidebar = () => {
     const navItems = [
         { id: 'home', icon: Home, label: t('welcome'), href: '/' },
         { id: 'dashboard', icon: LayoutDashboard, label: t('dashboard'), href: '/dashboard' },
-        { id: 'profile', icon: User, label: t('profile') || 'Perfil', href: '/profile' },
+        { id: 'profile', icon: User, label: t('profile'), href: '/profile' },
         { id: 'lessons', icon: BookOpen, label: t('learning_path'), href: '/lessons' },
-        { id: 'math', icon: Calculator, label: 'Matemática', href: '/math' },
+        { id: 'math', icon: Calculator, label: t('math'), href: '/math' },
         { id: 'game', icon: Gamepad2, label: t('game_mode'), href: '/games' },
-        { id: 'rankings', icon: Trophy, label: 'Ranking', href: '/rankings' },
+        { id: 'rankings', icon: Trophy, label: t('ranking'), href: '/rankings' },
     ];
 
     const roleItems = [];
@@ -107,13 +107,13 @@ const Sidebar = () => {
     }
     if (effectiveRole === 'admin') {
         roleItems.push({ id: 'admin', icon: Settings, label: t('admin_panel'), href: '/admin' });
-        roleItems.push({ id: 'subjects', icon: GraduationCap, label: 'Matérias *', href: '/admin/games' });
+        roleItems.push({ id: 'subjects', icon: GraduationCap, label: `${t('subjects')} *`, href: '/admin/games' });
     }
 
     // Add "Other Subjects" for students if there are visible subjects
     const studentItems = [];
     if (hasOtherSubjects && effectiveRole === 'student') {
-        studentItems.push({ id: 'other-subjects', icon: GraduationCap, label: 'Outras Matérias', href: '/subjects' });
+        studentItems.push({ id: 'other-subjects', icon: GraduationCap, label: t('subjects'), href: '/subjects' });
     }
 
     const languages: ('pt' | 'jp' | 'en' | 'fil' | 'zh' | 'hi')[] = ['pt', 'jp', 'en', 'fil', 'zh', 'hi'];

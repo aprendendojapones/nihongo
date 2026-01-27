@@ -153,7 +153,12 @@ const translations: Record<Language, Record<string, string>> = {
         uses: "usos",
         created: "Criado",
         expires: "Expira",
-        free: "Grátis"
+        free: "Grátis",
+        profile: "Perfil",
+        math: "Matemática",
+        subjects: "Matérias",
+        ranking: "Ranking",
+        management_panel: "Painel de Gestão"
     },
     jp: {
         welcome: "ようこそ",
@@ -272,7 +277,12 @@ const translations: Record<Language, Record<string, string>> = {
         uses: "使用回数",
         created: "作成日",
         expires: "有効期限",
-        free: "無料"
+        free: "無料",
+        profile: "プロフィール",
+        math: "数学",
+        subjects: "科目",
+        ranking: "ランキング",
+        management_panel: "管理パネル"
     },
     en: {
         welcome: "Welcome",
@@ -391,7 +401,12 @@ const translations: Record<Language, Record<string, string>> = {
         uses: "uses",
         created: "Created",
         expires: "Expires",
-        free: "Free"
+        free: "Free",
+        profile: "Profile",
+        math: "Mathematics",
+        subjects: "Subjects",
+        ranking: "Ranking",
+        management_panel: "Management Panel"
     },
     fil: { welcome: "Maligayang pagdating" },
     zh: { welcome: "欢迎" },
