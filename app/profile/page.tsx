@@ -130,38 +130,40 @@ export default function ProfilePage() {
         console.log('handleSubmit started. ProfileID:', profileId);
         console.log('FormData to save:', formData);
 
-        if (profileId) {
-            const { data: updateData, error } = await supabase
-                .from('profiles')
-                .update({
-                    username: formData.username,
-                    full_name: formData.full_name,
-                    phone: formData.phone,
-                    address: formData.address,
-                    country: formData.country,
-                    state: formData.state,
-                    city: formData.city,
-                    phone_public: formData.phone_public,
-                    address_public: formData.address_public,
-                    language_pref: formData.language_pref
-                })
-                .eq('id', profileId)
-                .select(); // Add select to return updated rows
+        if (user?.email) {
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: formData.username,
+                        full_name: formData.full_name,
+                        phone: formData.phone,
+                        address: formData.address,
+                        country: formData.country,
+                        state: formData.state,
+                        city: formData.city,
+                        phone_public: formData.phone_public,
+                        address_public: formData.address_public,
+                        language_pref: formData.language_pref
+                    }),
+                });
 
-            console.log('Update result error:', error);
-            console.log('Update result data:', updateData);
+                const result = await response.json();
 
-            if (!error && updateData && updateData.length > 0) {
+                if (!response.ok) {
+                    throw new Error(result.error || 'Erro ao atualizar perfil');
+                }
+
                 alert('Perfil atualizado com sucesso!');
-            } else if (!error && (!updateData || updateData.length === 0)) {
-                console.error('Update succeeded but no rows were modified. RLS blocking?');
-                alert('Erro: Não foi possível salvar. Parece ser um problema de permissão.');
-            } else {
+            } catch (error: any) {
                 console.error('Error updating profile:', error);
-                alert(`Erro ao atualizar perfil: ${error?.message}`);
+                alert(`Erro ao atualizar perfil: ${error.message}`);
             }
         } else {
-            console.error('Cannot save: profileId is missing');
+            console.error('Cannot save: user email is missing');
             alert('Erro: Perfil não carregado corretamente. Recarregue a página.');
         }
         setSaving(false);
