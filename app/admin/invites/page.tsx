@@ -57,11 +57,11 @@ export default function InvitesPage() {
 
     return (
         <div className="admin-container" style={{ padding: '2rem', color: 'var(--text-primary)' }}>
-            <h1 style={{ marginBottom: '2rem', fontSize: '2rem' }}>Gerador de Convites</h1>
+            <h1 style={{ marginBottom: '2rem', fontSize: '2rem' }}>{t('invite_generator')}</h1>
 
             <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px' }}>
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Tipo de Usuário</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>{t('user_type')}</label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
                         <button
                             className={`role-btn ${role === 'student' ? 'active' : ''}`}
@@ -172,12 +172,12 @@ export default function InvitesPage() {
                     onClick={() => window.location.href = '/admin/invites/history'}
                     style={{ width: '100%', padding: '0.8rem', fontSize: '1rem', marginTop: '0.5rem' }}
                 >
-                    Ver Histórico de Convites
+                    {t('view_invite_history')}
                 </button>
 
                 {generatedToken && (
                     <div className="result-area" style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', border: '1px solid #10b981' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#10b981', fontWeight: 'bold' }}>Link Gerado:</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#10b981', fontWeight: 'bold' }}>{t('generated_link')}</label>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <input
                                 type="text"

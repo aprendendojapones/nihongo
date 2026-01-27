@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Copy, Check, Filter, Users, Calendar, Link as LinkIcon } from 'lucide-react';
+import { useTranslation } from '@/components/TranslationContext';
 import '../../admin.css';
 
 interface Invitation {
@@ -30,6 +31,7 @@ interface Invitation {
 
 export default function InvitationHistoryPage() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [invitations, setInvitations] = useState<Invitation[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<'all' | 'active' | 'used' | 'expired' | 'family'>('all');
@@ -101,7 +103,7 @@ export default function InvitationHistoryPage() {
     };
 
     if (loading) {
-        return <div className="flex items-center justify-center h-screen text-white">Carregando...</div>;
+        return <div className="flex items-center justify-center h-screen text-white">{t('loading')}</div>;
     }
 
     return (
@@ -110,30 +112,30 @@ export default function InvitationHistoryPage() {
                 <button className="icon-button" onClick={() => router.back()} style={{ marginRight: '1rem' }}>
                     <ArrowLeft size={24} />
                 </button>
-                <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Histórico de Convites</h1>
+                <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{t('invite_history')}</h1>
             </header>
 
             {/* Statistics */}
             <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
                 <div className="glass-card" style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>{stats.total}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Total</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('total')}</div>
                 </div>
                 <div className="glass-card" style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>{stats.active}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Ativos</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('active')}</div>
                 </div>
                 <div className="glass-card" style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6b7280' }}>{stats.used}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Usados</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('used')}</div>
                 </div>
                 <div className="glass-card" style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ef4444' }}>{stats.expired}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Expirados</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('expired')}</div>
                 </div>
                 <div className="glass-card" style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#8b5cf6' }}>{stats.family}</div>
-                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Família</div>
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>{t('family')}</div>
                 </div>
             </div>
 
@@ -156,7 +158,7 @@ export default function InvitationHistoryPage() {
                         }}
                     >
                         <Filter size={16} />
-                        {f === 'all' ? 'Todos' : f === 'active' ? 'Ativos' : f === 'used' ? 'Usados' : f === 'expired' ? 'Expirados' : 'Família'}
+                        {f === 'all' ? t('all') : f === 'active' ? t('active') : f === 'used' ? t('used') : f === 'expired' ? t('expired') : t('family')}
                     </button>
                 ))}
             </div>
@@ -165,7 +167,7 @@ export default function InvitationHistoryPage() {
             <div className="invitations-list" style={{ display: 'grid', gap: '1rem' }}>
                 {filteredInvitations.length === 0 ? (
                     <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                        Nenhum convite encontrado
+                        {t('no_invites_found')}
                     </div>
                 ) : (
                     filteredInvitations.map(invite => (
@@ -207,7 +209,7 @@ export default function InvitationHistoryPage() {
                                                 background: '#10b981',
                                                 fontSize: '0.8rem'
                                             }}>
-                                                Grátis
+                                                {t('free')}
                                             </span>
                                         )}
                                         {invite.discount > 0 && (
@@ -223,14 +225,14 @@ export default function InvitationHistoryPage() {
                                     </div>
                                     <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <Users size={14} />
-                                        {invite.creator?.full_name || invite.creator?.email || 'Desconhecido'}
+                                        {invite.creator?.full_name || invite.creator?.email || t('unknown')}
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent-primary)' }}>
                                         {invite.uses}/{invite.max_uses}
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>usos</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('uses')}</div>
                                 </div>
                             </div>
 
@@ -270,11 +272,11 @@ export default function InvitationHistoryPage() {
                             <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Calendar size={14} />
-                                    Criado: {new Date(invite.created_at).toLocaleDateString('pt-BR')}
+                                    {t('created')}: {new Date(invite.created_at).toLocaleDateString('pt-BR')}
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <Calendar size={14} />
-                                    Expira: {new Date(invite.expires_at).toLocaleDateString('pt-BR')}
+                                    {t('expires')}: {new Date(invite.expires_at).toLocaleDateString('pt-BR')}
                                 </div>
                             </div>
                         </div>
