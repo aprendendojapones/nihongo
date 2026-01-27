@@ -40,6 +40,7 @@ export default function ProfilePage() {
 
     useEffect(() => {
         const fetchProfile = async () => {
+            console.log('fetchProfile started. User email:', user?.email);
             if (user?.email) {
                 const { data, error } = await supabase
                     .from('profiles')
@@ -47,7 +48,14 @@ export default function ProfilePage() {
                     .eq('email', user.email)
                     .single();
 
+                console.log('fetchProfile result:', { data, error });
+
+                if (error) {
+                    console.error('Error fetching profile:', error);
+                }
+
                 if (data) {
+                    console.log('Profile data found. ID:', data.id);
                     setProfileId(data.id);
                     setFormData({
                         username: data.username || '',
@@ -90,7 +98,11 @@ export default function ProfilePage() {
                     if (subData) {
                         setSubscription(subData);
                     }
+                } else {
+                    console.warn('No profile data found for email:', user.email);
                 }
+            } else {
+                console.log('No user email available yet.');
             }
             setLoading(false);
         };
