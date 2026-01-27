@@ -414,6 +414,9 @@ export default function AdminPage() {
                         <button className="btn-primary" onClick={() => router.push('/admin/invites')}>
                             Gerador de Convites Avançado
                         </button>
+                        <button className="btn-primary" onClick={() => router.push('/admin/invites/history')}>
+                            Histórico de Convites
+                        </button>
                     </div>
                 </section>
             </div>

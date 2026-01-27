@@ -167,6 +167,14 @@ export default function InvitesPage() {
                     {loading ? 'Gerando...' : <><UserPlus size={20} /> Gerar Link de Convite</>}
                 </button>
 
+                <button
+                    className="btn-secondary"
+                    onClick={() => window.location.href = '/admin/invites/history'}
+                    style={{ width: '100%', padding: '0.8rem', fontSize: '1rem', marginTop: '0.5rem' }}
+                >
+                    Ver Histórico de Convites
+                </button>
+
                 {generatedToken && (
                     <div className="result-area" style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', border: '1px solid #10b981' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#10b981', fontWeight: 'bold' }}>Link Gerado:</label>
