@@ -31,7 +31,7 @@ export async function GET() {
             .from('invitation_tokens')
             .select(`
                 *,
-                creator:created_by(id, email, full_name)
+                creator:profiles!created_by(id, email, full_name)
             `)
             .order('created_at', { ascending: false });
 
