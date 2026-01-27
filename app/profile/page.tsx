@@ -34,6 +34,7 @@ export default function ProfilePage() {
         level: 'N5'
     });
 
+    const [profileId, setProfileId] = useState<string | null>(null);
     const [progress, setProgress] = useState<any[]>([]);
     const [subscription, setSubscription] = useState<any>(null);
 
@@ -47,6 +48,7 @@ export default function ProfilePage() {
                     .single();
 
                 if (data) {
+                    setProfileId(data.id);
                     setFormData({
                         username: data.username || '',
                         full_name: data.full_name || '',
@@ -114,7 +116,7 @@ export default function ProfilePage() {
         e.preventDefault();
         setSaving(true);
 
-        if (user?.email) {
+        if (profileId) {
             const { error } = await supabase
                 .from('profiles')
                 .update({
@@ -129,7 +131,7 @@ export default function ProfilePage() {
                     address_public: formData.address_public,
                     language_pref: formData.language_pref
                 })
-                .eq('email', user.email);
+                .eq('id', profileId);
 
             if (!error) {
                 alert('Perfil atualizado com sucesso!');
@@ -137,6 +139,8 @@ export default function ProfilePage() {
                 console.error('Error updating profile:', error);
                 alert(`Erro ao atualizar perfil: ${error.message}`);
             }
+        } else {
+            alert('Erro: Perfil não carregado corretamente. Recarregue a página.');
         }
         setSaving(false);
     };
