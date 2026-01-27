@@ -131,7 +131,7 @@ export default function ProfilePage() {
         console.log('FormData to save:', formData);
 
         if (profileId) {
-            const { error } = await supabase
+            const { data: updateData, error } = await supabase
                 .from('profiles')
                 .update({
                     username: formData.username,
@@ -145,15 +145,20 @@ export default function ProfilePage() {
                     address_public: formData.address_public,
                     language_pref: formData.language_pref
                 })
-                .eq('id', profileId);
+                .eq('id', profileId)
+                .select(); // Add select to return updated rows
 
             console.log('Update result error:', error);
+            console.log('Update result data:', updateData);
 
-            if (!error) {
+            if (!error && updateData && updateData.length > 0) {
                 alert('Perfil atualizado com sucesso!');
+            } else if (!error && (!updateData || updateData.length === 0)) {
+                console.error('Update succeeded but no rows were modified. RLS blocking?');
+                alert('Erro: Não foi possível salvar. Parece ser um problema de permissão.');
             } else {
                 console.error('Error updating profile:', error);
-                alert(`Erro ao atualizar perfil: ${error.message}`);
+                alert(`Erro ao atualizar perfil: ${error?.message}`);
             }
         } else {
             console.error('Cannot save: profileId is missing');
