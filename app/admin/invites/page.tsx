@@ -17,14 +17,17 @@ export default function InvitesPage() {
 
     // Options
     const [discount, setDiscount] = useState(0);
+    const [hasDiscount, setHasDiscount] = useState(false);
     const [familyMode, setFamilyMode] = useState(false);
+    const [isFree, setIsFree] = useState(false);
 
     const handleGenerate = async () => {
         setLoading(true);
         try {
             const options = {
-                discount_percent: discount,
-                free_family: familyMode
+                discount_percent: hasDiscount ? discount : 0,
+                free_family: familyMode,
+                is_free: isFree
             };
 
             const { data, error } = await supabase.rpc('generate_invitation', {
@@ -59,25 +62,39 @@ export default function InvitesPage() {
             <div className="glass-card" style={{ padding: '2rem', maxWidth: '600px' }}>
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Tipo de Usuário</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem' }}>
                         <button
                             className={`role-btn ${role === 'student' ? 'active' : ''}`}
                             onClick={() => setRole('student')}
-                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'student' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'student' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
                         >
                             <School size={20} /> Aluno
                         </button>
                         <button
+                            className={`role-btn ${role === 'teacher' ? 'active' : ''}`}
+                            onClick={() => setRole('teacher')}
+                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'teacher' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
+                        >
+                            <School size={20} /> Professor
+                        </button>
+                        <button
+                            className={`role-btn ${role === 'director' ? 'active' : ''}`}
+                            onClick={() => setRole('director')}
+                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'director' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
+                        >
+                            <Shield size={20} /> Diretor
+                        </button>
+                        <button
                             className={`role-btn ${role === 'employee' ? 'active' : ''}`}
                             onClick={() => setRole('employee')}
-                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'employee' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'employee' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
                         >
-                            <Shield size={20} /> Funcionário
+                            <Users size={20} /> Func.
                         </button>
                         <button
                             className={`role-btn ${role === 'friend' ? 'active' : ''}`}
                             onClick={() => setRole('friend')}
-                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'friend' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            style={{ padding: '1rem', borderRadius: '8px', border: '1px solid #444', background: role === 'friend' ? 'var(--accent-primary)' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
                         >
                             <Users size={20} /> Amigo
                         </button>
@@ -95,18 +112,51 @@ export default function InvitesPage() {
                     />
                 </div>
 
-                {role === 'friend' && (
-                    <div className="form-group" style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                <div className="form-group" style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#aaa' }}>Opções Adicionais</h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                             <input
                                 type="checkbox"
                                 checked={familyMode}
                                 onChange={(e) => setFamilyMode(e.target.checked)}
                             />
-                            Ativar Modo Família (Plano Gratuito)
+                            Modo Família (Acesso Familiar)
                         </label>
+
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={isFree}
+                                onChange={(e) => setIsFree(e.target.checked)}
+                            />
+                            Grátis (Isento de Pagamento)
+                        </label>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={hasDiscount}
+                                    onChange={(e) => setHasDiscount(e.target.checked)}
+                                />
+                                Desconto (%)
+                            </label>
+                            {hasDiscount && (
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    value={discount}
+                                    onChange={(e) => setDiscount(parseInt(e.target.value))}
+                                    placeholder="%"
+                                    style={{ width: '80px', padding: '0.5rem', borderRadius: '4px', background: 'rgba(0,0,0,0.3)', border: '1px solid #555', color: 'white' }}
+                                />
+                            )}
+                        </div>
                     </div>
-                )}
+                </div>
 
                 <button
                     className="btn-primary"
