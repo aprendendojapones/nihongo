@@ -82,7 +82,6 @@ export default function Home() {
                     )}
                     <div className="user-info">
                         <h1>{t('welcome')}, {user?.username || user?.full_name || 'Student'}</h1>
-                        <p style={{ color: 'var(--text-muted)' }}>{t('keep_learning')}</p>
                     </div>
                 </div>
 
