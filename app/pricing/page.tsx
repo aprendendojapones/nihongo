@@ -33,6 +33,7 @@ export default function PricingPage() {
         fetchPlans();
     }, []);
 
+
     const handleSubscribe = async (planId: string) => {
         if (!session?.user) {
             router.push('/login');
@@ -41,24 +42,49 @@ export default function PricingPage() {
 
         setSubscribing(planId);
         try {
-            // In a real app, this would redirect to Stripe/Payment Gateway
-            // For now, we simulate a successful subscription
-            const { error } = await supabase.rpc('subscribe_user', {
-                p_user_id: (session.user as any).id,
-                p_plan_id: planId
+            // Map plan IDs to Stripe price IDs
+            const priceIdMap: { [key: string]: string } = {
+                'individual': process.env.NEXT_PUBLIC_STRIPE_PRICE_INDIVIDUAL_MONTHLY || '',
+                'family': process.env.NEXT_PUBLIC_STRIPE_PRICE_FAMILY_MONTHLY || '',
+                'school': process.env.NEXT_PUBLIC_STRIPE_PRICE_SCHOOL_MONTHLY || '',
+            };
+
+            const priceId = priceIdMap[planId];
+            if (!priceId) {
+                throw new Error('Invalid plan selected');
+            }
+
+            // Call Stripe checkout API
+            const response = await fetch('/api/stripe/create-checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    priceId,
+                    userId: (session.user as any).id,
+                    email: session.user.email,
+                    planType: planId,
+                }),
             });
 
-            if (error) throw error;
+            const data = await response.json();
 
-            alert('Assinatura realizada com sucesso!');
-            router.push('/profile');
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create checkout session');
+            }
+
+            // Redirect to Stripe Checkout
+            if (data.url) {
+                window.location.href = data.url;
+            }
         } catch (error: any) {
             console.error('Error subscribing:', error);
-            alert('Erro ao assinar: ' + error.message);
-        } finally {
+            alert('Erro ao processar pagamento: ' + error.message);
             setSubscribing(null);
         }
     };
+
 
     if (loading) return <div className="loading-container">Carregando planos...</div>;
 
