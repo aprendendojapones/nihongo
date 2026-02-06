@@ -8,6 +8,7 @@ CREATE TABLE schools (
   phone TEXT,
   fax TEXT,
   email TEXT,
+  type TEXT DEFAULT 'school', -- 'school' or 'group'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 

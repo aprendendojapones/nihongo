@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Trophy, Medal, Crown, User } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Crown, User, Swords } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from '@/components/TranslationContext';
@@ -17,155 +17,202 @@ interface Profile {
     level: string;
 }
 
+interface Tournament {
+    id: string;
+    title: string;
+    end_date: string;
+}
+
+interface TournamentEntry {
+    score: number;
+    user: Profile;
+}
+
 export default function RankingsPage() {
     const router = useRouter();
     const { data: session } = useSession();
     const { t } = useTranslation();
-    const [profiles, setProfiles] = useState<Profile[]>([]);
+    
+    // State
+    const [activeTab, setActiveTab] = useState<'global' | 'tournament'>('tournament');
+    const [profiles, setProfiles] = useState<Profile[]>([]); // Global
+    const [tournamententries, setTournamentEntries] = useState<TournamentEntry[]>([]); // Tournament
+    const [activeTournament, setActiveTournament] = useState<Tournament | null>(null);
     const [loading, setLoading] = useState(true);
-    const [userRank, setUserRank] = useState<number | null>(null);
 
     useEffect(() => {
-        fetchRankings();
-    }, []);
+        fetchData();
+    }, [activeTab]);
 
-    const fetchRankings = async () => {
+    const fetchData = async () => {
+        setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('id, username, full_name, avatar_url, xp, level')
-                .order('xp', { ascending: false })
-                .limit(50);
+            if (activeTab === 'global') {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('id, username, full_name, avatar_url, xp, level')
+                    .order('xp', { ascending: false })
+                    .limit(50);
+                setProfiles(data || []);
+            } else {
+                // Fetch Active Tournament
+                const { data: tourneys } = await supabase
+                    .from('tournaments')
+                    .select('*')
+                    .eq('is_active', true)
+                    .gt('end_date', new Date().toISOString())
+                    .limit(1);
+                
+                const tournament = tourneys?.[0];
+                setActiveTournament(tournament || null);
 
-            if (error) throw error;
-
-            setProfiles(data || []);
-
-            if (session?.user) {
-                const rank = data?.findIndex(p => p.id === (session.user as any).id);
-                if (rank !== undefined && rank !== -1) {
-                    setUserRank(rank + 1);
+                if (tournament) {
+                    const { data: entries } = await supabase
+                        .from('tournament_entries')
+                        .select(`
+                            score,
+                            user:profiles (id, username, full_name, avatar_url, level)
+                        `)
+                        .eq('tournament_id', tournament.id)
+                        .order('score', { ascending: false })
+                        .limit(50);
+                    
+                    // Transform structure to flat profile for display
+                    setTournamentEntries(entries as any || []);
                 }
             }
         } catch (error) {
-            console.error('Error fetching rankings:', error);
+            console.error('Error fetching data:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const getMedalIcon = (index: number) => {
-        switch (index) {
-            case 0: return <Crown size={32} className="medal-gold animate-bounce" />;
-            case 1: return <Medal size={28} className="medal-silver" />;
-            case 2: return <Medal size={28} className="medal-bronze" />;
-            default: return <span className="rank-number">{index + 1}</span>;
-        }
+    const renderList = (items: any[], isTournament: boolean) => {
+        // ... (Logic to render list, reused)
+        const top3 = items.slice(0, 3);
+        const rest = items.slice(3);
+
+        return (
+            <>
+                {/* Podium */}
+                <div className="podium-container">
+                    {top3[1] && <PodiumItem item={top3[1]} rank={2} isTournament={isTournament} />}
+                    {top3[0] && <PodiumItem item={top3[0]} rank={1} isTournament={isTournament} />}
+                    {top3[2] && <PodiumItem item={top3[2]} rank={3} isTournament={isTournament} />}
+                </div>
+                {/* List */}
+                <div className="rankings-list">
+                    {rest.map((item, idx) => (
+                        <RankingItem 
+                            key={idx} 
+                            item={item} 
+                            rank={idx + 4} 
+                            isTournament={isTournament} 
+                            currentUserId={(session?.user as any)?.id} 
+                        />
+                    ))}
+                    {rest.length === 0 && top3.length === 0 && (
+                        <p className="text-center text-gray-500 mt-10">Nenhum participante ainda.</p>
+                    )}
+                </div>
+            </>
+        );
     };
 
     return (
         <div className="rankings-page">
             <header className="rankings-header">
-                <button
-                    className="icon-button"
-                    onClick={() => router.back()}
-                >
+                <button className="icon-button" onClick={() => router.back()}>
                     <ArrowLeft size={24} />
                 </button>
-                <h1 className="gradient-text">Ranking Global</h1>
+                <div className="flex flex-col items-center">
+                    <h1 className="gradient-text">Ranking</h1>
+                    <div className="flex gap-4 mt-4">
+                        <button 
+                            className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${activeTab === 'tournament' ? 'bg-accent-primary text-black' : 'bg-white/10 text-gray-400'}`}
+                            onClick={() => setActiveTab('tournament')}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Swords size={16} /> Torneio Semanal
+                            </div>
+                        </button>
+                        <button 
+                            className={`px-4 py-2 rounded-full text-sm font-bold transition-colors ${activeTab === 'global' ? 'bg-accent-secondary text-black' : 'bg-white/10 text-gray-400'}`}
+                            onClick={() => setActiveTab('global')}
+                        >
+                            <div className="flex items-center gap-2">
+                                <Trophy size={16} /> Global
+                            </div>
+                        </button>
+                    </div>
+                </div>
                 <div className="header-spacer"></div>
             </header>
 
             <main className="rankings-container">
                 {loading ? (
                     <div className="loading-spinner">Carregando...</div>
+                ) : activeTab === 'tournament' ? (
+                    activeTournament ? (
+                        <>
+                            <div className="text-center mb-6">
+                                <h2 className="text-xl font-bold text-white">{activeTournament.title}</h2>
+                                <p className="text-sm text-gray-400">Termina em {new Date(activeTournament.end_date).toLocaleDateString()}</p>
+                            </div>
+                            {renderList(tournamententries.map(e => ({ ...e.user, xp: e.score })), true)}
+                        </>
+                    ) : (
+                        <div className="text-center py-20 text-gray-500">
+                            <Swords size={64} className="mx-auto mb-4 opacity-50" />
+                            <p>Nenhum torneio ativo no momento.</p>
+                        </div>
+                    )
                 ) : (
-                    <>
-                        {/* Top 3 Podium */}
-                        <div className="podium-container">
-                            {profiles[1] && (
-                                <div className="podium-item silver">
-                                    <div className="avatar-wrapper">
-                                        {profiles[1].avatar_url ? (
-                                            <img src={profiles[1].avatar_url} alt={profiles[1].username} />
-                                        ) : (
-                                            <div className="avatar-placeholder">{profiles[1].username?.[0] || 'U'}</div>
-                                        )}
-                                        <div className="medal-badge silver">2</div>
-                                    </div>
-                                    <div className="podium-info">
-                                        <span className="username">{profiles[1].username || 'Usuário'}</span>
-                                        <span className="xp">{profiles[1].xp} XP</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {profiles[0] && (
-                                <div className="podium-item gold">
-                                    <div className="crown-icon"><Crown size={40} color="#FFD700" /></div>
-                                    <div className="avatar-wrapper">
-                                        {profiles[0].avatar_url ? (
-                                            <img src={profiles[0].avatar_url} alt={profiles[0].username} />
-                                        ) : (
-                                            <div className="avatar-placeholder">{profiles[0].username?.[0] || 'U'}</div>
-                                        )}
-                                        <div className="medal-badge gold">1</div>
-                                    </div>
-                                    <div className="podium-info">
-                                        <span className="username">{profiles[0].username || 'Usuário'}</span>
-                                        <span className="xp">{profiles[0].xp} XP</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {profiles[2] && (
-                                <div className="podium-item bronze">
-                                    <div className="avatar-wrapper">
-                                        {profiles[2].avatar_url ? (
-                                            <img src={profiles[2].avatar_url} alt={profiles[2].username} />
-                                        ) : (
-                                            <div className="avatar-placeholder">{profiles[2].username?.[0] || 'U'}</div>
-                                        )}
-                                        <div className="medal-badge bronze">3</div>
-                                    </div>
-                                    <div className="podium-info">
-                                        <span className="username">{profiles[2].username || 'Usuário'}</span>
-                                        <span className="xp">{profiles[2].xp} XP</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* List of others */}
-                        <div className="rankings-list">
-                            {profiles.slice(3).map((profile, index) => (
-                                <div
-                                    key={profile.id}
-                                    className={`ranking-item ${profile.id === (session?.user as any)?.id ? 'current-user' : ''}`}
-                                >
-                                    <div className="rank-position">{index + 4}</div>
-                                    <div className="user-info">
-                                        <div className="avatar-small">
-                                            {profile.avatar_url ? (
-                                                <img src={profile.avatar_url} alt={profile.username} />
-                                            ) : (
-                                                <User size={20} />
-                                            )}
-                                        </div>
-                                        <div className="user-details">
-                                            <span className="username">{profile.username || 'Usuário'}</span>
-                                            <span className="level-badge">{profile.level || 'N5'}</span>
-                                        </div>
-                                    </div>
-                                    <div className="user-xp">
-                                        {profile.xp} <span className="xp-label">XP</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
+                    renderList(profiles, false)
                 )}
             </main>
         </div>
     );
 }
+
+// Helper Components
+const PodiumItem = ({ item, rank, isTournament }: any) => (
+    <div className={`podium-item ${rank === 1 ? 'gold' : rank === 2 ? 'silver' : 'bronze'}`}>
+        {rank === 1 && <div className="crown-icon"><Crown size={40} color="#FFD700" /></div>}
+        <div className="avatar-wrapper">
+            {item.avatar_url ? (
+                <img src={item.avatar_url} alt={item.username} />
+            ) : (
+                <div className="avatar-placeholder">{item.username?.[0] || 'U'}</div>
+            )}
+            <div className={`medal-badge ${rank === 1 ? 'gold' : rank === 2 ? 'silver' : 'bronze'}`}>{rank}</div>
+        </div>
+        <div className="podium-info">
+            <span className="username">{item.username || 'Usuário'}</span>
+            <span className="xp">{item.xp} {isTournament ? 'Pts' : 'XP'}</span>
+        </div>
+    </div>
+);
+
+const RankingItem = ({ item, rank, isTournament, currentUserId }: any) => (
+    <div className={`ranking-item ${item.id === currentUserId ? 'current-user' : ''}`}>
+        <div className="rank-position">{rank}</div>
+        <div className="user-info">
+            <div className="avatar-small">
+                {item.avatar_url ? (
+                    <img src={item.avatar_url} alt={item.username} />
+                ) : (
+                    <User size={20} />
+                )}
+            </div>
+            <div className="user-details">
+                <span className="username">{item.username || 'Usuário'}</span>
+                <span className="level-badge">{item.level || 'N5'}</span>
+            </div>
+        </div>
+        <div className="user-xp">
+            {item.xp} <span className="xp-label">{isTournament ? 'Pts' : 'XP'}</span>
+        </div>
+    </div>
+);

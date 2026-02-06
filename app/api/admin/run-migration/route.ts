@@ -15,7 +15,7 @@ export async function POST(request: Request) {
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
         // Read the migration file
-        const migrationPath = path.join(process.cwd(), 'migrations', 'create_game_management.sql');
+        const migrationPath = path.join(process.cwd(), 'migrations', 'live_classes.sql');
         const sql = fs.readFileSync(migrationPath, 'utf8');
 
         // Split SQL into individual statements (simple approach)

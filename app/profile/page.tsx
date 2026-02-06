@@ -5,10 +5,11 @@ import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { User, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen } from 'lucide-react';
+import { User, Users, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import { Country, State, City } from 'country-state-city';
 import { useDebounce } from '@/hooks/useDebounce';
+import CreateGroupModal from '@/components/CreateGroupModal';
 import './profile.css';
 
 export default function ProfilePage() {
@@ -40,6 +41,7 @@ export default function ProfilePage() {
     const [profileId, setProfileId] = useState<string | null>(null);
     const [progress, setProgress] = useState<any[]>([]);
     const [subscription, setSubscription] = useState<any>(null);
+    const [showGroupModal, setShowGroupModal] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -483,6 +485,27 @@ export default function ProfilePage() {
                             </div>
                         )}
                     </div>
+                    
+                    <div className="form-section" style={{ marginTop: '2rem' }}>
+                         <h3><Users size={18} /> Grupo de Estudos</h3>
+                         {formData.schoolName ? (
+                             <p className="text-gray-400 text-sm">Você já faz parte de um grupo/escola: <span className="text-white font-bold">{formData.schoolName}</span></p>
+                         ) : (
+                             <div className="bg-[#1a1a1a] p-4 rounded-lg border border-[#333] flex flex-col items-start gap-3">
+                                 <div>
+                                     <h4 className="text-white font-semibold">Crie seu próprio Grupo</h4>
+                                     <p className="text-gray-400 text-xs">Torne-se um líder, convide amigos e ganhe descontos.</p>
+                                 </div>
+                                 <button 
+                                     type="button"
+                                     onClick={() => setShowGroupModal(true)}
+                                     className="bg-[#ff4d4d] hover:bg-[#ff3333] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
+                                 >
+                                     <Users size={16} /> Criar Grupo
+                                 </button>
+                             </div>
+                         )}
+                    </div>
                 </div>
 
                 <div className="profile-progress-section">
@@ -560,6 +583,8 @@ export default function ProfilePage() {
                     </div>
                 </div>
             )}
+
+            <CreateGroupModal isOpen={showGroupModal} onClose={() => setShowGroupModal(false)} />
         </div>
     );
 }

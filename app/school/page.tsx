@@ -107,6 +107,18 @@ export default function SchoolDashboard() {
                 </section>
 
                 <aside style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <section className="glass-card schools-actions-section">
+                        <h3>Ações Rápidas</h3>
+                        <div className="flex flex-col gap-2 mt-4">
+                             <button 
+                                className="btn-primary flex items-center justify-center gap-2 w-full"
+                                onClick={() => router.push('/school/classes')}
+                            >
+                                <GraduationCap size={20} /> Aulas ao Vivo
+                            </button>
+                        </div>
+                    </section>
+
                     <section className="glass-card school-stats-section">
                         <h3>{t('school_stats')}</h3>
                         <div className="stats-list">

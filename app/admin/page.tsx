@@ -453,6 +453,12 @@ export default function AdminPage() {
                                         <div className="stat-label">XP Total</div>
                                         <div className="stat-value text-accent-primary">{(school.totalXp || 0).toLocaleString()}</div>
                                     </div>
+                                    <div className="stat-item">
+                                        <div className="stat-label">Tipo</div>
+                                        <div className="stat-value text-white text-xs bg-[#333] px-2 py-1 rounded">
+                                            {(school as any).type === 'group' ? 'Grupo' : 'Escola'}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {school.topStudent && (
