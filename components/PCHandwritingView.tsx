@@ -61,6 +61,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                 if (currentStroke.type === 'clear') {
                     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
                     setLastValidatedStroke(null);
+                    resetStrokeCount();
                     return;
                 }
 
