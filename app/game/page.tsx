@@ -45,6 +45,7 @@ function RepetitionMode({ levelId }: { levelId: string }) {
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [score, setScore] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
+    const [useHandwriting, setUseHandwriting] = useState(false);
 
     useEffect(() => {
         const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
@@ -176,17 +177,48 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                     )}
                 </div>
 
-                <div className="game-input-container">
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={userInput}
-                        onChange={handleInputChange}
-                        placeholder={questionType === 'char-to-romaji' ? t('type_romaji') : t('type_character')}
-                        className="game-input"
-                        disabled={!!feedback}
-                    />
+                {/* Handwriting Toggle */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    <button
+                        className={`btn-secondary ${!useHandwriting ? 'active' : ''}`}
+                        onClick={() => setUseHandwriting(false)}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                    >
+                        ⌨️ Teclado
+                    </button>
+                    <button
+                        className={`btn-secondary ${useHandwriting ? 'active' : ''}`}
+                        onClick={() => setUseHandwriting(true)}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                    >
+                        ✍️ Celular
+                    </button>
                 </div>
+
+                {/* Input Area - Keyboard or Handwriting */}
+                {useHandwriting ? (
+                    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+                        <PCHandwritingView
+                            targetChar={questionType === 'romaji-to-char' ? currentItem.char : undefined}
+                            onComplete={() => {
+                                // When handwriting is complete, check if it matches
+                                handleCorrect();
+                            }}
+                        />
+                    </div>
+                ) : (
+                    <div className="game-input-container">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={userInput}
+                            onChange={handleInputChange}
+                            placeholder={questionType === 'char-to-romaji' ? t('type_romaji') : t('type_character')}
+                            className="game-input"
+                            disabled={!!feedback}
+                        />
+                    </div>
+                )}
 
                 {feedback && (
                     <div className={`feedback-message ${feedback === 'correct' ? 'feedback-correct' : 'feedback-wrong'}`}>
