@@ -14,6 +14,7 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
     const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
     const [isDrawing, setIsDrawing] = useState(false);
     const { t } = useTranslation();
+    const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -28,6 +29,18 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         window.addEventListener('resize', resizeCanvas);
         return () => window.removeEventListener('resize', resizeCanvas);
     }, []);
+
+    // Subscribe to Supabase channel for broadcasting
+    useEffect(() => {
+        if (!sessionId) return;
+
+        const channel = supabase.channel(`handwriting:${sessionId}`).subscribe();
+        channelRef.current = channel;
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [sessionId]);
 
     const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
         setIsDrawing(true);
@@ -44,13 +57,13 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         ctx?.beginPath();
 
         // Send stroke to PC with normalized coordinates (0-1 range)
-        if (sessionId && points.length > 0) {
+        if (sessionId && points.length > 0 && channelRef.current) {
             const normalizedPoints = points.map(p => ({
                 x: p.x / canvas.width,
                 y: p.y / canvas.height
             }));
 
-            supabase.channel(`handwriting:${sessionId}`).send({
+            channelRef.current.send({
                 type: 'broadcast',
                 event: 'stroke',
                 payload: {
@@ -99,8 +112,8 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         const ctx = canvas.getContext('2d');
         ctx?.clearRect(0, 0, canvas.width, canvas.height);
 
-        if (sessionId) {
-            supabase.channel(`handwriting:${sessionId}`).send({
+        if (sessionId && channelRef.current) {
+            channelRef.current.send({
                 type: 'broadcast',
                 event: 'clear',
                 payload: { type: 'clear' }
