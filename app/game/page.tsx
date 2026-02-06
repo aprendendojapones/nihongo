@@ -84,6 +84,17 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                 const ctx = canvas?.getContext('2d');
                 if (ctx && canvas) {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Broadcast clear event to mobile
+                    const sessionIdMatch = window.location.pathname.match(/\/game\/([^\/]+)/);
+                    if (sessionIdMatch) {
+                        const sessionId = sessionIdMatch[1];
+                        supabase.channel(`handwriting:${sessionId}`).send({
+                            type: 'broadcast',
+                            event: 'clear',
+                            payload: {}
+                        });
+                    }
                 }
             }, 500);
         }
