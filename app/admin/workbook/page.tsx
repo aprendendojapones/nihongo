@@ -79,13 +79,6 @@ export default function AdminWorkbookPage() {
         }
     };
 
-    return (
-        <div className="p-8 text-white min-h-screen bg-[#050505]">
-            <header className="flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold gradient-text">Gestão de Cursos (Workbook)</h1>
-                    <p className="text-gray-400">Crie e edite os materiais didáticos interativos.</p>
-                </div>
     const handleImportContent = async () => {
         if (!confirm('Isso irá importar o conteúdo antigo (N5/Hiragana) para o novo formato. Continuar?')) return;
         setLoading(true);
@@ -94,6 +87,25 @@ export default function AdminWorkbookPage() {
             const data = await res.json();
             if (data.success) {
                 alert('Conteúdo importado com sucesso!');
+                fetchCourses();
+            } else {
+                alert('Erro: ' + data.error);
+            }
+        } catch (e) {
+            alert('Erro de conexão');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSeedOfficial = async () => {
+        if (!confirm('Isso irá apagar/sobrescrever o conteúdo oficial N5-N1. Leva alguns segundos. Continuar?')) return;
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/seed-official', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Sucesso! Níveis importados: ${data.seeded.join(', ')}`);
                 fetchCourses();
             } else {
                 alert('Erro: ' + data.error);
@@ -124,6 +136,12 @@ export default function AdminWorkbookPage() {
                         className="bg-blue-900 hover:bg-blue-800 text-blue-100 px-4 py-2 rounded text-sm"
                     >
                         Importar Legado
+                    </button>
+                     <button 
+                        onClick={handleSeedOfficial}
+                        className="bg-purple-900 hover:bg-purple-800 text-purple-100 px-4 py-2 rounded text-sm"
+                    >
+                        Importar N5-N1 (Oficial)
                     </button>
                     <button 
                         onClick={() => setIsCreating(true)}
