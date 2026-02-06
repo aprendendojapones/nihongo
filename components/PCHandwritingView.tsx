@@ -78,6 +78,14 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                     const { points, color, width } = currentStroke;
                     if (!points || points.length < 2) return;
 
+                    // Denormalize coordinates from 0-1 range to canvas size
+                    const canvasWidth = canvasRef.current.width;
+                    const canvasHeight = canvasRef.current.height;
+                    const scaledPoints = points.map(p => ({
+                        x: p.x * canvasWidth,
+                        y: p.y * canvasHeight
+                    }));
+
                     ctx.strokeStyle = color || '#ff3e3e';
                     ctx.lineWidth = width || 5;
                     ctx.lineCap = 'round';
@@ -86,9 +94,9 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                     ctx.shadowColor = color || '#ff3e3e';
 
                     ctx.beginPath();
-                    ctx.moveTo(points[0].x, points[0].y);
-                    for (let i = 1; i < points.length; i++) {
-                        ctx.lineTo(points[i].x, points[i].y);
+                    ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
+                    for (let i = 1; i < scaledPoints.length; i++) {
+                        ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
                     }
                     ctx.stroke();
 

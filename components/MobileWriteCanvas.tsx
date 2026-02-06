@@ -43,13 +43,18 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         const ctx = canvas.getContext('2d');
         ctx?.beginPath();
 
-        // Send stroke to PC
+        // Send stroke to PC with normalized coordinates (0-1 range)
         if (sessionId && points.length > 0) {
+            const normalizedPoints = points.map(p => ({
+                x: p.x / canvas.width,
+                y: p.y / canvas.height
+            }));
+
             supabase.channel(`handwriting:${sessionId}`).send({
                 type: 'broadcast',
                 event: 'stroke',
                 payload: {
-                    points: points,
+                    points: normalizedPoints,
                     color: '#ff3e3e',
                     width: 5,
                     type: 'draw'
