@@ -1,6 +1,4 @@
-"use client";
-
-import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users } from 'lucide-react';
+import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, GraduationCap } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/components/TranslationContext';
@@ -58,6 +56,46 @@ export default function DashboardPage() {
             </header>
 
             <main className="dashboard-grid">
+                <div className="main-column">
+                    <section className="glass-card welcome-section" style={{ 
+                        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%)',
+                        border: '1px solid rgba(168, 85, 247, 0.3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '1.5rem',
+                        marginBottom: '2rem'
+                    }}>
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Continuar Estudando</h2>
+                                <p style={{ color: '#ddd' }}>Acesse seus workbooks e cursos completos.</p>
+                            </div>
+                            <div style={{ 
+                                background: 'rgba(255,255,255,0.1)', 
+                                padding: '1rem', 
+                                borderRadius: '12px' 
+                            }}>
+                                <GraduationCap size={32} color="#fff" />
+                            </div>
+                        </div>
+
+                        <button 
+                            className="btn-primary" 
+                            style={{ 
+                                padding: '1rem', 
+                                fontSize: '1.1rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem'
+                            }}
+                            onClick={() => router.push('/courses')}
+                        >
+                            <BookOpen size={20} /> Acessar Meus Cursos
+                        </button>
+                    </section>
+                </div>
+
                 <aside className="side-column">
                     <section className="glass-card ranking-section">
                         <h3 className="ranking-title">

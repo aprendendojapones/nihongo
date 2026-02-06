@@ -408,6 +408,9 @@ export default function AdminPage() {
                         <button className="btn-primary" onClick={() => router.push('/admin/games')}>
                             Gerenciar Jogos
                         </button>
+                        <button className="btn-primary" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)', border: 'none' }} onClick={() => router.push('/admin/workbook')}>
+                            <BookOpen size={20} style={{ marginRight: '8px' }} /> Editor de Workbooks
+                        </button>
                         <button className="btn-primary" onClick={() => router.push('/rankings')}>
                             Ver Ranking Global
                         </button>
