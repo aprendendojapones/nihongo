@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Plus, Users, School, Link as LinkIcon, Check, Copy, Trophy, Edit2, X, Save } from 'lucide-react';
+import { Plus, Users, School, Link as LinkIcon, Check, Copy, Trophy, Edit2, X, Save, BookOpen } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
 import './admin.css';
