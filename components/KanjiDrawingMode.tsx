@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2, XCircle, RefreshCw, HelpCircle, Smartphone, Mo
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/components/TranslationContext';
 import confetti from 'canvas-confetti';
-import HandwritingCanvas from '@/components/HandwritingCanvas';
+import PCHandwritingView from '@/components/PCHandwritingView';
 import './handwriting.css';
 
 interface KanjiProblem {
@@ -105,19 +105,10 @@ export default function KanjiDrawingMode({ onComplete }: KanjiDrawingModeProps) 
                     <p className="text-xl text-accent-primary">{currentProblem.reading}</p>
                 </div>
 
-                <div className="relative w-full max-w-[400px] aspect-square">
-                    <HandwritingCanvas
-                        onRecognize={handleRecognize}
-                        expectedChar={currentProblem.char}
-                    />
-
-                    {/* Hint Overlay */}
-                    {showHint && (
-                        <div className="absolute top-0 left-0 w-full h-full pointer-events-none flex items-center justify-center opacity-20">
-                            <span className="text-[250px] font-jp text-white">{currentProblem.char}</span>
-                        </div>
-                    )}
-                </div>
+                <PCHandwritingView
+                    targetChar={currentProblem.char}
+                    onComplete={() => handleRecognize(currentProblem.char)}
+                />
 
                 <div className="flex gap-4">
                     <button

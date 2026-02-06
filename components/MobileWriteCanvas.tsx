@@ -102,7 +102,8 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         if (sessionId) {
             supabase.channel(`handwriting:${sessionId}`).send({
                 type: 'broadcast',
-                event: 'clear'
+                event: 'clear',
+                payload: { type: 'clear' }
             });
         }
     };

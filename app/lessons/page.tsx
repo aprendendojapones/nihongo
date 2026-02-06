@@ -150,20 +150,20 @@ export default function LessonsPage() {
                             <div className="level-actions">
                                 {isUnlocked ? (
                                     <>
-                                        {completed && (
-                                            <button
-                                                className="btn-primary btn-test"
-                                                onClick={() => startLevel(level.id, true)}
-                                            >
-                                                <Trophy size={18} /> {t('take_test')}
-                                            </button>
-                                        )}
                                         <button
                                             className="btn-primary"
                                             onClick={() => startLevel(level.id)}
                                         >
                                             {completed ? t('review') : t('start')} <ArrowRight size={18} />
                                         </button>
+                                        {completed && (
+                                            <button
+                                                className="btn-primary btn-test"
+                                                onClick={() => startLevel(level.id, true)}
+                                            >
+                                                <Trophy size={18} /> Prova
+                                            </button>
+                                        )}
                                     </>
                                 ) : (
                                     <div className="locked-info">
