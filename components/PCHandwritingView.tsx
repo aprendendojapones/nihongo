@@ -66,18 +66,9 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
 
                 if (currentStroke === lastValidatedStroke) return;
 
-                const isCorrect = kanjiData && kanjiData.strokes[strokeCount]
-                    ? validateStroke(currentStroke.points, kanjiData.strokes[strokeCount].path)
-                    : true;
-
-                if (isCorrect) {
-                    setStrokeFeedback('correct');
-                    setLastValidatedStroke(currentStroke);
-                    incrementStrokeCount();
-
-                    const { points, color, width } = currentStroke;
-                    if (!points || points.length < 2) return;
-
+                // ALWAYS draw the stroke first, regardless of validation
+                const { points, color, width } = currentStroke;
+                if (points && points.length >= 2) {
                     // Denormalize coordinates from 0-1 range to canvas size
                     const canvasWidth = canvasRef.current.width;
                     const canvasHeight = canvasRef.current.height;
@@ -99,7 +90,18 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                         ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
                     }
                     ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
 
+                // THEN validate if we have kanji data
+                const isCorrect = kanjiData && kanjiData.strokes[strokeCount]
+                    ? validateStroke(currentStroke.points, kanjiData.strokes[strokeCount].path)
+                    : true;
+
+                if (isCorrect) {
+                    setStrokeFeedback('correct');
+                    setLastValidatedStroke(currentStroke);
+                    incrementStrokeCount();
                     if (kanjiData && strokeCount + 1 >= kanjiData.strokes.length) {
                         setTimeout(() => {
                             if (onComplete) onComplete();
