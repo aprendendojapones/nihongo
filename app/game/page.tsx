@@ -200,11 +200,14 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                     <div style={{ maxWidth: '400px', margin: '0 auto' }}>
                         <PCHandwritingView
                             targetChar={questionType === 'romaji-to-char' ? currentItem.char : undefined}
-                            onComplete={() => {
-                                // When handwriting is complete, check if it matches
-                                handleCorrect();
-                            }}
                         />
+                        <button
+                            className="btn-primary"
+                            onClick={handleCorrect}
+                            style={{ marginTop: '1rem', width: '100%' }}
+                        >
+                            Confirmar
+                        </button>
                     </div>
                 ) : (
                     <div className="game-input-container">

@@ -212,7 +212,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                 </div>
             </header>
 
-            {useMobile && qrCodeUrl && (
+            {useMobile && qrCodeUrl && strokeCount === 0 && (
                 <div style={{ textAlign: 'center' }}>
                     <p style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>Escaneie com seu celular para escrever:</p>
                     <img src={qrCodeUrl} alt="QR Code" style={{ borderRadius: '12px', border: '4px solid var(--glass-border)', background: 'white', padding: '10px' }} />
