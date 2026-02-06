@@ -58,6 +58,17 @@ export async function POST(req: NextRequest) {
             .eq('id', session.user.id)
             .single();
         
+        // CHECK IF STRIPE IS ENABLED
+        if (!process.env.STRIPE_SECRET_KEY) {
+            console.warn('Stripe disabled. Skipping payment for group creation.');
+            // Auto-grant access/success without payment
+            return NextResponse.json({
+                success: true,
+                groupId: group.id,
+                checkoutUrl: `${process.env.NEXT_PUBLIC_URL || ''}/dashboard?success=true&mock=true`
+            });
+        }
+
         if (profile?.stripe_customer_id) {
             customerId = profile.stripe_customer_id;
         } else {
