@@ -1,3 +1,5 @@
+"use client";
+
 import { Trophy, Star, Flame, BookOpen, User, LogOut, Settings, Users, GraduationCap } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
