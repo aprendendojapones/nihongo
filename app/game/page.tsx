@@ -46,6 +46,7 @@ function RepetitionMode({ levelId }: { levelId: string }) {
     const [score, setScore] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
     const [useHandwriting, setUseHandwriting] = useState(false);
+    const handwritingRef = useRef<any>(null);
 
     useEffect(() => {
         const levelData = JAPANESE_DATA[levelId as keyof typeof JAPANESE_DATA] || JAPANESE_DATA.katakana;
@@ -75,6 +76,17 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         if (feedback) return;
         setFeedback('correct');
         setScore(s => s + 10);
+
+        // Clear handwriting canvas if in handwriting mode
+        if (useHandwriting && handwritingRef.current) {
+            setTimeout(() => {
+                const canvas = handwritingRef.current?.querySelector('canvas');
+                const ctx = canvas?.getContext('2d');
+                if (ctx && canvas) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }, 500);
+        }
 
         setTimeout(() => {
             setFeedback(null);
@@ -197,17 +209,14 @@ function RepetitionMode({ levelId }: { levelId: string }) {
 
                 {/* Input Area - Keyboard or Handwriting */}
                 {useHandwriting ? (
-                    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+                    <div ref={handwritingRef} style={{ maxWidth: '400px', margin: '0 auto' }}>
                         <PCHandwritingView
                             targetChar={questionType === 'romaji-to-char' ? currentItem.char : undefined}
+                            onComplete={() => {
+                                // Auto-validate after drawing complete
+                                handleCorrect();
+                            }}
                         />
-                        <button
-                            className="btn-primary"
-                            onClick={handleCorrect}
-                            style={{ marginTop: '1rem', width: '100%' }}
-                        >
-                            Confirmar
-                        </button>
                     </div>
                 ) : (
                     <div className="game-input-container">
