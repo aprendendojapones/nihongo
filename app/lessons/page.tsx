@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Trophy, ArrowRight, Lock, CheckCircle2, Star, Zap, Clock, Brain, Link2, Gamepad2 } from 'lucide-react';
+import { Trophy, ArrowRight, Lock, CheckCircle2, Star, Zap, Clock, Brain, Link2, Gamepad2, PenTool } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -52,6 +52,7 @@ const PRACTICE_MODES = [
     { id: 'timed', icon: Clock, title: 'Contra o Tempo', desc: '60 segundos', color: '#ff3e3e' },
     { id: 'memory', icon: Brain, title: 'Memória', desc: 'Jogo de pares', color: '#00d4ff' },
     { id: 'matching', icon: Link2, title: 'Combinação', desc: 'Conecte os pares', color: '#ffa500' },
+    { id: 'kanji_drawing', icon: PenTool, title: 'Kanji Drawing', desc: 'Desenhe com celular', color: '#e91e63' },
 ];
 
 export default function LessonsPage() {

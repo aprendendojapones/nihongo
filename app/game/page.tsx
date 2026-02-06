@@ -85,10 +85,8 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                     // Cycle through characters
                     setCurrentCharIndex((currentCharIndex + 1) % shuffledData.length);
                 } else {
-                    setPhase('test');
-                    setPracticeCount(0);
-                    setCurrentCharIndex(Math.floor(Math.random() * shuffledData.length));
-                    setQuestionType(Math.random() > 0.5 ? 'char-to-romaji' : 'romaji-to-char');
+                    // Practice complete - finish game instead of auto-starting test
+                    finishGame();
                 }
             } else {
                 if (testCorrectCount < 4) {
