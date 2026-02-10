@@ -84,7 +84,6 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
 
             // Handle clear event
             if (currentStroke.type === 'clear') {
-                if (currentStroke.id === lastValidatedStroke?.id) return;
                 ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
                 setLastValidatedStroke(null);
                 resetStrokeCount();
@@ -92,7 +91,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
             }
 
             // Skip if we already validated this stroke
-            if (currentStroke.id === lastValidatedStroke?.id) return;
+            if (currentStroke === lastValidatedStroke) return;
 
             // Check if this is a new stroke
             if (currentStroke.type === 'stroke') {
