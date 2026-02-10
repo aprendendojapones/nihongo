@@ -54,19 +54,48 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
         }
     }, [targetChar, sessionId, resetStrokeCount]);
 
+    // Async function to validate drawing with OCR
+    const validateWithOCR = async (canvas: HTMLCanvasElement, target: string) => {
+        try {
+            const imageData = canvas.toDataURL('image/png');
+            
+            const response = await fetch('/api/ocr/recognize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image: imageData,
+                    targetChar: target,
+                }),
+            });
+
+            const result = await response.json();
+            return result.isCorrect;
+        } catch (error) {
+            console.error('OCR recognition failed:', error);
+            return false;
+        }
+    };
+
+    // Handle incoming strokes from mobile
     useEffect(() => {
         if (currentStroke && canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d');
-            if (ctx) {
-                if (currentStroke.type === 'clear') {
-                    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                    setLastValidatedStroke(null);
-                    resetStrokeCount();
-                    return;
-                }
+            if (!ctx) return;
 
-                if (currentStroke === lastValidatedStroke) return;
+            // Handle clear event
+            if (currentStroke.type === 'clear') {
+                if (currentStroke.id === lastValidatedStroke?.id) return;
+                ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                setLastValidatedStroke(null);
+                resetStrokeCount();
+                return;
+            }
 
+            // Skip if we already validated this stroke
+            if (currentStroke.id === lastValidatedStroke?.id) return;
+
+            // Check if this is a new stroke
+            if (currentStroke.type === 'stroke') {
                 // ALWAYS draw the stroke first, regardless of validation
                 const { points, color, width } = currentStroke;
                 if (points && points.length >= 2) {
@@ -94,28 +123,33 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                     ctx.shadowBlur = 0;
                 }
 
-                // THEN validate if we have kanji data
-                const isCorrect = kanjiData && kanjiData.strokes[strokeCount]
-                    ? validateStroke(currentStroke.points, kanjiData.strokes[strokeCount].path)
-                    : true;
-
-                if (isCorrect) {
+                // Validate using OCR if we have a target character
+                if (targetChar) {
+                    validateWithOCR(canvasRef.current, targetChar).then(isCorrect => {
+                        if (isCorrect) {
+                            setStrokeFeedback('correct');
+                            setLastValidatedStroke(currentStroke);
+                            incrementStrokeCount();
+                            
+                            // Call onComplete after successful recognition
+                            setTimeout(() => {
+                                if (onComplete) onComplete();
+                            }, 1000);
+                        } else {
+                            setStrokeFeedback('wrong');
+                            setLastValidatedStroke(currentStroke);
+                            setTimeout(() => setStrokeFeedback(null), 500);
+                        }
+                    });
+                } else {
+                    // No target char, just accept the drawing
                     setStrokeFeedback('correct');
                     setLastValidatedStroke(currentStroke);
                     incrementStrokeCount();
-                    if (kanjiData && strokeCount + 1 >= kanjiData.strokes.length) {
-                        setTimeout(() => {
-                            if (onComplete) onComplete();
-                        }, 1000);
-                    }
-                } else {
-                    setStrokeFeedback('wrong');
-                    setLastValidatedStroke(currentStroke);
-                    setTimeout(() => setStrokeFeedback(null), 500);
                 }
             }
         }
-    }, [currentStroke, kanjiData, strokeCount, incrementStrokeCount, onComplete, lastValidatedStroke]);
+    }, [currentStroke, targetChar, strokeCount, incrementStrokeCount, onComplete, lastValidatedStroke, resetStrokeCount]);
 
     const [isDrawing, setIsDrawing] = useState(false);
     const [mousePoints, setMousePoints] = useState<{ x: number; y: number }[]>([]);
