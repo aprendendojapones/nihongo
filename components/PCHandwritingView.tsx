@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { supabase } from '@/lib/supabase';
 import { useHandwriting } from '@/hooks/useHandwriting';
-import { fetchKanjiData, KanjiData, validateStroke } from '@/lib/kanji';
+import { fetchKanjiData, KanjiData } from '@/lib/kanji';
 import './handwriting.css';
 
 interface PCHandwritingViewProps {
@@ -41,15 +41,37 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
             fetchKanjiData(targetChar).then(data => setKanjiData(data));
 
             if (sessionId) {
-                supabase.channel(`handwriting:${sessionId}`).send({
-                    type: 'broadcast',
-                    event: 'target_char',
-                    payload: { char: targetChar }
+                const channel = supabase.channel(`handwriting:${sessionId}`);
+                
+                channel.subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        // Send initial target char
+                        channel.send({
+                            type: 'broadcast',
+                            event: 'target_char',
+                            payload: { char: targetChar }
+                        });
+                    }
                 });
+
+                // Listen for requests from mobile
+                const requestListener = channel.on('broadcast', { event: 'request_target' }, () => {
+                    if (targetChar) {
+                        channel.send({
+                            type: 'broadcast',
+                            event: 'target_char',
+                            payload: { char: targetChar }
+                        });
+                    }
+                }).subscribe();
+
                 if (ctx && canvasRef.current) {
                     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
                 }
-                return;
+                
+                return () => {
+                    supabase.removeChannel(requestListener);
+                };
             }
         }
     }, [targetChar, sessionId, resetStrokeCount]);

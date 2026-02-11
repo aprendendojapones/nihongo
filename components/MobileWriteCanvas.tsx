@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { RefreshCw, Check, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/components/TranslationContext';
+import { fetchKanjiData, KanjiData } from '@/lib/kanji';
 import './handwriting.css';
 
 export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessionId?: string }) {
@@ -13,8 +14,11 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [points, setPoints] = useState<{ x: number; y: number }[]>([]);
     const [isDrawing, setIsDrawing] = useState(false);
+
     const { t } = useTranslation();
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+    const [targetChar, setTargetChar] = useState<string>('');
+    const [kanjiData, setKanjiData] = useState<KanjiData | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -31,16 +35,40 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
     }, []);
 
     // Subscribe to Supabase channel for broadcasting
+    // Subscribe to Supabase channel
     useEffect(() => {
         if (!sessionId) return;
 
-        const channel = supabase.channel(`handwriting:${sessionId}`).subscribe();
+        const channel = supabase.channel(`handwriting:${sessionId}`);
+        
+        channel.on('broadcast', { event: 'target_char' }, (payload) => {
+            if (payload.payload && payload.payload.char) {
+                setTargetChar(payload.payload.char);
+            }
+        }).subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                // Request current target char in case we joined late
+                channel.send({
+                    type: 'broadcast',
+                    event: 'request_target',
+                    payload: {}
+                });
+            }
+        });
+
         channelRef.current = channel;
 
         return () => {
             supabase.removeChannel(channel);
         };
     }, [sessionId]);
+
+    // Fetch Kanji Data when target char changes
+    useEffect(() => {
+        if (targetChar) {
+            fetchKanjiData(targetChar).then(data => setKanjiData(data));
+        }
+    }, [targetChar]);
 
     const startDrawing = (e: React.TouchEvent | React.MouseEvent) => {
         setIsDrawing(true);
@@ -150,11 +178,38 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
                 </div>
             </header>
 
-            <div className="mobile-canvas-wrapper">
+            <div className="mobile-canvas-wrapper" style={{ position: 'relative' }}>
+                {kanjiData && (
+                    <svg
+                        viewBox="0 0 109 109"
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            opacity: 0.2,
+                            pointerEvents: 'none',
+                            zIndex: 0
+                        }}
+                    >
+                        {kanjiData.strokes.map((s) => (
+                            <path
+                                key={s.id}
+                                d={s.path}
+                                fill="none"
+                                stroke="white"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        ))}
+                    </svg>
+                )}
                 <canvas
                     ref={canvasRef}
                     className="handwriting-canvas"
-                    style={{ width: '100%', height: '100%', touchAction: 'none' }}
+                    style={{ width: '100%', height: '100%', touchAction: 'none', position: 'relative', zIndex: 1 }}
                     onTouchStart={(e) => {
                         e.preventDefault(); // Prevent scrolling
                         startDrawing(e);
