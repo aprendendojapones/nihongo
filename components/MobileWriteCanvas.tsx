@@ -94,7 +94,8 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         if (!ctx) return;
 
         const { x, y } = getCoordinates(e);
-        setPoints(prev => [...prev, { x, y }]);
+        const newPoints = [...points, { x, y }];
+        setPoints(newPoints);
 
         ctx.lineWidth = 5;
         ctx.lineCap = 'round';
@@ -104,6 +105,25 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(x, y);
+
+        // Send points in real-time for live preview
+        if (sessionId && channelRef.current && newPoints.length > 0) {
+            const normalizedPoints = newPoints.map(p => ({
+                x: p.x / canvas.width,
+                y: p.y / canvas.height
+            }));
+
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'stroke',
+                payload: {
+                    points: normalizedPoints,
+                    color: '#ff3e3e',
+                    width: 5,
+                    type: 'stroke'
+                }
+            });
+        }
     };
 
     const clear = () => {
@@ -134,9 +154,14 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         <div className="mobile-canvas-container">
             <header className="mobile-header">
                 <h2 className="gradient-text">Escrita</h2>
-                <button className="hint-button" onClick={clear}>
-                    <Trash2 size={24} />
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="hint-button" onClick={clear}>
+                        <Trash2 size={24} />
+                    </button>
+                    <button className="hint-button" onClick={complete} style={{ backgroundColor: '#4ade80' }}>
+                        <Check size={24} />
+                    </button>
+                </div>
             </header>
 
             <div className="mobile-canvas-wrapper">
