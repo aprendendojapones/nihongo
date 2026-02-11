@@ -179,7 +179,7 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
             </header>
 
             <div className="mobile-canvas-wrapper" style={{ position: 'relative' }}>
-                {kanjiData && (
+                {kanjiData ? (
                     <svg
                         viewBox="0 0 109 109"
                         style={{
@@ -205,7 +205,26 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
                             />
                         ))}
                     </svg>
-                )}
+                ) : targetChar ? (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.2,
+                        pointerEvents: 'none',
+                        zIndex: 0,
+                        fontSize: '200px',
+                        color: 'white',
+                        fontFamily: 'serif'
+                    }}>
+                        {targetChar}
+                    </div>
+                ) : null}
                 <canvas
                     ref={canvasRef}
                     className="handwriting-canvas"

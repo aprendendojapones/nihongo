@@ -221,7 +221,7 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                     position: 'relative'
                 }}
             >
-                {kanjiData && (
+                {kanjiData ? (
                     <svg
                         viewBox="0 0 109 109"
                         style={{
@@ -246,7 +246,25 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                             />
                         ))}
                     </svg>
-                )}
+                ) : targetChar ? (
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.1,
+                        pointerEvents: 'none',
+                        fontSize: '200px',
+                        color: 'white',
+                        fontFamily: 'serif'
+                    }}>
+                        {targetChar}
+                    </div>
+                ) : null}
 
                 <canvas
                     ref={canvasRef}

@@ -24,6 +24,7 @@ import ListeningMode from '@/components/ListeningMode';
 import KanjiDrawingMode from '@/components/KanjiDrawingMode';
 import { FILL_BLANK_DATA } from '@/data/fill-blank-data';
 import { validateCharacter, CharacterType } from '@/lib/validation/character-validator';
+import IQTestMode from '@/components/IQTestMode';
 import './game.css';
 
 // Repetition Mode: For Hiragana/Katakana
@@ -119,8 +120,11 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                     // Cycle through characters
                     setCurrentCharIndex((currentCharIndex + 1) % shuffledData.length);
                 } else {
-                    // Practice complete - finish game instead of auto-starting test
-                    finishGame();
+                    // Practice complete - start test phase
+                    setPhase('test');
+                    setQuestionType('romaji-to-char'); // Usually test writing/identifying char
+                    // Pick a random char for first test question
+                    setCurrentCharIndex(Math.floor(Math.random() * shuffledData.length));
                 }
             } else {
                 if (testCorrectCount < 4) {
@@ -419,6 +423,38 @@ function GamePageContent() {
 
     if (mode === 'kanji_drawing') {
         return <KanjiDrawingMode onComplete={(score) => handlePracticeComplete(score, 150, 0)} />;
+    }
+
+    if (mode === 'iq_test') {
+        return (
+            <div className="game-container">
+                 <header className="game-header">
+                    <button className="icon-button" onClick={() => router.back()}>
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="gradient-text">Teste de QI Profissional</h1>
+                    <div className="header-spacer"></div>
+                </header>
+                <main className="game-main">
+                    <IQTestMode onComplete={(iqScore) => {
+                        // Save IQ score to user profile (using a special lesson_id or a separate table if preferred)
+                        // For now we use lesson_id 'iq_stats' to store the latest IQ
+                        if (user) {
+                            supabase.from('user_progress').upsert({
+                                user_id: user.id,
+                                lesson_id: 'iq_stats',
+                                completed: true,
+                                score: iqScore // Storing IQ as score
+                            }).then(() => {
+                                router.push('/profile');
+                            });
+                        } else {
+                            router.push('/');
+                        }
+                    }} />
+                </main>
+            </div>
+        );
     }
 
     // Use repetition mode for hiragana and katakana (default study mode)
