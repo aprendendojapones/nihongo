@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { User, Users, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen } from 'lucide-react';
+import { User, Users, Save, Shield, Globe, ArrowLeft, Eye, EyeOff, ScanLine, Trophy, Star, Zap, BookOpen, Gamepad2, Brain } from 'lucide-react';
 import { useTranslation } from '@/components/TranslationContext';
 import { Country, State, City } from 'country-state-city';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -553,6 +553,74 @@ export default function ProfilePage() {
                                 ) : (
                                     <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>
                                         Nenhuma atividade registrada ainda.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                {/* Games & Analytics Section */}
+                <div className="profile-progress-section" style={{ marginTop: '2rem' }}>
+                    <div className="form-section">
+                        <h3><Gamepad2 size={18} /> Jogos & Desafios</h3>
+
+                        <div className="stats-grid">
+                            {/* IQ Score Card */}
+                            {progress.find(p => p.lesson_id === 'iq_stats') ? (
+                                <div className="stat-card special-card" style={{ background: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)' }}>
+                                    <div className="stat-icon"><Brain size={24} color="white" /></div>
+                                    <div className="stat-value" style={{ color: 'white' }}>
+                                        {progress.find(p => p.lesson_id === 'iq_stats')?.score}
+                                    </div>
+                                    <div className="stat-label" style={{ color: 'rgba(255,255,255,0.8)' }}>QI Estimado</div>
+                                </div>
+                            ) : (
+                                <div className="stat-card" onClick={() => router.push('/game?mode=iq_test')} style={{ cursor: 'pointer', border: '1px dashed var(--glass-border)' }}>
+                                    <div className="stat-icon"><Brain size={24} color="var(--text-muted)" /></div>
+                                    <div className="stat-value" style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Fazer Teste</div>
+                                    <div className="stat-label">Descubra seu QI</div>
+                                </div>
+                            )}
+
+                            {/* Games Played Count */}
+                            <div className="stat-card">
+                                <div className="stat-icon"><Trophy size={24} color="#ff9800" /></div>
+                                <div className="stat-value">
+                                    {progress.filter(p => p.lesson_id.includes('_') && p.lesson_id !== 'iq_stats').length}
+                                </div>
+                                <div className="stat-label">Jogos Jogados</div>
+                            </div>
+                        </div>
+
+                        {/* Recent Games List */}
+                        <div className="recent-activities" style={{ marginTop: '1.5rem' }}>
+                            <h4 className="recent-activities-title">Histórico de Jogos</h4>
+                            <div className="progress-list">
+                                {progress.filter(p => p.lesson_id.includes('_') && p.lesson_id !== 'iq_stats').length > 0 ? (
+                                    progress
+                                        .filter(p => p.lesson_id.includes('_') && p.lesson_id !== 'iq_stats')
+                                        .slice(0, 5)
+                                        .map((item) => (
+                                            <div key={item.id} className="progress-item">
+                                                <div className="progress-item-info">
+                                                    <Gamepad2 size={16} color="var(--accent-primary)" />
+                                                    <span className="progress-item-name">
+                                                        {item.lesson_id.split('_').slice(1).join(' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                                        <span style={{ fontSize: '0.8em', opacity: 0.7, marginLeft: '5px' }}>
+                                                            ({item.lesson_id.split('_')[0].toUpperCase()})
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <span className="progress-item-score">
+                                                    {item.score !== null ? `${item.score} pts` : 'Concluído'}
+                                                </span>
+                                            </div>
+                                        ))
+                                ) : (
+                                    <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem' }}>
+                                        Nenhum jogo registrado ainda.
                                     </p>
                                 )}
                             </div>
