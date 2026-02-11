@@ -23,6 +23,17 @@ export default function GamesPage() {
 
     const GAME_MODES: GameMode[] = [
         {
+            id: 'iq_test',
+            name: 'Teste de QI Profissional',
+            description: 'Desafie sua lógica',
+            icon: <Brain size={32} />,
+            image: '/games/game_quiz.png',
+            difficulty: 'hard',
+            estimatedTime: '10 min',
+            color: '#9c27b0',
+            available: true
+        },
+        {
             id: 'study',
             name: 'Practice Mode',
             description: 'Pratique com repetição espaçada',
