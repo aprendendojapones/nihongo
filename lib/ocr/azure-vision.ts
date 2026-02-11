@@ -27,8 +27,8 @@ export async function recognizeWithAzure(base64Image: string): Promise<OCRResult
         const imageData = base64Image.replace(/^data:image\/\w+;base64,/, '');
         const imageBuffer = Buffer.from(imageData, 'base64');
 
-        // Perform OCR with Japanese language
-        const result = await client.recognizePrintedText(
+        // Perform OCR with Japanese language using stream
+        const result = await client.recognizePrintedTextInStream(
             true, // detectOrientation
             imageBuffer,
             {
