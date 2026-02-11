@@ -105,25 +105,6 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(x, y);
-
-        // Send points in real-time for live preview
-        if (sessionId && channelRef.current && newPoints.length > 0) {
-            const normalizedPoints = newPoints.map(p => ({
-                x: p.x / canvas.width,
-                y: p.y / canvas.height
-            }));
-
-            channelRef.current.send({
-                type: 'broadcast',
-                event: 'stroke',
-                payload: {
-                    points: normalizedPoints,
-                    color: '#ff3e3e',
-                    width: 5,
-                    type: 'stroke'
-                }
-            });
-        }
     };
 
     const clear = () => {
@@ -142,10 +123,15 @@ export default function MobileWriteCanvas({ sessionId: propSessionId }: { sessio
     };
 
     const complete = () => {
-        if (sessionId) {
+        const canvas = canvasRef.current;
+        if (sessionId && canvas) {
+            // Send the full image as base64
+            const dataUrl = canvas.toDataURL('image/png');
+            
             supabase.channel(`handwriting:${sessionId}`).send({
                 type: 'broadcast',
-                event: 'complete'
+                event: 'submit',
+                payload: { image: dataUrl }
             });
         }
     };

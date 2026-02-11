@@ -13,11 +13,12 @@ interface PCHandwritingViewProps {
 }
 
 export default function PCHandwritingView({ targetChar, onComplete }: PCHandwritingViewProps) {
-    const { sessionId, currentStroke, clearCanvas, resetStrokeCount, strokeCount, incrementStrokeCount } = useHandwriting();
+    const { sessionId, submittedImage, clearCanvas, resetStrokeCount, strokeCount, incrementStrokeCount } = useHandwriting();
     const [useMobile, setUseMobile] = useState(true);
     const [qrCodeUrl, setQrCodeUrl] = useState('');
     const [kanjiData, setKanjiData] = useState<KanjiData | null>(null);
-    const [lastValidatedStroke, setLastValidatedStroke] = useState<any>(null);
+    const [isValidating, setIsValidating] = useState(false);
+    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
     const [strokeFeedback, setStrokeFeedback] = useState<'correct' | 'wrong' | null>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -48,7 +49,6 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                 if (ctx && canvasRef.current) {
                     ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
                 }
-                setLastValidatedStroke(null);
                 return;
             }
         }
@@ -76,79 +76,45 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
         }
     };
 
-    // Handle incoming strokes from mobile
+    // Handle submitted image from mobile
     useEffect(() => {
-        if (currentStroke && canvasRef.current) {
+        if (submittedImage && canvasRef.current) {
             const ctx = canvasRef.current.getContext('2d');
-            if (!ctx) return;
-
-            // Handle clear event
-            if (currentStroke.type === 'clear') {
-                ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-                setLastValidatedStroke(null);
-                resetStrokeCount();
-                return;
-            }
-
-            // Skip if we already validated this stroke
-            if (currentStroke === lastValidatedStroke) return;
-
-            // Check if this is a new stroke
-            if (currentStroke.type === 'stroke') {
-                // ALWAYS draw the stroke first, regardless of validation
-                const { points, color, width } = currentStroke;
-                if (points && points.length >= 2) {
-                    // Denormalize coordinates from 0-1 range to canvas size
-                    const canvasWidth = canvasRef.current.width;
-                    const canvasHeight = canvasRef.current.height;
-                    const scaledPoints = points.map(p => ({
-                        x: p.x * canvasWidth,
-                        y: p.y * canvasHeight
-                    }));
-
-                    ctx.strokeStyle = color || '#ff3e3e';
-                    ctx.lineWidth = width || 5;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = color || '#ff3e3e';
-
-                    ctx.beginPath();
-                    ctx.moveTo(scaledPoints[0].x, scaledPoints[0].y);
-                    for (let i = 1; i < scaledPoints.length; i++) {
-                        ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
+            const img = new Image();
+            img.onload = () => {
+                if (ctx && canvasRef.current) {
+                    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+                    ctx.drawImage(img, 0, 0, canvasRef.current.width, canvasRef.current.height);
+                    
+                    // Auto-validate after receiving image
+                    if (targetChar) {
+                        validateWithOCR(canvasRef.current, targetChar).then(handleValidationResult);
                     }
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
                 }
-
-                // Validate using OCR if we have a target character
-                if (targetChar) {
-                    validateWithOCR(canvasRef.current, targetChar).then(isCorrect => {
-                        if (isCorrect) {
-                            setStrokeFeedback('correct');
-                            setLastValidatedStroke(currentStroke);
-                            incrementStrokeCount();
-                            
-                            // Call onComplete after successful recognition
-                            setTimeout(() => {
-                                if (onComplete) onComplete();
-                            }, 1000);
-                        } else {
-                            setStrokeFeedback('wrong');
-                            setLastValidatedStroke(currentStroke);
-                            setTimeout(() => setStrokeFeedback(null), 500);
-                        }
-                    });
-                } else {
-                    // No target char, just accept the drawing
-                    setStrokeFeedback('correct');
-                    setLastValidatedStroke(currentStroke);
-                    incrementStrokeCount();
-                }
-            }
+            };
+            img.src = submittedImage;
         }
-    }, [currentStroke, targetChar, strokeCount, incrementStrokeCount, onComplete, lastValidatedStroke, resetStrokeCount]);
+    }, [submittedImage, targetChar]);
+
+    const handleValidationResult = (isCorrect: boolean) => {
+        setIsValidating(false);
+        if (isCorrect) {
+            setStrokeFeedback('correct');
+            setFeedbackMessage('Correto!');
+            incrementStrokeCount(); // Just to track activity
+            
+            setTimeout(() => {
+                if (onComplete) onComplete();
+            }, 1000);
+        } else {
+            setStrokeFeedback('wrong');
+            setFeedbackMessage('Tente novamente');
+            setTimeout(() => {
+                setStrokeFeedback(null);
+                setFeedbackMessage(null);
+            }, 2000);
+        }
+    };
 
     const [isDrawing, setIsDrawing] = useState(false);
     const [mousePoints, setMousePoints] = useState<{ x: number; y: number }[]>([]);
@@ -197,38 +163,8 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
     const stopDrawing = () => {
         if (!isDrawing || useMobile) return;
         setIsDrawing(false);
-
-        // Validate the stroke
-        if (mousePoints.length > 1) {
-            const isCorrect = kanjiData && kanjiData.strokes[strokeCount]
-                ? validateStroke(mousePoints, kanjiData.strokes[strokeCount].path)
-                : true;
-
-            if (isCorrect) {
-                setStrokeFeedback('correct');
-                incrementStrokeCount();
-                if (kanjiData && strokeCount + 1 >= kanjiData.strokes.length) {
-                    setTimeout(() => {
-                        if (onComplete) onComplete();
-                    }, 1000);
-                }
-            } else {
-                setStrokeFeedback('wrong');
-                setTimeout(() => {
-                    setStrokeFeedback(null);
-                    // Clear the wrong stroke from canvas
-                    const ctx = canvasRef.current?.getContext('2d');
-                    if (ctx && canvasRef.current) {
-                        // This is tricky because we might have previous correct strokes.
-                        // For simplicity, let's just clear and redraw correct ones if we had them,
-                        // but PCHandwritingView doesn't store all strokes yet.
-                        // Let's just clear the whole thing for now if wrong, or just leave it.
-                        // The user can click "Limpar".
-                    }
-                }, 500);
-            }
-        }
         setMousePoints([]);
+        // Mouse drawing does NOT auto-validate anymore. Must click confirm.
     };
 
     return (
@@ -312,8 +248,8 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                         ctx?.clearRect(0, 0, 400, 400);
                         clearCanvas();
                         resetStrokeCount();
-                        setLastValidatedStroke(null);
                         setStrokeFeedback(null);
+                        setFeedbackMessage(null);
                         setMousePoints([]);
                     }}
                 >
@@ -323,12 +259,34 @@ export default function PCHandwritingView({ targetChar, onComplete }: PCHandwrit
                     className="btn-primary"
                     style={{ flex: 1 }}
                     onClick={() => {
-                        if (onComplete) onComplete();
+                        if (canvasRef.current && targetChar) {
+                            setIsValidating(true);
+                            validateWithOCR(canvasRef.current, targetChar).then(handleValidationResult);
+                        } else if (onComplete) {
+                            onComplete();
+                        }
                     }}
+                    disabled={isValidating}
                 >
                     Confirmar
                 </button>
             </div>
+            {feedbackMessage && (
+                <div style={{ 
+                    position: 'absolute', 
+                    bottom: '80px', 
+                    left: '50%', 
+                    transform: 'translateX(-50%)',
+                    background: strokeFeedback === 'correct' ? '#4ade80' : '#ff3e3e',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}>
+                    {feedbackMessage}
+                </div>
+            )}
         </div>
     );
 }

@@ -11,7 +11,7 @@ export interface Stroke {
 
 export function useHandwriting() {
     const [sessionId, setSessionId] = useState<string>('');
-    const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
+    const [submittedImage, setSubmittedImage] = useState<string | null>(null);
     const [strokeCount, setStrokeCount] = useState(0);
 
     useEffect(() => {
@@ -28,11 +28,13 @@ export function useHandwriting() {
         if (!sessionId) return;
 
         const channel = supabase.channel(`handwriting:${sessionId}`)
-            .on('broadcast', { event: 'stroke' }, (payload) => {
-                setCurrentStroke(payload.payload);
+            .on('broadcast', { event: 'submit' }, (payload) => {
+                if (payload.payload && payload.payload.image) {
+                    setSubmittedImage(payload.payload.image);
+                }
             })
             .on('broadcast', { event: 'clear' }, () => {
-                setCurrentStroke({ points: [], color: '', width: 0, type: 'clear' });
+                setSubmittedImage(null);
             })
             .subscribe();
 
@@ -42,7 +44,7 @@ export function useHandwriting() {
     }, [sessionId]);
 
     const clearCanvas = useCallback(() => {
-        setCurrentStroke({ points: [], color: '', width: 0, type: 'clear' });
+        setSubmittedImage(null);
     }, []);
 
     const resetStrokeCount = useCallback(() => {
@@ -55,7 +57,7 @@ export function useHandwriting() {
 
     return {
         sessionId,
-        currentStroke,
+        submittedImage,
         clearCanvas,
         resetStrokeCount,
         strokeCount,
