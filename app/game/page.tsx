@@ -23,6 +23,7 @@ import SentenceScrambleMode from '@/components/SentenceScrambleMode';
 import ListeningMode from '@/components/ListeningMode';
 import KanjiDrawingMode from '@/components/KanjiDrawingMode';
 import { FILL_BLANK_DATA } from '@/data/fill-blank-data';
+import { validateCharacter, CharacterType } from '@/lib/validation/character-validator';
 import './game.css';
 
 // Repetition Mode: For Hiragana/Katakana
@@ -67,7 +68,16 @@ function RepetitionMode({ levelId }: { levelId: string }) {
         setUserInput(value);
 
         const target = questionType === 'char-to-romaji' ? currentItem.romaji : currentItem.char;
-        if (value.toLowerCase().trim() === target.toLowerCase()) {
+        
+        // Determine character type for validation
+        let charType: CharacterType = 'hiragana';
+        if (questionType === 'char-to-romaji') {
+            charType = 'romaji';
+        } else if (levelId === 'katakana') {
+            charType = 'katakana';
+        }
+
+        if (validateCharacter(value, target, charType)) {
             handleCorrect();
         }
     };
@@ -222,7 +232,7 @@ function RepetitionMode({ levelId }: { levelId: string }) {
                 {useHandwriting ? (
                     <div ref={handwritingRef} style={{ maxWidth: '400px', margin: '0 auto' }}>
                         <PCHandwritingView
-                            targetChar={questionType === 'romaji-to-char' ? currentItem.char : undefined}
+                            targetChar={questionType === 'romaji-to-char' ? currentItem.char : currentItem.romaji}
                             onComplete={() => {
                                 // Auto-validate after drawing complete
                                 handleCorrect();
