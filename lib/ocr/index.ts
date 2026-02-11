@@ -47,32 +47,12 @@ export async function recognizeText(base64Image: string): Promise<OCRResult> {
     throw new Error('No OCR provider configured');
 }
 
+import { validateOCRResult } from '@/lib/validation/character-validator';
+
 /**
  * Validate if recognized text matches target character
  * Handles hiragana, katakana, kanji, and romaji
  */
 export function validateRecognizedText(recognized: string, target: string): boolean {
-    if (!recognized || !target) return false;
-
-    // Normalize both strings (trim, lowercase for romaji)
-    const normalizedRecognized = recognized.trim();
-    const normalizedTarget = target.trim();
-
-    // Exact match
-    if (normalizedRecognized === normalizedTarget) {
-        return true;
-    }
-
-    // For romaji, case-insensitive match
-    if (/^[a-zA-Z]+$/.test(normalizedTarget)) {
-        return normalizedRecognized.toLowerCase() === normalizedTarget.toLowerCase();
-    }
-
-    // For Japanese characters, check if target is contained in recognized text
-    // (OCR might detect extra characters around the main one)
-    if (normalizedRecognized.includes(normalizedTarget)) {
-        return true;
-    }
-
-    return false;
+    return validateOCRResult(recognized, target);
 }
