@@ -195,7 +195,7 @@ export default function GamesPage() {
                 >
                     <ArrowLeft size={24} />
                 </button>
-                <h1 className="gradient-text">Jogos</h1>
+                <h1 className="gradient-text">Jogos & Testes</h1>
                 <div className="header-spacer"></div>
             </header>
 
